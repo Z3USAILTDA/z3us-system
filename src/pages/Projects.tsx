@@ -16,7 +16,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Building2, Calendar } from "lucide-react";
+import { Plus, Edit2, Trash2, Building2, Calendar, LayoutGrid, Table as TableIcon } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const Projects = () => {
   const [projects, setProjects] = useState<any[]>([]);
@@ -24,6 +32,7 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   useEffect(() => {
     fetchData();
@@ -162,13 +171,30 @@ const Projects = () => {
           <h1 className="text-3xl font-bold">Gerenciar Projetos</h1>
           <p className="text-muted-foreground">Cadastre e gerencie projetos</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Projeto
+        <div className="flex gap-2">
+          <div className="flex border rounded-md">
+            <Button
+              variant={viewMode === "cards" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("cards")}
+            >
+              <LayoutGrid className="h-4 w-4" />
             </Button>
-          </DialogTrigger>
+            <Button
+              variant={viewMode === "table" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("table")}
+            >
+              <TableIcon className="h-4 w-4" />
+            </Button>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Projeto
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -343,7 +369,8 @@ const Projects = () => {
               </Button>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       {projects.length === 0 ? (
@@ -352,7 +379,7 @@ const Projects = () => {
             <p className="text-muted-foreground">Nenhum projeto cadastrado</p>
           </CardContent>
         </Card>
-      ) : (
+      ) : viewMode === "cards" ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <Card key={project.id} className="hover:shadow-lg transition-all">
@@ -422,6 +449,75 @@ const Projects = () => {
             </Card>
           ))}
         </div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sprint</TableHead>
+                  <TableHead>Área</TableHead>
+                  <TableHead>Título</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Progresso</TableHead>
+                  <TableHead>Dt Entrega</TableHead>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projects.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell>{project.sprint || "-"}</TableCell>
+                    <TableCell>
+                      {project.area && <Badge variant="outline">{project.area}</Badge>}
+                    </TableCell>
+                    <TableCell className="max-w-md">
+                      <div className="line-clamp-2">{project.title}</div>
+                    </TableCell>
+                    <TableCell>{project.clients?.company_name}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(project.status)}>
+                        {getStatusLabel(project.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Progress value={project.progress} className="h-2 w-20" />
+                        <span className="text-sm">{project.progress}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {project.end_date
+                        ? new Date(project.end_date).toLocaleDateString("pt-BR")
+                        : "-"}
+                    </TableCell>
+                    <TableCell>{project.responsible || "-"}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(project)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(project.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
