@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Building2 } from "lucide-react";
+import logoBranco from "@/assets/logo-branco.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -82,18 +82,10 @@ const Auth = () => {
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
       
       <Card className="w-full max-w-md relative z-10 bg-card/80 backdrop-blur-sm border-primary/30 neon-border">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-primary rounded-xl blur-xl opacity-60 animate-glow-pulse" />
-              <div className="relative p-3 bg-card border border-primary/30 rounded-xl">
-                <Building2 className="h-8 w-8 text-primary" />
-              </div>
-            </div>
+        <CardHeader className="text-center space-y-6">
+          <div className="flex justify-center">
+            <img src={logoBranco} alt="Z3US" className="h-20 object-contain" />
           </div>
-          <CardTitle className="text-3xl font-bold">
-            <span className="bg-gradient-primary bg-clip-text text-transparent">Z3US</span> Sistema
-          </CardTitle>
           <CardDescription className="text-base">
             Entre com suas credenciais ou crie uma nova conta
           </CardDescription>

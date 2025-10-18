@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { FolderKanban, Calendar, TrendingUp } from "lucide-react";
+import logoBranco from "@/assets/logo-branco.png";
 
 const ClientDashboard = () => {
   const [projects, setProjects] = useState<any[]>([]);
@@ -74,12 +75,9 @@ const ClientDashboard = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="relative">
+      <div className="relative flex items-center gap-4">
         <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-primary rounded-full" />
-        <h1 className="text-4xl font-bold tracking-tight">
-          Meus <span className="bg-gradient-primary bg-clip-text text-transparent">Projetos</span>
-        </h1>
-        <p className="text-muted-foreground text-lg mt-2">Acompanhe o andamento em tempo real</p>
+        <img src={logoBranco} alt="Z3US" className="h-16 object-contain" />
       </div>
 
       {projects.length === 0 ? (
