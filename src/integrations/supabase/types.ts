@@ -155,6 +155,7 @@ export type Database = {
         Row: {
           actual_end_date: string | null
           actual_start_date: string | null
+          area: string | null
           client_id: string
           created_at: string
           description: string | null
@@ -173,6 +174,7 @@ export type Database = {
         Insert: {
           actual_end_date?: string | null
           actual_start_date?: string | null
+          area?: string | null
           client_id: string
           created_at?: string
           description?: string | null
@@ -191,6 +193,7 @@ export type Database = {
         Update: {
           actual_end_date?: string | null
           actual_start_date?: string | null
+          area?: string | null
           client_id?: string
           created_at?: string
           description?: string | null
