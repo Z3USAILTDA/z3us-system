@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Zap, Sparkles, Shield, Cpu, ArrowRight } from "lucide-react";
+import { Sparkles, Shield, Cpu, ArrowRight } from "lucide-react";
+import logoZ3us from "@/assets/logo-z3us.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -21,17 +22,13 @@ const Index = () => {
           <div className="flex justify-center mb-8">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-primary rounded-2xl blur-xl opacity-60 animate-glow-pulse" />
-              <div className="relative p-6 bg-card/80 backdrop-blur-sm border border-primary/30 rounded-2xl neon-border">
-                <Zap className="h-16 w-16 text-primary" />
+              <div className="relative p-8 bg-card/80 backdrop-blur-sm border border-primary/30 rounded-2xl neon-border">
+                <img src={logoZ3us} alt="Z3US Logo" className="h-24 w-24 object-contain" />
               </div>
             </div>
           </div>
           
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full text-sm text-primary">
-              <Sparkles className="h-4 w-4" />
-              Sistema de Gestão Inteligente
-            </div>
             
             <h1 className="text-6xl md:text-7xl font-bold tracking-tight">
               <span className="bg-gradient-primary bg-clip-text text-transparent">
