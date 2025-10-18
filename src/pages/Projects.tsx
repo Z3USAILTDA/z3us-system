@@ -117,9 +117,11 @@ const Projects = () => {
     setDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    setEditingProject(null);
+  const handleDialogChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingProject(null);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -155,7 +157,7 @@ const Projects = () => {
           <h1 className="text-3xl font-bold">Gerenciar Projetos</h1>
           <p className="text-muted-foreground">Cadastre e gerencie projetos</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />

@@ -104,9 +104,11 @@ const Teams = () => {
     setDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    setEditingTeam(null);
+  const handleDialogChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingTeam(null);
+    }
   };
 
   if (loading) {
@@ -120,7 +122,7 @@ const Teams = () => {
           <h1 className="text-3xl font-bold">Gerenciar Equipes</h1>
           <p className="text-muted-foreground">Cadastre e gerencie membros da equipe</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />

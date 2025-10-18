@@ -107,9 +107,11 @@ const Clients = () => {
     setDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    setEditingClient(null);
+  const handleDialogChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingClient(null);
+    }
   };
 
   if (loading) {
@@ -123,7 +125,7 @@ const Clients = () => {
           <h1 className="text-3xl font-bold">Gerenciar Clientes</h1>
           <p className="text-muted-foreground">Cadastre e gerencie seus clientes</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
