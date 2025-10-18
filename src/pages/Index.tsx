@@ -30,12 +30,8 @@ const Index = () => {
           
           <div className="space-y-6">
             
-            <h1 className="text-6xl md:text-7xl font-bold tracking-tight">
-              <span className="bg-gradient-primary bg-clip-text text-transparent">
-                Z3US
-              </span>
-              <br />
-              <span className="text-foreground">Gestão de Projetos</span>
+            <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-foreground">
+              Gestão de Projetos
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
