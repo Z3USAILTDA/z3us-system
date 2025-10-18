@@ -68,8 +68,12 @@ const Projects = () => {
       priority: formData.get("priority") as string,
       start_date: formData.get("start_date") as string,
       end_date: formData.get("end_date") as string,
-      budget: parseFloat(formData.get("budget") as string) || null,
       progress: parseInt(formData.get("progress") as string) || 0,
+      observation: formData.get("observation") as string,
+      responsible: formData.get("responsible") as string,
+      sprint: formData.get("sprint") as string,
+      actual_start_date: formData.get("actual_start_date") as string,
+      actual_end_date: formData.get("actual_end_date") as string,
     };
 
     if (editingProject) {
@@ -261,13 +265,39 @@ const Projects = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="budget">Orçamento (R$)</Label>
+                  <Label htmlFor="responsible">Responsável</Label>
                   <Input
-                    id="budget"
-                    name="budget"
-                    type="number"
-                    step="0.01"
-                    defaultValue={editingProject?.budget}
+                    id="responsible"
+                    name="responsible"
+                    defaultValue={editingProject?.responsible}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sprint">Sprint</Label>
+                  <Input
+                    id="sprint"
+                    name="sprint"
+                    defaultValue={editingProject?.sprint}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="actual_start_date">Data Real Início</Label>
+                  <Input
+                    id="actual_start_date"
+                    name="actual_start_date"
+                    type="date"
+                    defaultValue={editingProject?.actual_start_date}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="actual_end_date">Data Real Término</Label>
+                  <Input
+                    id="actual_end_date"
+                    name="actual_end_date"
+                    type="date"
+                    defaultValue={editingProject?.actual_end_date}
                   />
                 </div>
                 <div className="space-y-2">
@@ -281,6 +311,15 @@ const Projects = () => {
                     defaultValue={editingProject?.progress || 0}
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="observation">Observação</Label>
+                <Textarea
+                  id="observation"
+                  name="observation"
+                  defaultValue={editingProject?.observation}
+                  rows={3}
+                />
               </div>
               <Button type="submit" className="w-full">
                 {editingProject ? "Atualizar" : "Adicionar"}
