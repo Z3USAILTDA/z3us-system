@@ -74,6 +74,7 @@ const Projects = () => {
       sprint: formData.get("sprint") as string,
       actual_start_date: formData.get("actual_start_date") as string,
       actual_end_date: formData.get("actual_end_date") as string,
+      area: formData.get("area") as string,
     };
 
     if (editingProject) {
@@ -263,7 +264,23 @@ const Projects = () => {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="area">Área</Label>
+                  <select
+                    id="area"
+                    name="area"
+                    defaultValue={editingProject?.area}
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                  >
+                    <option value="">Selecione uma área</option>
+                    <option value="Aereo">Aéreo</option>
+                    <option value="Maritimo">Marítimo</option>
+                    <option value="Desembaraço">Desembaraço</option>
+                    <option value="Financeiro">Financeiro</option>
+                    <option value="Operacional">Operacional</option>
+                  </select>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="responsible">Responsável</Label>
                   <Input
@@ -355,6 +372,18 @@ const Projects = () => {
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   <span>{project.clients?.company_name}</span>
                 </div>
+                
+                {project.area && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{project.area}</Badge>
+                  </div>
+                )}
+                
+                {project.sprint && (
+                  <div className="text-sm text-muted-foreground">
+                    <span className="font-medium">Sprint:</span> {project.sprint}
+                  </div>
+                )}
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
