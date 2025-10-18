@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Building2, Calendar, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Plus, Edit2, Trash2, Building2, Calendar, LayoutGrid, Table as TableIcon, X } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -25,6 +25,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Projects = () => {
   const [projects, setProjects] = useState<any[]>([]);
@@ -33,6 +40,13 @@ const Projects = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  
+  // Filters
+  const [filterSprint, setFilterSprint] = useState("");
+  const [filterArea, setFilterArea] = useState("");
+  const [filterClient, setFilterClient] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterResponsible, setFilterResponsible] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -159,6 +173,31 @@ const Projects = () => {
     };
     return labels[status] || status;
   };
+
+  // Filter projects based on selected filters
+  const filteredProjects = projects.filter((project) => {
+    if (filterSprint && project.sprint !== filterSprint) return false;
+    if (filterArea && project.area !== filterArea) return false;
+    if (filterClient && project.client_id !== filterClient) return false;
+    if (filterStatus && project.status !== filterStatus) return false;
+    if (filterResponsible && project.responsible !== filterResponsible) return false;
+    return true;
+  });
+
+  // Get unique values for filters
+  const uniqueSprints = [...new Set(projects.map(p => p.sprint).filter(Boolean))];
+  const uniqueAreas = [...new Set(projects.map(p => p.area).filter(Boolean))];
+  const uniqueResponsibles = [...new Set(projects.map(p => p.responsible).filter(Boolean))];
+
+  const clearFilters = () => {
+    setFilterSprint("");
+    setFilterArea("");
+    setFilterClient("");
+    setFilterStatus("");
+    setFilterResponsible("");
+  };
+
+  const hasActiveFilters = filterSprint || filterArea || filterClient || filterStatus || filterResponsible;
 
   if (loading) {
     return <div className="text-center py-8">Carregando...</div>;
@@ -381,7 +420,7 @@ const Projects = () => {
         </Card>
       ) : viewMode === "cards" ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
+          {filteredProjects.map((project) => (
             <Card key={project.id} className="hover:shadow-lg transition-all">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -451,7 +490,111 @@ const Projects = () => {
         </div>
       ) : (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-6">
+            {/* Filters */}
+            <div className="mb-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">Filtros</h3>
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-8"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Limpar Filtros
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">Sprint</Label>
+                  <Select value={filterSprint} onValueChange={setFilterSprint}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos</SelectItem>
+                      {uniqueSprints.map((sprint) => (
+                        <SelectItem key={sprint} value={sprint}>
+                          {sprint}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Área</Label>
+                  <Select value={filterArea} onValueChange={setFilterArea}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Todas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todas</SelectItem>
+                      {uniqueAreas.map((area) => (
+                        <SelectItem key={area} value={area}>
+                          {area}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Cliente</Label>
+                  <Select value={filterClient} onValueChange={setFilterClient}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos</SelectItem>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.company_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Status</Label>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="planning">Planejamento</SelectItem>
+                      <SelectItem value="in_progress">Em Andamento</SelectItem>
+                      <SelectItem value="on_hold">Pausado</SelectItem>
+                      <SelectItem value="completed">Concluído</SelectItem>
+                      <SelectItem value="cancelled">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Responsável</Label>
+                  <Select value={filterResponsible} onValueChange={setFilterResponsible}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Todos</SelectItem>
+                      {uniqueResponsibles.map((responsible) => (
+                        <SelectItem key={responsible} value={responsible}>
+                          {responsible}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
             <Table>
               <TableHeader>
                 <TableRow>
@@ -467,7 +610,7 @@ const Projects = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {projects.map((project) => (
+                {filteredProjects.map((project) => (
                   <TableRow key={project.id}>
                     <TableCell>{project.sprint || "-"}</TableCell>
                     <TableCell>
