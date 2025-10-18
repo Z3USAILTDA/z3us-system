@@ -89,20 +89,25 @@ const Projects = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    const startDate = formData.get("start_date") as string;
+    const endDate = formData.get("end_date") as string;
+    const actualStartDate = formData.get("actual_start_date") as string;
+    const actualEndDate = formData.get("actual_end_date") as string;
+    
     const projectData = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
       client_id: formData.get("client_id") as string,
       status: formData.get("status") as string,
       priority: formData.get("priority") as string,
-      start_date: formData.get("start_date") as string,
-      end_date: formData.get("end_date") as string,
+      start_date: startDate || null,
+      end_date: endDate || null,
       progress: parseInt(formData.get("progress") as string) || 0,
       observation: formData.get("observation") as string,
       responsible: formData.get("responsible") as string,
       sprint: formData.get("sprint") as string,
-      actual_start_date: formData.get("actual_start_date") as string,
-      actual_end_date: formData.get("actual_end_date") as string,
+      actual_start_date: actualStartDate || null,
+      actual_end_date: actualEndDate || null,
       area: formData.get("area") as string,
     };
 
