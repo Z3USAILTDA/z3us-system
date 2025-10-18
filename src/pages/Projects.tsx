@@ -36,6 +36,7 @@ import {
 const Projects = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
@@ -53,7 +54,7 @@ const Projects = () => {
   }, []);
 
   const fetchData = async () => {
-    const [projectsRes, clientsRes] = await Promise.all([
+    const [projectsRes, clientsRes, teamsRes] = await Promise.all([
       supabase
         .from("projects")
         .select(`
@@ -64,6 +65,7 @@ const Projects = () => {
         `)
         .order("created_at", { ascending: false }),
       supabase.from("clients").select("*").eq("status", "active"),
+      supabase.from("teams").select("*").eq("status", "active").order("name"),
     ]);
 
     if (projectsRes.error) {
@@ -74,6 +76,10 @@ const Projects = () => {
 
     if (!clientsRes.error) {
       setClients(clientsRes.data || []);
+    }
+
+    if (!teamsRes.error) {
+      setTeams(teamsRes.data || []);
     }
 
     setLoading(false);
@@ -353,11 +359,19 @@ const Projects = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="responsible">Responsável</Label>
-                  <Input
+                  <select
                     id="responsible"
                     name="responsible"
                     defaultValue={editingProject?.responsible}
-                  />
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                  >
+                    <option value="">Selecione um responsável</option>
+                    {teams.map((team) => (
+                      <option key={team.id} value={team.name}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="sprint">Sprint</Label>
