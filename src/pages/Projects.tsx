@@ -176,11 +176,11 @@ const Projects = () => {
 
   // Filter projects based on selected filters
   const filteredProjects = projects.filter((project) => {
-    if (filterSprint && project.sprint !== filterSprint) return false;
-    if (filterArea && project.area !== filterArea) return false;
-    if (filterClient && project.client_id !== filterClient) return false;
-    if (filterStatus && project.status !== filterStatus) return false;
-    if (filterResponsible && project.responsible !== filterResponsible) return false;
+    if (filterSprint && filterSprint !== "all" && project.sprint !== filterSprint) return false;
+    if (filterArea && filterArea !== "all" && project.area !== filterArea) return false;
+    if (filterClient && filterClient !== "all" && project.client_id !== filterClient) return false;
+    if (filterStatus && filterStatus !== "all" && project.status !== filterStatus) return false;
+    if (filterResponsible && filterResponsible !== "all" && project.responsible !== filterResponsible) return false;
     return true;
   });
 
@@ -190,14 +190,19 @@ const Projects = () => {
   const uniqueResponsibles = [...new Set(projects.map(p => p.responsible).filter(Boolean))];
 
   const clearFilters = () => {
-    setFilterSprint("");
-    setFilterArea("");
-    setFilterClient("");
-    setFilterStatus("");
-    setFilterResponsible("");
+    setFilterSprint("all");
+    setFilterArea("all");
+    setFilterClient("all");
+    setFilterStatus("all");
+    setFilterResponsible("all");
   };
 
-  const hasActiveFilters = filterSprint || filterArea || filterClient || filterStatus || filterResponsible;
+  const hasActiveFilters = 
+    (filterSprint && filterSprint !== "all") || 
+    (filterArea && filterArea !== "all") || 
+    (filterClient && filterClient !== "all") || 
+    (filterStatus && filterStatus !== "all") || 
+    (filterResponsible && filterResponsible !== "all");
 
   if (loading) {
     return <div className="text-center py-8">Carregando...</div>;
@@ -510,12 +515,12 @@ const Projects = () => {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="space-y-2">
                   <Label className="text-xs">Sprint</Label>
-                  <Select value={filterSprint} onValueChange={setFilterSprint}>
+                  <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       {uniqueSprints.map((sprint) => (
                         <SelectItem key={sprint} value={sprint}>
                           {sprint}
@@ -527,12 +532,12 @@ const Projects = () => {
 
                 <div className="space-y-2">
                   <Label className="text-xs">Área</Label>
-                  <Select value={filterArea} onValueChange={setFilterArea}>
+                  <Select value={filterArea || "all"} onValueChange={setFilterArea}>
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Todas" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas</SelectItem>
+                      <SelectItem value="all">Todas</SelectItem>
                       {uniqueAreas.map((area) => (
                         <SelectItem key={area} value={area}>
                           {area}
@@ -544,12 +549,12 @@ const Projects = () => {
 
                 <div className="space-y-2">
                   <Label className="text-xs">Cliente</Label>
-                  <Select value={filterClient} onValueChange={setFilterClient}>
+                  <Select value={filterClient || "all"} onValueChange={setFilterClient}>
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
                           {client.company_name}
@@ -561,12 +566,12 @@ const Projects = () => {
 
                 <div className="space-y-2">
                   <Label className="text-xs">Status</Label>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="planning">Planejamento</SelectItem>
                       <SelectItem value="in_progress">Em Andamento</SelectItem>
                       <SelectItem value="on_hold">Pausado</SelectItem>
@@ -578,12 +583,12 @@ const Projects = () => {
 
                 <div className="space-y-2">
                   <Label className="text-xs">Responsável</Label>
-                  <Select value={filterResponsible} onValueChange={setFilterResponsible}>
+                  <Select value={filterResponsible || "all"} onValueChange={setFilterResponsible}>
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       {uniqueResponsibles.map((responsible) => (
                         <SelectItem key={responsible} value={responsible}>
                           {responsible}
