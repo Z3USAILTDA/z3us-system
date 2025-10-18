@@ -1,91 +1,152 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Building2, Users, FolderKanban, Sparkles } from "lucide-react";
+import { Zap, Sparkles, Shield, Cpu, ArrowRight } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center space-y-8 mb-16">
-          <div className="flex justify-center">
-            <div className="p-4 bg-gradient-primary rounded-2xl shadow-xl">
-              <Building2 className="h-16 w-16 text-primary-foreground" />
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Animated background grid */}
+      <div className="absolute inset-0 tech-grid opacity-30" />
+      
+      {/* Floating orbs */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "4s" }} />
+
+      <div className="container mx-auto px-4 py-16 relative z-10">
+        {/* Hero Section */}
+        <div className="text-center space-y-8 mb-20 animate-fade-in">
+          <div className="flex justify-center mb-8">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-primary rounded-2xl blur-xl opacity-60 animate-glow-pulse" />
+              <div className="relative p-6 bg-card/80 backdrop-blur-sm border border-primary/30 rounded-2xl neon-border">
+                <Zap className="h-16 w-16 text-primary" />
+              </div>
             </div>
           </div>
           
-          <div className="space-y-4">
-            <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-              Sistema de Gestão de Projetos
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full text-sm text-primary">
+              <Sparkles className="h-4 w-4" />
+              Sistema de Gestão Inteligente
+            </div>
+            
+            <h1 className="text-6xl md:text-7xl font-bold tracking-tight">
+              <span className="bg-gradient-primary bg-clip-text text-transparent">
+                Z3US
+              </span>
+              <br />
+              <span className="text-foreground">Gestão de Projetos</span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Gerencie seus projetos, equipes e clientes com inteligência artificial
+            
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Plataforma tecnológica avançada para gerenciar projetos, equipes e dar visibilidade total aos seus clientes
             </p>
           </div>
 
           <div className="flex gap-4 justify-center flex-wrap">
-            <Button size="lg" onClick={() => navigate("/auth")} className="text-lg px-8">
-              Entrar no Sistema
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/auth")} className="text-lg px-8">
-              Criar Conta
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <div className="p-6 bg-card rounded-xl shadow-md hover:shadow-lg transition-shadow">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-primary/10 rounded-lg">
-                <Users className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold mb-2 text-center">Gestão de Equipes</h3>
-            <p className="text-muted-foreground text-center">
-              Cadastre e gerencie sua equipe de forma eficiente
-            </p>
-          </div>
-
-          <div className="p-6 bg-card rounded-xl shadow-md hover:shadow-lg transition-shadow">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-accent/10 rounded-lg">
-                <FolderKanban className="h-8 w-8 text-accent" />
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold mb-2 text-center">Controle de Projetos</h3>
-            <p className="text-muted-foreground text-center">
-              Acompanhe o progresso de todos os seus projetos
-            </p>
-          </div>
-
-          <div className="p-6 bg-card rounded-xl shadow-md hover:shadow-lg transition-shadow">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-info/10 rounded-lg">
-                <Sparkles className="h-8 w-8 text-info" />
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold mb-2 text-center">Inteligência Artificial</h3>
-            <p className="text-muted-foreground text-center">
-              IA para otimizar a gestão e sugerir alocações
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-16 p-8 bg-gradient-primary rounded-2xl shadow-xl max-w-4xl mx-auto">
-          <div className="text-center text-primary-foreground space-y-4">
-            <h2 className="text-3xl font-bold">Portal do Cliente</h2>
-            <p className="text-lg opacity-90">
-              Clientes podem acessar com seu CNPJ e acompanhar suas demandas em tempo real
-            </p>
             <Button 
               size="lg" 
-              variant="secondary"
-              onClick={() => navigate("/auth")}
-              className="mt-4"
+              onClick={() => navigate("/auth")} 
+              className="text-lg px-8 bg-gradient-primary hover:shadow-lg hover:shadow-primary/50 transition-all group"
             >
-              Acessar Portal do Cliente
+              Acessar Sistema
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              onClick={() => navigate("/auth")} 
+              className="text-lg px-8 border-primary/30 hover:bg-primary/10"
+            >
+              Portal do Cliente
+            </Button>
+          </div>
+        </div>
+
+        {/* Features Grid */}
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-20">
+          <div className="group relative p-8 bg-card/50 backdrop-blur-sm border border-border rounded-2xl hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 scan-line overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+            <div className="relative">
+              <div className="flex justify-center mb-6">
+                <div className="p-4 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
+                  <Shield className="h-10 w-10 text-primary" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold mb-3 text-center">Gestão Inteligente</h3>
+              <p className="text-muted-foreground text-center leading-relaxed">
+                IA integrada para otimizar processos e sugerir as melhores alocações de recursos
+              </p>
+            </div>
+          </div>
+
+          <div className="group relative p-8 bg-card/50 backdrop-blur-sm border border-border rounded-2xl hover:border-secondary/50 transition-all hover:shadow-xl hover:shadow-secondary/20 scan-line overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+            <div className="relative">
+              <div className="flex justify-center mb-6">
+                <div className="p-4 bg-secondary/10 rounded-xl group-hover:bg-secondary/20 transition-colors">
+                  <Cpu className="h-10 w-10 text-secondary" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold mb-3 text-center">Tempo Real</h3>
+              <p className="text-muted-foreground text-center leading-relaxed">
+                Acompanhamento em tempo real de todos os projetos, equipes e demandas
+              </p>
+            </div>
+          </div>
+
+          <div className="group relative p-8 bg-card/50 backdrop-blur-sm border border-border rounded-2xl hover:border-accent/50 transition-all hover:shadow-xl hover:shadow-accent/20 scan-line overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+            <div className="relative">
+              <div className="flex justify-center mb-6">
+                <div className="p-4 bg-accent/10 rounded-xl group-hover:bg-accent/20 transition-colors">
+                  <Sparkles className="h-10 w-10 text-accent" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold mb-3 text-center">Portal do Cliente</h3>
+              <p className="text-muted-foreground text-center leading-relaxed">
+                Seus clientes acessam via CNPJ e acompanham suas demandas de forma transparente
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="relative max-w-5xl mx-auto">
+          <div className="absolute inset-0 bg-gradient-primary rounded-3xl blur-2xl opacity-20" />
+          <div className="relative p-12 bg-card/80 backdrop-blur-sm border border-primary/30 rounded-3xl neon-border overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-secondary opacity-50" />
+            <div className="relative text-center space-y-6">
+              <h2 className="text-4xl md:text-5xl font-bold">
+                <span className="bg-gradient-primary bg-clip-text text-transparent">
+                  Tecnologia Avançada
+                </span>
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                Transforme a gestão dos seus projetos com inteligência artificial, 
+                visibilidade total e controle em tempo real
+              </p>
+              <div className="flex gap-4 justify-center pt-4">
+                <Button 
+                  size="lg" 
+                  onClick={() => navigate("/auth")}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-lg hover:shadow-primary/50 transition-all"
+                >
+                  Começar Agora
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => navigate("/auth")}
+                  className="border-primary/30 hover:bg-primary/10"
+                >
+                  Saiba Mais
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

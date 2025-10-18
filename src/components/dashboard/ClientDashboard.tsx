@@ -73,10 +73,13 @@ const ClientDashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Meus Projetos</h1>
-        <p className="text-muted-foreground">Acompanhe o andamento de todos os seus projetos</p>
+    <div className="space-y-8 animate-fade-in">
+      <div className="relative">
+        <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-primary rounded-full" />
+        <h1 className="text-4xl font-bold tracking-tight">
+          Meus <span className="bg-gradient-primary bg-clip-text text-transparent">Projetos</span>
+        </h1>
+        <p className="text-muted-foreground text-lg mt-2">Acompanhe o andamento em tempo real</p>
       </div>
 
       {projects.length === 0 ? (
@@ -91,17 +94,22 @@ const ClientDashboard = () => {
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
-          {projects.map((project) => (
-            <Card key={project.id} className="hover:shadow-lg transition-all">
-              <CardHeader>
+          {projects.map((project, index) => (
+            <Card 
+              key={project.id} 
+              className="relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 group overflow-hidden"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+              <CardHeader className="relative z-10">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-xl">{project.title}</CardTitle>
+                  <div className="space-y-1 flex-1">
+                    <CardTitle className="text-xl bg-gradient-primary bg-clip-text text-transparent">{project.title}</CardTitle>
                     <CardDescription className="line-clamp-2">
                       {project.description || "Sem descrição"}
                     </CardDescription>
                   </div>
-                  <Badge className={getStatusColor(project.status)}>
+                  <Badge className={`${getStatusColor(project.status)} ml-2`}>
                     {getStatusLabel(project.status)}
                   </Badge>
                 </div>

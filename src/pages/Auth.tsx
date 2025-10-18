@@ -75,16 +75,26 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
+      {/* Background effects */}
+      <div className="absolute inset-0 tech-grid opacity-20" />
+      <div className="absolute top-20 left-10 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+      
+      <Card className="w-full max-w-md relative z-10 bg-card/80 backdrop-blur-sm border-primary/30 neon-border">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-gradient-primary rounded-xl">
-              <Building2 className="h-8 w-8 text-primary-foreground" />
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-primary rounded-xl blur-xl opacity-60 animate-glow-pulse" />
+              <div className="relative p-3 bg-card border border-primary/30 rounded-xl">
+                <Building2 className="h-8 w-8 text-primary" />
+              </div>
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Sistema de Gestão de Projetos</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-3xl font-bold">
+            <span className="bg-gradient-primary bg-clip-text text-transparent">Z3US</span> Sistema
+          </CardTitle>
+          <CardDescription className="text-base">
             Entre com suas credenciais ou crie uma nova conta
           </CardDescription>
         </CardHeader>

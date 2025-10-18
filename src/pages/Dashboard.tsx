@@ -94,11 +94,27 @@ const DashboardContent = () => {
       <Sidebar className={state === "collapsed" ? "w-14" : "w-60"}>
         <div className="p-4 border-b border-sidebar-border">
           {state !== "collapsed" && (
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-gradient-primary rounded-lg">
-                <Building2 className="h-5 w-5 text-primary-foreground" />
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-primary rounded-lg blur-md opacity-60" />
+                <div className="relative p-2 bg-card border border-primary/30 rounded-lg">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
               </div>
-              <span className="font-semibold text-sidebar-foreground">Gestão Pro</span>
+              <div>
+                <span className="font-bold text-lg bg-gradient-primary bg-clip-text text-transparent">Z3US</span>
+                <p className="text-xs text-muted-foreground">Gestão Inteligente</p>
+              </div>
+            </div>
+          )}
+          {state === "collapsed" && (
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-primary rounded-lg blur-md opacity-60" />
+                <div className="relative p-2 bg-card border border-primary/30 rounded-lg">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
+              </div>
             </div>
           )}
         </div>
