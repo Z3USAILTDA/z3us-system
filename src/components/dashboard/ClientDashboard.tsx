@@ -1,0 +1,147 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { FolderKanban, Calendar, TrendingUp } from "lucide-react";
+
+const ClientDashboard = () => {
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return;
+
+    const { data: clientData } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!clientData) {
+      setLoading(false);
+      return;
+    }
+
+    const { data: projectsData } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("client_id", clientData.id)
+      .order("created_at", { ascending: false });
+
+    setProjects(projectsData || []);
+    setLoading(false);
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      planning: "bg-info",
+      in_progress: "bg-warning",
+      on_hold: "bg-muted",
+      completed: "bg-success",
+      cancelled: "bg-destructive",
+    };
+    return colors[status] || "bg-muted";
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      planning: "Planejamento",
+      in_progress: "Em Andamento",
+      on_hold: "Pausado",
+      completed: "Concluído",
+      cancelled: "Cancelado",
+    };
+    return labels[status] || status;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando projetos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Meus Projetos</h1>
+        <p className="text-muted-foreground">Acompanhe o andamento de todos os seus projetos</p>
+      </div>
+
+      {projects.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhum projeto encontrado</h3>
+            <p className="text-sm text-muted-foreground">
+              Entre em contato com nossa equipe para iniciar seu primeiro projeto
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {projects.map((project) => (
+            <Card key={project.id} className="hover:shadow-lg transition-all">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-xl">{project.title}</CardTitle>
+                    <CardDescription className="line-clamp-2">
+                      {project.description || "Sem descrição"}
+                    </CardDescription>
+                  </div>
+                  <Badge className={getStatusColor(project.status)}>
+                    {getStatusLabel(project.status)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Progresso</span>
+                    <span className="font-medium">{project.progress}%</span>
+                  </div>
+                  <Progress value={project.progress} className="h-2" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-sm">
+                      <p className="text-muted-foreground">Início</p>
+                      <p className="font-medium">
+                        {project.start_date
+                          ? new Date(project.start_date).toLocaleDateString("pt-BR")
+                          : "Não definido"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-sm">
+                      <p className="text-muted-foreground">Prioridade</p>
+                      <p className="font-medium capitalize">{project.priority}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ClientDashboard;

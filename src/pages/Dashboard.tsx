@@ -1,0 +1,178 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { 
+  LayoutDashboard, 
+  Users, 
+  Building2, 
+  FolderKanban, 
+  LogOut,
+  Menu
+} from "lucide-react";
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { NavLink } from "react-router-dom";
+import AdminDashboard from "@/components/dashboard/AdminDashboard";
+import ClientDashboard from "@/components/dashboard/ClientDashboard";
+
+const DashboardContent = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const { state } = useSidebar();
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    setUser(session.user);
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+
+    setProfile(profileData);
+    setLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Logout realizado com sucesso!");
+    navigate("/auth");
+  };
+
+  const adminMenuItems = [
+    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+    { title: "Equipes", url: "/dashboard/teams", icon: Users },
+    { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
+    { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+  ];
+
+  const clientMenuItems = [
+    { title: "Meus Projetos", url: "/dashboard", icon: FolderKanban },
+  ];
+
+  const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen w-full bg-background">
+      <Sidebar className={state === "collapsed" ? "w-14" : "w-60"}>
+        <div className="p-4 border-b border-sidebar-border">
+          {state !== "collapsed" && (
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-gradient-primary rounded-lg">
+                <Building2 className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="font-semibold text-sidebar-foreground">Gestão Pro</span>
+            </div>
+          )}
+        </div>
+        
+        <SidebarContent>
+          <SidebarGroup>
+            {state !== "collapsed" && <SidebarGroupLabel>Menu</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        end
+                        className={({ isActive }) =>
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "hover:bg-sidebar-accent/50"
+                        }
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {state !== "collapsed" && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <div className="mt-auto p-4 border-t border-sidebar-border">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+              {state !== "collapsed" && <span className="ml-2">Sair</span>}
+            </Button>
+          </div>
+        </SidebarContent>
+      </Sidebar>
+
+      <div className="flex-1 flex flex-col">
+        <header className="h-16 border-b border-border bg-card flex items-center px-6">
+          <SidebarTrigger>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SidebarTrigger>
+          
+          <div className="ml-auto flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
+              <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 p-6 overflow-auto">
+          {profile?.role === "admin" ? <AdminDashboard /> : <ClientDashboard />}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+const Dashboard = () => {
+  return (
+    <SidebarProvider>
+      <DashboardContent />
+    </SidebarProvider>
+  );
+};
+
+export default Dashboard;
