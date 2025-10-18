@@ -20,12 +20,7 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center space-y-8 mb-20 animate-fade-in">
           <div className="flex justify-center mb-8">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-primary rounded-2xl blur-xl opacity-60 animate-glow-pulse" />
-              <div className="relative p-8 bg-card/80 backdrop-blur-sm border border-primary/30 rounded-2xl neon-border">
-                <img src={logoZ3us} alt="Z3US Logo" className="h-24 w-24 object-contain" />
-              </div>
-            </div>
+            <img src={logoZ3us} alt="Z3US Logo" className="h-40 w-40 object-contain" />
           </div>
           
           <div className="space-y-6">
