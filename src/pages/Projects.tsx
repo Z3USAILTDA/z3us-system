@@ -438,21 +438,31 @@ const Projects = () => {
                   {project.description || "Sem descrição"}
                 </p>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   <span>{project.clients?.company_name}</span>
                 </div>
                 
-                {project.area && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{project.area}</Badge>
-                  </div>
-                )}
+                <div className="flex gap-2 flex-wrap">
+                  {project.area && <Badge variant="outline">{project.area}</Badge>}
+                  {project.sprint && <Badge variant="secondary">Sprint: {project.sprint}</Badge>}
+                  {project.priority && (
+                    <Badge variant={
+                      project.priority === "high" ? "destructive" : 
+                      project.priority === "medium" ? "default" : 
+                      "secondary"
+                    }>
+                      {project.priority === "high" ? "Alta" : 
+                       project.priority === "medium" ? "Média" : "Baixa"}
+                    </Badge>
+                  )}
+                </div>
                 
-                {project.sprint && (
-                  <div className="text-sm text-muted-foreground">
-                    <span className="font-medium">Sprint:</span> {project.sprint}
+                {project.responsible && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Responsável:</span>{" "}
+                    <span className="font-medium">{project.responsible}</span>
                   </div>
                 )}
                 
@@ -464,11 +474,11 @@ const Projects = () => {
                   <Progress value={project.progress} className="h-2" />
                 </div>
 
-                {project.start_date && (
+                {project.end_date && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      {new Date(project.start_date).toLocaleDateString("pt-BR")}
+                      Entrega: {new Date(project.end_date).toLocaleDateString("pt-BR")}
                     </span>
                   </div>
                 )}
