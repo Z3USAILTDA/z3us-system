@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, Building2, FolderKanban, TrendingUp, AlertTriangle, CheckCircle2, Clock, Flag } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -15,6 +16,9 @@ const AdminDashboard = () => {
     completed: 0,
     open: 0,
   });
+
+  const [clients, setClients] = useState<Array<{ id: string; company_name: string }>>([]);
+  const [selectedClient, setSelectedClient] = useState<string>("all");
 
   const [projectsByPerson, setProjectsByPerson] = useState<Array<{
     responsible: string;
@@ -34,26 +38,52 @@ const AdminDashboard = () => {
   }>>([]);
 
   useEffect(() => {
-    fetchStats();
+    fetchClients();
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [selectedClient]);
+
+  const fetchClients = async () => {
+    const { data } = await supabase
+      .from("clients")
+      .select("id, company_name")
+      .eq("status", "active")
+      .order("company_name");
+    
+    if (data) {
+      setClients(data);
+    }
+  };
 
   const fetchStats = async () => {
     const today = new Date().toISOString().split('T')[0];
     
+    // Build queries with optional client filter
+    const buildQuery = (query: any) => {
+      if (selectedClient !== "all") {
+        return query.eq("client_id", selectedClient);
+      }
+      return query;
+    };
+
     const [teamsRes, clientsRes, projectsRes, activeProjectsRes, completedRes, openRes, delayedRes] = await Promise.all([
       supabase.from("teams").select("*", { count: "exact", head: true }),
       supabase.from("clients").select("*", { count: "exact", head: true }),
-      supabase.from("projects").select("*", { count: "exact", head: true }),
-      supabase.from("projects").select("*", { count: "exact", head: true }).neq("status", "completed"),
-      supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "completed"),
-      supabase.from("projects").select("*", { count: "exact", head: true }).in("status", ["planning", "in_progress"]),
-      supabase.from("projects").select("*", { count: "exact", head: true }).lt("end_date", today).neq("status", "completed"),
+      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true })),
+      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).neq("status", "completed")),
+      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "completed")),
+      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).in("status", ["planning", "in_progress"])),
+      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).lt("end_date", today).neq("status", "completed")),
     ]);
 
     // Fetch projects with responsible and dates
-    const { data: allProjects } = await supabase
-      .from("projects")
-      .select("responsible, end_date, status");
+    let projectsQuery = supabase.from("projects").select("responsible, end_date, status");
+    if (selectedClient !== "all") {
+      projectsQuery = projectsQuery.eq("client_id", selectedClient);
+    }
+    const { data: allProjects } = await projectsQuery;
 
     // Group by responsible
     const personMap = new Map<string, { total: number; onTime: number; delayed: number }>();
@@ -84,9 +114,11 @@ const AdminDashboard = () => {
     );
 
     // Fetch projects by client
-    const { data: projectsWithClients } = await supabase
-      .from("projects")
-      .select("client_id, clients(company_name)");
+    let clientQuery = supabase.from("projects").select("client_id, clients(company_name)");
+    if (selectedClient !== "all") {
+      clientQuery = clientQuery.eq("client_id", selectedClient);
+    }
+    const { data: projectsWithClients } = await clientQuery;
 
     const clientMap = new Map<string, number>();
     projectsWithClients?.forEach(project => {
@@ -102,9 +134,11 @@ const AdminDashboard = () => {
     );
 
     // Fetch projects by priority
-    const { data: projectsWithPriority } = await supabase
-      .from("projects")
-      .select("priority");
+    let priorityQuery = supabase.from("projects").select("priority");
+    if (selectedClient !== "all") {
+      priorityQuery = priorityQuery.eq("client_id", selectedClient);
+    }
+    const { data: projectsWithPriority } = await priorityQuery;
 
     const priorityMap = new Map<string, number>();
     projectsWithPriority?.forEach(project => {
@@ -165,10 +199,29 @@ const AdminDashboard = () => {
     <div className="space-y-8 animate-fade-in">
       <div className="relative">
         <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-primary rounded-full" />
-        <h1 className="text-4xl font-bold tracking-tight">
-          Dashboard <span className="bg-gradient-primary bg-clip-text text-transparent">Administrativo</span>
-        </h1>
-        <p className="text-muted-foreground text-lg mt-2">Visão geral do sistema de gestão Z3US</p>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">
+              Dashboard <span className="bg-gradient-primary bg-clip-text text-transparent">Administrativo</span>
+            </h1>
+            <p className="text-muted-foreground text-lg mt-2">Visão geral do sistema de gestão Z3US</p>
+          </div>
+          <div className="w-[280px]">
+            <Select value={selectedClient} onValueChange={setSelectedClient}>
+              <SelectTrigger className="bg-card">
+                <SelectValue placeholder="Filtrar por cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os clientes</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.company_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
