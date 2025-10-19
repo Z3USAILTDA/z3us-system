@@ -9,7 +9,8 @@ import {
   Building2, 
   FolderKanban, 
   LogOut,
-  Menu
+  Menu,
+  UserCog
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -67,6 +68,7 @@ const DashboardContent = () => {
 
   const adminMenuItems = [
     { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+    { title: "Usuários", url: "/dashboard/users", icon: UserCog },
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
