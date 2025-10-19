@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Building2, Calendar, LayoutGrid, Table as TableIcon, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Building2, Calendar, LayoutGrid, Table as TableIcon, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -48,6 +48,10 @@ const Projects = () => {
   const [filterClient, setFilterClient] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterResponsible, setFilterResponsible] = useState("");
+  
+  // Sorting
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     fetchData();
@@ -194,6 +198,54 @@ const Projects = () => {
     if (filterResponsible && filterResponsible !== "all" && project.responsible !== filterResponsible) return false;
     return true;
   });
+
+  // Sort filtered projects
+  const sortedProjects = [...filteredProjects].sort((a, b) => {
+    if (!sortColumn) return 0;
+    
+    let aValue = a[sortColumn];
+    let bValue = b[sortColumn];
+    
+    // Handle nested client name
+    if (sortColumn === "client") {
+      aValue = a.clients?.company_name || "";
+      bValue = b.clients?.company_name || "";
+    }
+    
+    // Handle null/undefined values
+    if (aValue == null) aValue = "";
+    if (bValue == null) bValue = "";
+    
+    // Convert to string for comparison
+    aValue = String(aValue).toLowerCase();
+    bValue = String(bValue).toLowerCase();
+    
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Set new column with ascending order
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const SortIcon = ({ column }: { column: string }) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="ml-2 h-4 w-4" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="ml-2 h-4 w-4" />
+    ) : (
+      <ArrowDown className="ml-2 h-4 w-4" />
+    );
+  };
 
   // Get unique values for filters
   const uniqueSprints = [...new Set(projects.map(p => p.sprint).filter(Boolean))];
@@ -444,7 +496,7 @@ const Projects = () => {
         </Card>
       ) : viewMode === "cards" ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredProjects.map((project) => (
+          {sortedProjects.map((project) => (
             <Card key={project.id} className="hover:shadow-lg transition-all">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -632,19 +684,83 @@ const Projects = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Sprint</TableHead>
-                  <TableHead>Área</TableHead>
-                  <TableHead>Título</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Progresso</TableHead>
-                  <TableHead>Dt Entrega</TableHead>
-                  <TableHead>Responsável</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleSort("sprint")}
+                  >
+                    <div className="flex items-center">
+                      Sprint
+                      <SortIcon column="sprint" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleSort("area")}
+                  >
+                    <div className="flex items-center">
+                      Área
+                      <SortIcon column="area" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleSort("title")}
+                  >
+                    <div className="flex items-center">
+                      Título
+                      <SortIcon column="title" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleSort("client")}
+                  >
+                    <div className="flex items-center">
+                      Cliente
+                      <SortIcon column="client" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleSort("status")}
+                  >
+                    <div className="flex items-center">
+                      Status
+                      <SortIcon column="status" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleSort("progress")}
+                  >
+                    <div className="flex items-center">
+                      Progresso
+                      <SortIcon column="progress" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleSort("end_date")}
+                  >
+                    <div className="flex items-center">
+                      Dt Entrega
+                      <SortIcon column="end_date" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleSort("responsible")}
+                  >
+                    <div className="flex items-center">
+                      Responsável
+                      <SortIcon column="responsible" />
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProjects.map((project) => (
+                {sortedProjects.map((project) => (
                   <TableRow key={project.id}>
                     <TableCell>{project.sprint || "-"}</TableCell>
                     <TableCell>
