@@ -756,6 +756,15 @@ const Projects = () => {
                       <SortIcon column="responsible" />
                     </div>
                   </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleSort("observation")}
+                  >
+                    <div className="flex items-center">
+                      Observações
+                      <SortIcon column="observation" />
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -787,6 +796,11 @@ const Projects = () => {
                         : "-"}
                     </TableCell>
                     <TableCell>{project.responsible || "-"}</TableCell>
+                    <TableCell className="max-w-xs">
+                      <div className="line-clamp-2 text-sm text-muted-foreground">
+                        {project.observation || "-"}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
