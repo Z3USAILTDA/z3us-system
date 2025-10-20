@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { UserPlus, Shield, User, Mail, Calendar, ArrowLeft } from "lucide-react";
+import { UserPlus, Shield, User, Mail, Calendar, Home, Users as UsersIcon, FolderKanban, Building2, LogOut, UserCircle } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -14,12 +14,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarHeader,
+  SidebarFooter,
+} from "@/components/ui/sidebar";
+import logoWhite from "@/assets/logo-branco.png";
 
-const Users = () => {
+const UsersContent = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     checkAdminAndFetch();
@@ -32,6 +48,14 @@ const Users = () => {
       navigate("/auth");
       return;
     }
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+
+    setProfile(profileData);
 
     // Check if user is admin
     const { data: roleData } = await supabase
@@ -48,6 +72,11 @@ const Users = () => {
 
     setIsAdmin(true);
     await fetchUsers();
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
   };
 
   const fetchUsers = async () => {
@@ -97,6 +126,20 @@ const Users = () => {
     });
   };
 
+  const adminMenuItems = [
+    { title: "Dashboard", url: "/dashboard", icon: Home },
+    { title: "Equipes", url: "/dashboard/teams", icon: UsersIcon },
+    { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
+    { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+  ];
+
+  const clientMenuItems = [
+    { title: "Dashboard", url: "/dashboard", icon: Home },
+    { title: "Meus Projetos", url: "/dashboard/projects", icon: FolderKanban },
+  ];
+
+  const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
+
   if (loading) {
     return <div className="text-center py-8">Carregando...</div>;
   }
@@ -106,27 +149,73 @@ const Users = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen flex w-full">
+      <Sidebar>
+        <SidebarHeader className="border-b p-4">
+          <div className="flex items-center gap-3">
+            <img src={logoWhite} alt="Z3US Logo" className="h-8 w-auto" />
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Menu</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                      <a href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter className="border-t p-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 px-2">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <UserCircle className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</p>
+                <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+              </div>
+            </div>
             <Button
               variant="ghost"
-              size="icon"
-              onClick={() => navigate("/dashboard")}
+              className="w-full justify-start"
+              onClick={handleSignOut}
             >
-              <ArrowLeft className="h-5 w-5" />
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
             </Button>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+
+      <main className="flex-1 overflow-auto">
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex h-14 items-center px-4 gap-4">
+            <SidebarTrigger />
+            <h2 className="text-lg font-semibold">Gerenciar Usuários</h2>
+          </div>
+        </div>
+        
+        <div className="p-6 space-y-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
               <p className="text-muted-foreground">Visualize e gerencie usuários do sistema</p>
             </div>
+            <Button disabled>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Adicionar Usuário
+            </Button>
           </div>
-          <Button disabled>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Adicionar Usuário
-          </Button>
-        </div>
 
         <Card>
           <CardHeader>
@@ -201,9 +290,16 @@ const Users = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
+
+const Users = () => (
+  <SidebarProvider>
+    <UsersContent />
+  </SidebarProvider>
+);
 
 export default Users;
