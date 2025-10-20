@@ -174,6 +174,7 @@ const Projects = () => {
       on_hold: "bg-muted",
       completed: "bg-success",
       cancelled: "bg-destructive",
+      test: "bg-purple-500",
     };
     return colors[status] || "bg-muted";
   };
@@ -185,6 +186,7 @@ const Projects = () => {
       on_hold: "Pausado",
       completed: "Concluído",
       cancelled: "Cancelado",
+      test: "Teste",
     };
     return labels[status] || status;
   };
@@ -359,6 +361,7 @@ const Projects = () => {
                     <option value="planning">Planejamento</option>
                     <option value="in_progress">Em Andamento</option>
                     <option value="on_hold">Pausado</option>
+                    <option value="test">Teste</option>
                     <option value="completed">Concluído</option>
                     <option value="cancelled">Cancelado</option>
                   </select>
@@ -656,6 +659,7 @@ const Projects = () => {
                       <SelectItem value="planning">Planejamento</SelectItem>
                       <SelectItem value="in_progress">Em Andamento</SelectItem>
                       <SelectItem value="on_hold">Pausado</SelectItem>
+                      <SelectItem value="test">Teste</SelectItem>
                       <SelectItem value="completed">Concluído</SelectItem>
                       <SelectItem value="cancelled">Cancelado</SelectItem>
                     </SelectContent>
