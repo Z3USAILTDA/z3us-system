@@ -3,15 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { 
-  LayoutDashboard, 
-  Users, 
-  Building2, 
-  FolderKanban, 
-  LogOut,
-  Menu,
-  UserCog
-} from "lucide-react";
+import { LayoutDashboard, Users, Building2, FolderKanban, LogOut, Menu, UserCog } from "lucide-react";
 import {
   SidebarProvider,
   Sidebar,
@@ -41,8 +33,10 @@ const DashboardContent = () => {
   }, []);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
       navigate("/auth");
       return;
@@ -50,11 +44,7 @@ const DashboardContent = () => {
 
     setUser(session.user);
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
+    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
 
     setProfile(profileData);
     setLoading(false);
@@ -67,16 +57,13 @@ const DashboardContent = () => {
   };
 
   const adminMenuItems = [
-    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { title: "Usuários", url: "/dashboard/users", icon: UserCog },
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
   ];
 
-  const clientMenuItems = [
-    { title: "Meus Projetos", url: "/dashboard", icon: FolderKanban },
-  ];
+  const clientMenuItems = [{ title: "Meus Projetos", url: "/dashboard", icon: FolderKanban }];
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
 
@@ -120,7 +107,7 @@ const DashboardContent = () => {
             </div>
           )}
         </div>
-        
+
         <SidebarContent>
           <SidebarGroup>
             {state !== "collapsed" && <SidebarGroupLabel>Menu</SidebarGroupLabel>}
@@ -133,9 +120,7 @@ const DashboardContent = () => {
                         to={item.url}
                         end
                         className={({ isActive }) =>
-                          isActive
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                            : "hover:bg-sidebar-accent/50"
+                          isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
                         }
                       >
                         <item.icon className="h-4 w-4" />
@@ -168,7 +153,7 @@ const DashboardContent = () => {
               <Menu className="h-5 w-5" />
             </Button>
           </SidebarTrigger>
-          
+
           <div className="ml-auto flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
