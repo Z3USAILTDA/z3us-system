@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Building2, Calendar, LayoutGrid, Table as TableIcon, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  Building2, 
+  Calendar, 
+  LayoutGrid, 
+  Table as TableIcon, 
+  X, 
+  ArrowUpDown, 
+  ArrowUp, 
+  ArrowDown,
+  LayoutDashboard,
+  Users,
+  FolderKanban,
+  LogOut,
+  Menu,
+  UserCog
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -32,8 +51,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { NavLink } from "react-router-dom";
 
-const Projects = () => {
+const ProjectsContent = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
@@ -41,6 +77,7 @@ const Projects = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const { state } = useSidebar();
   
   // Filters
   const [filterSprint, setFilterSprint] = useState("");
@@ -54,8 +91,28 @@ const Projects = () => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
-    fetchData();
+    checkUser();
   }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    setUser(session.user);
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+
+    setProfile(profileData);
+    fetchData();
+  };
 
   const fetchData = async () => {
     const [projectsRes, clientsRes, teamsRes] = await Promise.all([
@@ -88,6 +145,26 @@ const Projects = () => {
 
     setLoading(false);
   };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Logout realizado com sucesso!");
+    navigate("/auth");
+  };
+
+  const adminMenuItems = [
+    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+    { title: "Usuários", url: "/dashboard/users", icon: UserCog },
+    { title: "Equipes", url: "/dashboard/teams", icon: Users },
+    { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
+    { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+  ];
+
+  const clientMenuItems = [
+    { title: "Meus Projetos", url: "/dashboard", icon: FolderKanban },
+  ];
+
+  const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -270,12 +347,105 @@ const Projects = () => {
     (filterResponsible && filterResponsible !== "all");
 
   if (loading) {
-    return <div className="text-center py-8">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="flex min-h-screen w-full bg-background">
+      <Sidebar className={state === "collapsed" ? "w-14" : "w-60"}>
+        <div className="p-4 border-b border-sidebar-border">
+          {state !== "collapsed" && (
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-primary rounded-lg blur-md opacity-60" />
+                <div className="relative p-2 bg-card border border-primary/30 rounded-lg">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
+              </div>
+              <div>
+                <span className="font-bold text-lg bg-gradient-primary bg-clip-text text-transparent">Z3US</span>
+                <p className="text-xs text-muted-foreground">Gestão Inteligente</p>
+              </div>
+            </div>
+          )}
+          {state === "collapsed" && (
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-primary rounded-lg blur-md opacity-60" />
+                <div className="relative p-2 bg-card border border-primary/30 rounded-lg">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <SidebarContent>
+          <SidebarGroup>
+            {state !== "collapsed" && <SidebarGroupLabel>Menu</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        end
+                        className={({ isActive }) =>
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                            : "hover:bg-sidebar-accent/50"
+                        }
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {state !== "collapsed" && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <div className="mt-auto p-4 border-t border-sidebar-border">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+              {state !== "collapsed" && <span className="ml-2">Sair</span>}
+            </Button>
+          </div>
+        </SidebarContent>
+      </Sidebar>
+
+      <div className="flex-1 flex flex-col">
+        <header className="h-16 border-b border-border bg-card flex items-center px-6">
+          <SidebarTrigger>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SidebarTrigger>
+          
+          <div className="ml-auto flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
+              <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 p-6 overflow-auto">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Gerenciar Projetos</h1>
           <p className="text-muted-foreground">Cadastre e gerencie projetos</p>
@@ -830,7 +1000,18 @@ const Projects = () => {
           </CardContent>
         </Card>
       )}
+          </div>
+        </main>
+      </div>
     </div>
+  );
+};
+
+const Projects = () => {
+  return (
+    <SidebarProvider>
+      <ProjectsContent />
+    </SidebarProvider>
   );
 };
 
