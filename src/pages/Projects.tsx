@@ -140,7 +140,6 @@ const ProjectsContent = () => {
   };
 
   const adminMenuItems = [
-    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { title: "Usuários", url: "/dashboard/users", icon: UserCog },
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
