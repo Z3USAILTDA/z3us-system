@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +10,19 @@ import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import logoBranco from "@/assets/logo-branco.png";
+import { signUpSchema, signInSchema, type SignUpFormData, type SignInFormData } from "@/lib/validations";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  const signUpForm = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+  });
+
+  const signInForm = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -21,22 +32,16 @@ const Auth = () => {
     });
   }, [navigate]);
 
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSignUp = async (data: SignUpFormData) => {
     setLoading(true);
-    
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const fullName = formData.get("fullName") as string;
 
     const { error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: data.email,
+      password: data.password,
       options: {
         emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
-          full_name: fullName,
+          full_name: data.fullName,
           role: "client",
         },
       },
@@ -46,22 +51,18 @@ const Auth = () => {
       toast.error(error.message);
     } else {
       toast.success("Conta criada com sucesso! Você já pode fazer login.");
+      signUpForm.reset();
     }
     
     setLoading(false);
   };
 
-  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSignIn = async (data: SignInFormData) => {
     setLoading(true);
-    
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: data.email,
+      password: data.password,
     });
 
     if (error) {
@@ -97,26 +98,30 @@ const Auth = () => {
             </TabsList>
             
             <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-4">
+              <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">Email</Label>
                   <Input
                     id="signin-email"
-                    name="email"
                     type="email"
                     placeholder="seu@email.com"
-                    required
+                    {...signInForm.register("email")}
                   />
+                  {signInForm.formState.errors.email && (
+                    <p className="text-sm text-destructive">{signInForm.formState.errors.email.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Senha</Label>
                   <Input
                     id="signin-password"
-                    name="password"
                     type="password"
                     placeholder="••••••••"
-                    required
+                    {...signInForm.register("password")}
                   />
+                  {signInForm.formState.errors.password && (
+                    <p className="text-sm text-destructive">{signInForm.formState.errors.password.message}</p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Entrando..." : "Entrar"}
@@ -125,37 +130,45 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
+              <form onSubmit={signUpForm.handleSubmit(handleSignUp)} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Nome Completo</Label>
                   <Input
                     id="signup-name"
-                    name="fullName"
                     type="text"
                     placeholder="Seu nome completo"
-                    required
+                    {...signUpForm.register("fullName")}
                   />
+                  {signUpForm.formState.errors.fullName && (
+                    <p className="text-sm text-destructive">{signUpForm.formState.errors.fullName.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input
                     id="signup-email"
-                    name="email"
                     type="email"
                     placeholder="seu@email.com"
-                    required
+                    {...signUpForm.register("email")}
                   />
+                  {signUpForm.formState.errors.email && (
+                    <p className="text-sm text-destructive">{signUpForm.formState.errors.email.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Senha</Label>
                   <Input
                     id="signup-password"
-                    name="password"
                     type="password"
                     placeholder="••••••••"
-                    required
-                    minLength={6}
+                    {...signUpForm.register("password")}
                   />
+                  {signUpForm.formState.errors.password && (
+                    <p className="text-sm text-destructive">{signUpForm.formState.errors.password.message}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Mínimo 8 caracteres, com maiúscula, minúscula, número e caractere especial
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Criando conta..." : "Criar Conta"}

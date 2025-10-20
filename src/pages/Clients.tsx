@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { clientSchema, type ClientFormData } from "@/lib/validations";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +33,13 @@ const Clients = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
 
+  const form = useForm<ClientFormData>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: {
+      status: "active",
+    },
+  });
+
   useEffect(() => {
     fetchClients();
   }, []);
@@ -48,18 +58,15 @@ const Clients = () => {
     setLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
+  const handleSubmit = async (data: ClientFormData) => {
     const clientData = {
-      company_name: formData.get("company_name") as string,
-      cnpj: formData.get("cnpj") as string,
-      contact_name: formData.get("contact_name") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
-      address: formData.get("address") as string,
-      status: formData.get("status") as string,
+      company_name: data.company_name,
+      cnpj: data.cnpj,
+      contact_name: data.contact_name,
+      email: data.email,
+      phone: data.phone || "",
+      address: data.address || "",
+      status: data.status,
     };
 
     if (editingClient) {
@@ -75,6 +82,7 @@ const Clients = () => {
         fetchClients();
         setDialogOpen(false);
         setEditingClient(null);
+        form.reset();
       }
     } else {
       const { error } = await supabase.from("clients").insert([clientData]);
@@ -85,6 +93,7 @@ const Clients = () => {
         toast.success("Cliente adicionado com sucesso!");
         fetchClients();
         setDialogOpen(false);
+        form.reset();
       }
     }
   };
@@ -104,6 +113,7 @@ const Clients = () => {
 
   const handleEdit = (client: any) => {
     setEditingClient(client);
+    form.reset(client);
     setDialogOpen(true);
   };
 
@@ -111,6 +121,15 @@ const Clients = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingClient(null);
+      form.reset({
+        company_name: "",
+        cnpj: "",
+        contact_name: "",
+        email: "",
+        phone: "",
+        address: "",
+        status: "active",
+      });
     }
   };
 
@@ -141,26 +160,28 @@ const Clients = () => {
                 Preencha os dados do cliente
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="company_name">Nome da Empresa</Label>
                   <Input
                     id="company_name"
-                    name="company_name"
-                    defaultValue={editingClient?.company_name}
-                    required
+                    {...form.register("company_name")}
                   />
+                  {form.formState.errors.company_name && (
+                    <p className="text-sm text-destructive">{form.formState.errors.company_name.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="cnpj">CNPJ</Label>
                   <Input
                     id="cnpj"
-                    name="cnpj"
-                    defaultValue={editingClient?.cnpj}
                     placeholder="00.000.000/0000-00"
-                    required
+                    {...form.register("cnpj")}
                   />
+                  {form.formState.errors.cnpj && (
+                    <p className="text-sm text-destructive">{form.formState.errors.cnpj.message}</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -168,45 +189,51 @@ const Clients = () => {
                   <Label htmlFor="contact_name">Nome do Contato</Label>
                   <Input
                     id="contact_name"
-                    name="contact_name"
-                    defaultValue={editingClient?.contact_name}
-                    required
+                    {...form.register("contact_name")}
                   />
+                  {form.formState.errors.contact_name && (
+                    <p className="text-sm text-destructive">{form.formState.errors.contact_name.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
-                    name="email"
                     type="email"
-                    defaultValue={editingClient?.email}
-                    required
+                    {...form.register("email")}
                   />
+                  {form.formState.errors.email && (
+                    <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
                 <Input
                   id="phone"
-                  name="phone"
-                  defaultValue={editingClient?.phone}
+                  placeholder="(XX) XXXXX-XXXX"
+                  {...form.register("phone")}
                 />
+                {form.formState.errors.phone && (
+                  <p className="text-sm text-destructive">{form.formState.errors.phone.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">Endereço</Label>
                 <Textarea
                   id="address"
-                  name="address"
-                  defaultValue={editingClient?.address}
                   rows={3}
+                  {...form.register("address")}
                 />
+                {form.formState.errors.address && (
+                  <p className="text-sm text-destructive">{form.formState.errors.address.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
                 <select
                   id="status"
-                  name="status"
-                  defaultValue={editingClient?.status || "active"}
+                  {...form.register("status")}
                   className="w-full px-3 py-2 border border-input rounded-md bg-background"
                 >
                   <option value="active">Ativo</option>

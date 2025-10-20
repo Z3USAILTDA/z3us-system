@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { teamSchema, type TeamFormData } from "@/lib/validations";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +32,13 @@ const Teams = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
 
+  const form = useForm<TeamFormData>({
+    resolver: zodResolver(teamSchema),
+    defaultValues: {
+      status: "active",
+    },
+  });
+
   useEffect(() => {
     fetchTeams();
   }, []);
@@ -47,16 +57,13 @@ const Teams = () => {
     setLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
+  const handleSubmit = async (data: TeamFormData) => {
     const teamData = {
-      name: formData.get("name") as string,
-      role: formData.get("role") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
-      status: formData.get("status") as string,
+      name: data.name,
+      role: data.role,
+      email: data.email || "",
+      phone: data.phone || "",
+      status: data.status,
     };
 
     if (editingTeam) {
@@ -72,6 +79,7 @@ const Teams = () => {
         fetchTeams();
         setDialogOpen(false);
         setEditingTeam(null);
+        form.reset();
       }
     } else {
       const { error } = await supabase.from("teams").insert([teamData]);
@@ -82,6 +90,7 @@ const Teams = () => {
         toast.success("Membro adicionado com sucesso!");
         fetchTeams();
         setDialogOpen(false);
+        form.reset();
       }
     }
   };
@@ -101,6 +110,7 @@ const Teams = () => {
 
   const handleEdit = (team: any) => {
     setEditingTeam(team);
+    form.reset(team);
     setDialogOpen(true);
   };
 
@@ -108,6 +118,13 @@ const Teams = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingTeam(null);
+      form.reset({
+        name: "",
+        role: "",
+        email: "",
+        phone: "",
+        status: "active",
+      });
     }
   };
 
@@ -138,49 +155,55 @@ const Teams = () => {
                 Preencha os dados do membro da equipe
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nome</Label>
                 <Input
                   id="name"
-                  name="name"
-                  defaultValue={editingTeam?.name}
-                  required
+                  {...form.register("name")}
                 />
+                {form.formState.errors.name && (
+                  <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="role">Função</Label>
                 <Input
                   id="role"
-                  name="role"
-                  defaultValue={editingTeam?.role}
                   placeholder="Ex: Engenheiro, Arquiteto"
-                  required
+                  {...form.register("role")}
                 />
+                {form.formState.errors.role && (
+                  <p className="text-sm text-destructive">{form.formState.errors.role.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
-                  defaultValue={editingTeam?.email}
+                  {...form.register("email")}
                 />
+                {form.formState.errors.email && (
+                  <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
                 <Input
                   id="phone"
-                  name="phone"
-                  defaultValue={editingTeam?.phone}
+                  placeholder="(XX) XXXXX-XXXX"
+                  {...form.register("phone")}
                 />
+                {form.formState.errors.phone && (
+                  <p className="text-sm text-destructive">{form.formState.errors.phone.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
                 <select
                   id="status"
-                  name="status"
-                  defaultValue={editingTeam?.status || "active"}
+                  {...form.register("status")}
                   className="w-full px-3 py-2 border border-input rounded-md bg-background"
                 >
                   <option value="active">Ativo</option>
