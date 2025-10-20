@@ -12,7 +12,6 @@ import logoBranco from "@/assets/logo-branco.png";
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -38,7 +37,7 @@ const Auth = () => {
         emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           full_name: fullName,
-          role: isClient ? "client" : "admin",
+          role: "client",
         },
       },
     });
@@ -157,18 +156,6 @@ const Auth = () => {
                     required
                     minLength={6}
                   />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isClient"
-                    checked={isClient}
-                    onChange={(e) => setIsClient(e.target.checked)}
-                    className="rounded border-input"
-                  />
-                  <Label htmlFor="isClient" className="text-sm">
-                    Sou cliente (acessar portal do cliente)
-                  </Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Criando conta..." : "Criar Conta"}
