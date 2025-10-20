@@ -17,40 +17,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Building2, 
-  Calendar, 
-  LayoutGrid, 
-  Table as TableIcon, 
-  X, 
-  ArrowUpDown, 
-  ArrowUp, 
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Building2,
+  Calendar,
+  LayoutGrid,
+  Table as TableIcon,
+  X,
+  ArrowUpDown,
+  ArrowUp,
   ArrowDown,
   LayoutDashboard,
   Users,
   FolderKanban,
   LogOut,
   Menu,
-  UserCog
+  UserCog,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   SidebarProvider,
   Sidebar,
@@ -78,14 +65,14 @@ const ProjectsContent = () => {
   const [editingProject, setEditingProject] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const { state } = useSidebar();
-  
+
   // Filters
   const [filterSprint, setFilterSprint] = useState("");
   const [filterArea, setFilterArea] = useState("");
   const [filterClient, setFilterClient] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterResponsible, setFilterResponsible] = useState("");
-  
+
   // Sorting
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -95,8 +82,10 @@ const ProjectsContent = () => {
   }, []);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
       navigate("/auth");
       return;
@@ -104,11 +93,7 @@ const ProjectsContent = () => {
 
     setUser(session.user);
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
+    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
 
     setProfile(profileData);
     fetchData();
@@ -118,12 +103,14 @@ const ProjectsContent = () => {
     const [projectsRes, clientsRes, teamsRes] = await Promise.all([
       supabase
         .from("projects")
-        .select(`
+        .select(
+          `
           *,
           clients (
             company_name
           )
-        `)
+        `,
+        )
         .order("created_at", { ascending: false }),
       supabase.from("clients").select("*").eq("status", "active"),
       supabase.from("teams").select("*").eq("status", "active").order("name"),
@@ -157,24 +144,21 @@ const ProjectsContent = () => {
     { title: "Usuários", url: "/dashboard/users", icon: UserCog },
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
-    { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
   ];
 
-  const clientMenuItems = [
-    { title: "Meus Projetos", url: "/dashboard", icon: FolderKanban },
-  ];
+  const clientMenuItems = [{ title: "Meus Projetos", url: "/dashboard", icon: FolderKanban }];
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
+
     const startDate = formData.get("start_date") as string;
     const endDate = formData.get("end_date") as string;
     const actualStartDate = formData.get("actual_start_date") as string;
     const actualEndDate = formData.get("actual_end_date") as string;
-    
+
     const projectData = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
@@ -193,10 +177,7 @@ const ProjectsContent = () => {
     };
 
     if (editingProject) {
-      const { error } = await supabase
-        .from("projects")
-        .update(projectData)
-        .eq("id", editingProject.id);
+      const { error } = await supabase.from("projects").update(projectData).eq("id", editingProject.id);
 
       if (error) {
         toast.error("Erro ao atualizar projeto");
@@ -281,24 +262,24 @@ const ProjectsContent = () => {
   // Sort filtered projects
   const sortedProjects = [...filteredProjects].sort((a, b) => {
     if (!sortColumn) return 0;
-    
+
     let aValue = a[sortColumn];
     let bValue = b[sortColumn];
-    
+
     // Handle nested client name
     if (sortColumn === "client") {
       aValue = a.clients?.company_name || "";
       bValue = b.clients?.company_name || "";
     }
-    
+
     // Handle null/undefined values
     if (aValue == null) aValue = "";
     if (bValue == null) bValue = "";
-    
+
     // Convert to string for comparison
     aValue = String(aValue).toLowerCase();
     bValue = String(bValue).toLowerCase();
-    
+
     if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
     if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
     return 0;
@@ -319,17 +300,13 @@ const ProjectsContent = () => {
     if (sortColumn !== column) {
       return <ArrowUpDown className="ml-2 h-4 w-4" />;
     }
-    return sortDirection === "asc" ? (
-      <ArrowUp className="ml-2 h-4 w-4" />
-    ) : (
-      <ArrowDown className="ml-2 h-4 w-4" />
-    );
+    return sortDirection === "asc" ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
   };
 
   // Get unique values for filters
-  const uniqueSprints = [...new Set(projects.map(p => p.sprint).filter(Boolean))];
-  const uniqueAreas = [...new Set(projects.map(p => p.area).filter(Boolean))];
-  const uniqueResponsibles = [...new Set(projects.map(p => p.responsible).filter(Boolean))];
+  const uniqueSprints = [...new Set(projects.map((p) => p.sprint).filter(Boolean))];
+  const uniqueAreas = [...new Set(projects.map((p) => p.area).filter(Boolean))];
+  const uniqueResponsibles = [...new Set(projects.map((p) => p.responsible).filter(Boolean))];
 
   const clearFilters = () => {
     setFilterSprint("all");
@@ -339,11 +316,11 @@ const ProjectsContent = () => {
     setFilterResponsible("all");
   };
 
-  const hasActiveFilters = 
-    (filterSprint && filterSprint !== "all") || 
-    (filterArea && filterArea !== "all") || 
-    (filterClient && filterClient !== "all") || 
-    (filterStatus && filterStatus !== "all") || 
+  const hasActiveFilters =
+    (filterSprint && filterSprint !== "all") ||
+    (filterArea && filterArea !== "all") ||
+    (filterClient && filterClient !== "all") ||
+    (filterStatus && filterStatus !== "all") ||
     (filterResponsible && filterResponsible !== "all");
 
   if (loading) {
@@ -386,7 +363,7 @@ const ProjectsContent = () => {
             </div>
           )}
         </div>
-        
+
         <SidebarContent>
           <SidebarGroup>
             {state !== "collapsed" && <SidebarGroupLabel>Menu</SidebarGroupLabel>}
@@ -399,9 +376,7 @@ const ProjectsContent = () => {
                         to={item.url}
                         end
                         className={({ isActive }) =>
-                          isActive
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                            : "hover:bg-sidebar-accent/50"
+                          isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
                         }
                       >
                         <item.icon className="h-4 w-4" />
@@ -434,7 +409,7 @@ const ProjectsContent = () => {
               <Menu className="h-5 w-5" />
             </Button>
           </SidebarTrigger>
-          
+
           <div className="ml-auto flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
@@ -446,560 +421,514 @@ const ProjectsContent = () => {
         <main className="flex-1 p-6 overflow-auto">
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Gerenciar Projetos</h1>
-          <p className="text-muted-foreground">Cadastre e gerencie projetos</p>
-        </div>
-        <div className="flex gap-2">
-          <div className="flex border rounded-md">
-            <Button
-              variant={viewMode === "cards" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("cards")}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "table" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("table")}
-            >
-              <TableIcon className="h-4 w-4" />
-            </Button>
-          </div>
-          <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Projeto
-              </Button>
-            </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingProject ? "Editar Projeto" : "Adicionar Novo Projeto"}
-              </DialogTitle>
-              <DialogDescription>
-                Preencha os dados do projeto
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Título do Projeto</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  defaultValue={editingProject?.title}
-                  required
-                />
+              <div>
+                <h1 className="text-3xl font-bold">Gerenciar Projetos</h1>
+                <p className="text-muted-foreground">Cadastre e gerencie projetos</p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  defaultValue={editingProject?.description}
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="client_id">Cliente</Label>
-                  <select
-                    id="client_id"
-                    name="client_id"
-                    defaultValue={editingProject?.client_id}
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                    required
-                  >
-                    <option value="">Selecione um cliente</option>
-                    {clients.map((client) => (
-                      <option key={client.id} value={client.id}>
-                        {client.company_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <select
-                    id="status"
-                    name="status"
-                    defaultValue={editingProject?.status || "planning"}
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  >
-                    <option value="planning">Planejamento</option>
-                    <option value="in_progress">Em Andamento</option>
-                    <option value="on_hold">Pausado</option>
-                    <option value="test">Teste</option>
-                    <option value="completed">Concluído</option>
-                    <option value="cancelled">Cancelado</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="priority">Prioridade</Label>
-                  <select
-                    id="priority"
-                    name="priority"
-                    defaultValue={editingProject?.priority || "medium"}
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  >
-                    <option value="low">Baixa</option>
-                    <option value="medium">Média</option>
-                    <option value="high">Alta</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="start_date">Data de Início</Label>
-                  <Input
-                    id="start_date"
-                    name="start_date"
-                    type="date"
-                    defaultValue={editingProject?.start_date}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="end_date">Data de Término</Label>
-                  <Input
-                    id="end_date"
-                    name="end_date"
-                    type="date"
-                    defaultValue={editingProject?.end_date}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="area">Área</Label>
-                  <select
-                    id="area"
-                    name="area"
-                    defaultValue={editingProject?.area}
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  >
-                    <option value="">Selecione uma área</option>
-                    <option value="Aereo">Aéreo</option>
-                    <option value="Maritimo">Marítimo</option>
-                    <option value="Desembaraço">Desembaraço</option>
-                    <option value="Financeiro">Financeiro</option>
-                    <option value="Operacional">Operacional</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="responsible">Responsável</Label>
-                  <select
-                    id="responsible"
-                    name="responsible"
-                    defaultValue={editingProject?.responsible}
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                  >
-                    <option value="">Selecione um responsável</option>
-                    {teams.map((team) => (
-                      <option key={team.id} value={team.name}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="sprint">Sprint</Label>
-                  <Input
-                    id="sprint"
-                    name="sprint"
-                    defaultValue={editingProject?.sprint}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="actual_start_date">Data Real Início</Label>
-                  <Input
-                    id="actual_start_date"
-                    name="actual_start_date"
-                    type="date"
-                    defaultValue={editingProject?.actual_start_date}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="actual_end_date">Data Real Término</Label>
-                  <Input
-                    id="actual_end_date"
-                    name="actual_end_date"
-                    type="date"
-                    defaultValue={editingProject?.actual_end_date}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="progress">Progresso (%)</Label>
-                  <Input
-                    id="progress"
-                    name="progress"
-                    type="number"
-                    min="0"
-                    max="100"
-                    defaultValue={editingProject?.progress || 0}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="observation">Observação</Label>
-                <Textarea
-                  id="observation"
-                  name="observation"
-                  defaultValue={editingProject?.observation}
-                  rows={3}
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                {editingProject ? "Atualizar" : "Adicionar"}
-              </Button>
-            </form>
-          </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {projects.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Nenhum projeto cadastrado</p>
-          </CardContent>
-        </Card>
-      ) : viewMode === "cards" ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {sortedProjects.map((project) => (
-            <Card key={project.id} className="hover:shadow-lg transition-all">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg">{project.title}</CardTitle>
-                  <Badge className={getStatusColor(project.status)}>
-                    {getStatusLabel(project.status)}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {project.description || "Sem descrição"}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <span>{project.clients?.company_name}</span>
-                </div>
-                
-                <div className="flex gap-2 flex-wrap">
-                  {project.area && <Badge variant="outline">{project.area}</Badge>}
-                  {project.sprint && <Badge variant="secondary">Sprint: {project.sprint}</Badge>}
-                  {project.priority && (
-                    <Badge variant={
-                      project.priority === "high" ? "destructive" : 
-                      project.priority === "medium" ? "default" : 
-                      "secondary"
-                    }>
-                      {project.priority === "high" ? "Alta" : 
-                       project.priority === "medium" ? "Média" : "Baixa"}
-                    </Badge>
-                  )}
-                </div>
-                
-                {project.responsible && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Responsável:</span>{" "}
-                    <span className="font-medium">{project.responsible}</span>
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Progresso</span>
-                    <span className="font-medium">{project.progress}%</span>
-                  </div>
-                  <Progress value={project.progress} className="h-2" />
-                </div>
-
-                {project.end_date && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>
-                      Entrega: {new Date(project.end_date).toLocaleDateString("pt-BR")}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-2 pt-4 border-t">
+              <div className="flex gap-2">
+                <div className="flex border rounded-md">
                   <Button
-                    variant="ghost"
+                    variant={viewMode === "cards" ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => handleEdit(project)}
+                    onClick={() => setViewMode("cards")}
                   >
-                    <Edit2 className="h-4 w-4" />
+                    <LayoutGrid className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={viewMode === "table" ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => handleDelete(project.id)}
+                    onClick={() => setViewMode("table")}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <TableIcon className="h-4 w-4" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-6">
-            {/* Filters */}
-            <div className="mb-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium">Filtros</h3>
-                {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="h-8"
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Limpar Filtros
-                  </Button>
-                )}
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs">Sprint</Label>
-                  <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {uniqueSprints.map((sprint) => (
-                        <SelectItem key={sprint} value={sprint}>
-                          {sprint}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Área</Label>
-                  <Select value={filterArea || "all"} onValueChange={setFilterArea}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Todas" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      {uniqueAreas.map((area) => (
-                        <SelectItem key={area} value={area}>
-                          {area}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Cliente</Label>
-                  <Select value={filterClient || "all"} onValueChange={setFilterClient}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          {client.company_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Status</Label>
-                  <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="planning">Planejamento</SelectItem>
-                      <SelectItem value="in_progress">Em Andamento</SelectItem>
-                      <SelectItem value="on_hold">Pausado</SelectItem>
-                      <SelectItem value="test">Teste</SelectItem>
-                      <SelectItem value="completed">Concluído</SelectItem>
-                      <SelectItem value="cancelled">Cancelado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs">Responsável</Label>
-                  <Select value={filterResponsible || "all"} onValueChange={setFilterResponsible}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Todos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {uniqueResponsibles.map((responsible) => (
-                        <SelectItem key={responsible} value={responsible}>
-                          {responsible}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Projeto
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>{editingProject ? "Editar Projeto" : "Adicionar Novo Projeto"}</DialogTitle>
+                      <DialogDescription>Preencha os dados do projeto</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Título do Projeto</Label>
+                        <Input id="title" name="title" defaultValue={editingProject?.title} required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Descrição</Label>
+                        <Textarea
+                          id="description"
+                          name="description"
+                          defaultValue={editingProject?.description}
+                          rows={3}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="client_id">Cliente</Label>
+                          <select
+                            id="client_id"
+                            name="client_id"
+                            defaultValue={editingProject?.client_id}
+                            className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                            required
+                          >
+                            <option value="">Selecione um cliente</option>
+                            {clients.map((client) => (
+                              <option key={client.id} value={client.id}>
+                                {client.company_name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="status">Status</Label>
+                          <select
+                            id="status"
+                            name="status"
+                            defaultValue={editingProject?.status || "planning"}
+                            className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                          >
+                            <option value="planning">Planejamento</option>
+                            <option value="in_progress">Em Andamento</option>
+                            <option value="on_hold">Pausado</option>
+                            <option value="test">Teste</option>
+                            <option value="completed">Concluído</option>
+                            <option value="cancelled">Cancelado</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="priority">Prioridade</Label>
+                          <select
+                            id="priority"
+                            name="priority"
+                            defaultValue={editingProject?.priority || "medium"}
+                            className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                          >
+                            <option value="low">Baixa</option>
+                            <option value="medium">Média</option>
+                            <option value="high">Alta</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="start_date">Data de Início</Label>
+                          <Input
+                            id="start_date"
+                            name="start_date"
+                            type="date"
+                            defaultValue={editingProject?.start_date}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="end_date">Data de Término</Label>
+                          <Input id="end_date" name="end_date" type="date" defaultValue={editingProject?.end_date} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="area">Área</Label>
+                          <select
+                            id="area"
+                            name="area"
+                            defaultValue={editingProject?.area}
+                            className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                          >
+                            <option value="">Selecione uma área</option>
+                            <option value="Aereo">Aéreo</option>
+                            <option value="Maritimo">Marítimo</option>
+                            <option value="Desembaraço">Desembaraço</option>
+                            <option value="Financeiro">Financeiro</option>
+                            <option value="Operacional">Operacional</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="responsible">Responsável</Label>
+                          <select
+                            id="responsible"
+                            name="responsible"
+                            defaultValue={editingProject?.responsible}
+                            className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                          >
+                            <option value="">Selecione um responsável</option>
+                            {teams.map((team) => (
+                              <option key={team.id} value={team.name}>
+                                {team.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="sprint">Sprint</Label>
+                          <Input id="sprint" name="sprint" defaultValue={editingProject?.sprint} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="actual_start_date">Data Real Início</Label>
+                          <Input
+                            id="actual_start_date"
+                            name="actual_start_date"
+                            type="date"
+                            defaultValue={editingProject?.actual_start_date}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="actual_end_date">Data Real Término</Label>
+                          <Input
+                            id="actual_end_date"
+                            name="actual_end_date"
+                            type="date"
+                            defaultValue={editingProject?.actual_end_date}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="progress">Progresso (%)</Label>
+                          <Input
+                            id="progress"
+                            name="progress"
+                            type="number"
+                            min="0"
+                            max="100"
+                            defaultValue={editingProject?.progress || 0}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="observation">Observação</Label>
+                        <Textarea
+                          id="observation"
+                          name="observation"
+                          defaultValue={editingProject?.observation}
+                          rows={3}
+                        />
+                      </div>
+                      <Button type="submit" className="w-full">
+                        {editingProject ? "Atualizar" : "Adicionar"}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSort("sprint")}
-                  >
-                    <div className="flex items-center">
-                      Sprint
-                      <SortIcon column="sprint" />
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSort("area")}
-                  >
-                    <div className="flex items-center">
-                      Área
-                      <SortIcon column="area" />
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSort("title")}
-                  >
-                    <div className="flex items-center">
-                      Título
-                      <SortIcon column="title" />
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSort("client")}
-                  >
-                    <div className="flex items-center">
-                      Cliente
-                      <SortIcon column="client" />
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSort("status")}
-                  >
-                    <div className="flex items-center">
-                      Status
-                      <SortIcon column="status" />
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSort("progress")}
-                  >
-                    <div className="flex items-center">
-                      Progresso
-                      <SortIcon column="progress" />
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSort("end_date")}
-                  >
-                    <div className="flex items-center">
-                      Dt Entrega
-                      <SortIcon column="end_date" />
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSort("responsible")}
-                  >
-                    <div className="flex items-center">
-                      Responsável
-                      <SortIcon column="responsible" />
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleSort("observation")}
-                  >
-                    <div className="flex items-center">
-                      Observações
-                      <SortIcon column="observation" />
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            {projects.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">Nenhum projeto cadastrado</p>
+                </CardContent>
+              </Card>
+            ) : viewMode === "cards" ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {sortedProjects.map((project) => (
-                  <TableRow key={project.id}>
-                    <TableCell>{project.sprint || "-"}</TableCell>
-                    <TableCell>
-                      {project.area && <Badge variant="outline">{project.area}</Badge>}
-                    </TableCell>
-                    <TableCell className="max-w-md">
-                      <div className="line-clamp-2">{project.title}</div>
-                    </TableCell>
-                    <TableCell>{project.clients?.company_name}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(project.status)}>
-                        {getStatusLabel(project.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Progress value={project.progress} className="h-2 w-20" />
-                        <span className="text-sm">{project.progress}%</span>
+                  <Card key={project.id} className="hover:shadow-lg transition-all">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-lg">{project.title}</CardTitle>
+                        <Badge className={getStatusColor(project.status)}>{getStatusLabel(project.status)}</Badge>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {project.end_date
-                        ? new Date(project.end_date).toLocaleDateString("pt-BR")
-                        : "-"}
-                    </TableCell>
-                    <TableCell>{project.responsible || "-"}</TableCell>
-                    <TableCell className="max-w-xs">
-                      <div className="line-clamp-2 text-sm text-muted-foreground">
-                        {project.observation || "-"}
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {project.description || "Sem descrição"}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <span>{project.clients?.company_name}</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(project)}
-                        >
+
+                      <div className="flex gap-2 flex-wrap">
+                        {project.area && <Badge variant="outline">{project.area}</Badge>}
+                        {project.sprint && <Badge variant="secondary">Sprint: {project.sprint}</Badge>}
+                        {project.priority && (
+                          <Badge
+                            variant={
+                              project.priority === "high"
+                                ? "destructive"
+                                : project.priority === "medium"
+                                  ? "default"
+                                  : "secondary"
+                            }
+                          >
+                            {project.priority === "high" ? "Alta" : project.priority === "medium" ? "Média" : "Baixa"}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {project.responsible && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Responsável:</span>{" "}
+                          <span className="font-medium">{project.responsible}</span>
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Progresso</span>
+                          <span className="font-medium">{project.progress}%</span>
+                        </div>
+                        <Progress value={project.progress} className="h-2" />
+                      </div>
+
+                      {project.end_date && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>Entrega: {new Date(project.end_date).toLocaleDateString("pt-BR")}</span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end gap-2 pt-4 border-t">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(project)}>
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(project.id)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(project.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </CardContent>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-6">
+                  {/* Filters */}
+                  <div className="mb-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium">Filtros</h3>
+                      {hasActiveFilters && (
+                        <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
+                          <X className="h-4 w-4 mr-1" />
+                          Limpar Filtros
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Sprint</Label>
+                        <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {uniqueSprints.map((sprint) => (
+                              <SelectItem key={sprint} value={sprint}>
+                                {sprint}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">Área</Label>
+                        <Select value={filterArea || "all"} onValueChange={setFilterArea}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Todas" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todas</SelectItem>
+                            {uniqueAreas.map((area) => (
+                              <SelectItem key={area} value={area}>
+                                {area}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">Cliente</Label>
+                        <Select value={filterClient || "all"} onValueChange={setFilterClient}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {clients.map((client) => (
+                              <SelectItem key={client.id} value={client.id}>
+                                {client.company_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">Status</Label>
+                        <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="planning">Planejamento</SelectItem>
+                            <SelectItem value="in_progress">Em Andamento</SelectItem>
+                            <SelectItem value="on_hold">Pausado</SelectItem>
+                            <SelectItem value="test">Teste</SelectItem>
+                            <SelectItem value="completed">Concluído</SelectItem>
+                            <SelectItem value="cancelled">Cancelado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">Responsável</Label>
+                        <Select value={filterResponsible || "all"} onValueChange={setFilterResponsible}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {uniqueResponsibles.map((responsible) => (
+                              <SelectItem key={responsible} value={responsible}>
+                                {responsible}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("sprint")}
+                        >
+                          <div className="flex items-center">
+                            Sprint
+                            <SortIcon column="sprint" />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("area")}
+                        >
+                          <div className="flex items-center">
+                            Área
+                            <SortIcon column="area" />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("title")}
+                        >
+                          <div className="flex items-center">
+                            Título
+                            <SortIcon column="title" />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("client")}
+                        >
+                          <div className="flex items-center">
+                            Cliente
+                            <SortIcon column="client" />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("status")}
+                        >
+                          <div className="flex items-center">
+                            Status
+                            <SortIcon column="status" />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("progress")}
+                        >
+                          <div className="flex items-center">
+                            Progresso
+                            <SortIcon column="progress" />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("end_date")}
+                        >
+                          <div className="flex items-center">
+                            Dt Entrega
+                            <SortIcon column="end_date" />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("responsible")}
+                        >
+                          <div className="flex items-center">
+                            Responsável
+                            <SortIcon column="responsible" />
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("observation")}
+                        >
+                          <div className="flex items-center">
+                            Observações
+                            <SortIcon column="observation" />
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedProjects.map((project) => (
+                        <TableRow key={project.id}>
+                          <TableCell>{project.sprint || "-"}</TableCell>
+                          <TableCell>{project.area && <Badge variant="outline">{project.area}</Badge>}</TableCell>
+                          <TableCell className="max-w-md">
+                            <div className="line-clamp-2">{project.title}</div>
+                          </TableCell>
+                          <TableCell>{project.clients?.company_name}</TableCell>
+                          <TableCell>
+                            <Badge className={getStatusColor(project.status)}>{getStatusLabel(project.status)}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Progress value={project.progress} className="h-2 w-20" />
+                              <span className="text-sm">{project.progress}%</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {project.end_date ? new Date(project.end_date).toLocaleDateString("pt-BR") : "-"}
+                          </TableCell>
+                          <TableCell>{project.responsible || "-"}</TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="line-clamp-2 text-sm text-muted-foreground">
+                              {project.observation || "-"}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm" onClick={() => handleEdit(project)}>
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleDelete(project.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </main>
       </div>
