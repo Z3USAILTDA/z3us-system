@@ -60,6 +60,7 @@ const ProjectsContent = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
+  const [managers, setManagers] = useState<any[]>([]); // << NOVO
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
@@ -100,7 +101,7 @@ const ProjectsContent = () => {
   };
 
   const fetchData = async () => {
-    const [projectsRes, clientsRes, teamsRes] = await Promise.all([
+    const [projectsRes, clientsRes, teamsRes, managersRes] = await Promise.all([
       supabase
         .from("projects")
         .select(
@@ -114,6 +115,8 @@ const ProjectsContent = () => {
         .order("created_at", { ascending: false }),
       supabase.from("clients").select("*").eq("status", "active"),
       supabase.from("teams").select("*").eq("status", "active").order("name"),
+      // << NOVO: buscar perfis que podem ser gerentes (admin/manager)
+      supabase.from("profiles").select("id, full_name, role, email").in("role", ["admin", "manager"]),
     ]);
 
     if (projectsRes.error) {
@@ -128,6 +131,10 @@ const ProjectsContent = () => {
 
     if (!teamsRes.error) {
       setTeams(teamsRes.data || []);
+    }
+
+    if (!managersRes.error) {
+      setManagers(managersRes.data || []);
     }
 
     setLoading(false);
@@ -175,6 +182,7 @@ const ProjectsContent = () => {
       actual_start_date: actualStartDate || null,
       actual_end_date: actualEndDate || null,
       area: formData.get("area") as string,
+      project_manager_id: (formData.get("project_manager_id") as string) || null, // << NOVO
     };
 
     if (editingProject) {
@@ -248,6 +256,13 @@ const ProjectsContent = () => {
       test: "Teste",
     };
     return labels[status] || status;
+  };
+
+  // << NOVO: helper para nome do gerente
+  const getManagerName = (id: string | null) => {
+    if (!id) return "—";
+    const m = managers.find((x: any) => x.id === id);
+    return m ? m.full_name || m.email : "—";
   };
 
   // Filter projects based on selected filters
@@ -469,6 +484,8 @@ const ProjectsContent = () => {
                           rows={3}
                         />
                       </div>
+
+                      {/* Linha 1: Cliente + Gerente + Status (mantém o grid 2 col; o 3º campo quebra para a próxima linha automaticamente) */}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="client_id">Cliente</Label>
@@ -487,6 +504,25 @@ const ProjectsContent = () => {
                             ))}
                           </select>
                         </div>
+
+                        {/* << NOVO: Gerente do Projeto */}
+                        <div className="space-y-2">
+                          <Label htmlFor="project_manager_id">Gerente do Projeto</Label>
+                          <select
+                            id="project_manager_id"
+                            name="project_manager_id"
+                            defaultValue={editingProject?.project_manager_id || ""}
+                            className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                          >
+                            <option value="">Selecione um gerente</option>
+                            {managers.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.full_name || m.email}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
                         <div className="space-y-2">
                           <Label htmlFor="status">Status</Label>
                           <select
@@ -504,6 +540,8 @@ const ProjectsContent = () => {
                           </select>
                         </div>
                       </div>
+
+                      {/* Linha 2: Prioridade + Datas */}
                       <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="priority">Prioridade</Label>
@@ -532,6 +570,8 @@ const ProjectsContent = () => {
                           <Input id="end_date" name="end_date" type="date" defaultValue={editingProject?.end_date} />
                         </div>
                       </div>
+
+                      {/* Linha 3: Área + Responsável + Sprint */}
                       <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="area">Área</Label>
@@ -570,6 +610,8 @@ const ProjectsContent = () => {
                           <Input id="sprint" name="sprint" defaultValue={editingProject?.sprint} />
                         </div>
                       </div>
+
+                      {/* Linha 4: Datas reais + Progresso */}
                       <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="actual_start_date">Data Real Início</Label>
@@ -601,6 +643,8 @@ const ProjectsContent = () => {
                           />
                         </div>
                       </div>
+
+                      {/* Observação */}
                       <div className="space-y-2">
                         <Label htmlFor="observation">Observação</Label>
                         <Textarea
@@ -643,6 +687,14 @@ const ProjectsContent = () => {
                         <Building2 className="h-4 w-4 text-muted-foreground" />
                         <span>{project.clients?.company_name}</span>
                       </div>
+
+                      {/* << NOVO: Mostra gerente quando houver */}
+                      {project.project_manager_id && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Gerente:</span>{" "}
+                          <span className="font-medium">{getManagerName(project.project_manager_id)}</span>
+                        </div>
+                      )}
 
                       <div className="flex gap-2 flex-wrap">
                         {project.area && <Badge variant="outline">{project.area}</Badge>}
@@ -847,6 +899,10 @@ const ProjectsContent = () => {
                             <SortIcon column="status" />
                           </div>
                         </TableHead>
+
+                        {/* << NOVO: Cabeçalho Gerente */}
+                        <TableHead>Gerente</TableHead>
+
                         <TableHead
                           className="cursor-pointer hover:bg-muted/50 transition-colors"
                           onClick={() => handleSort("progress")}
@@ -898,6 +954,10 @@ const ProjectsContent = () => {
                           <TableCell>
                             <Badge className={getStatusColor(project.status)}>{getStatusLabel(project.status)}</Badge>
                           </TableCell>
+
+                          {/* << NOVO: célula Gerente */}
+                          <TableCell>{getManagerName(project.project_manager_id)}</TableCell>
+
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Progress value={project.progress} className="h-2 w-20" />
