@@ -212,7 +212,6 @@ const UsersContent = () => {
               <p className="text-muted-foreground">Visualize e gerencie usuários do sistema</p>
             </div>
 
-            {/* Mantém o mesmo visual do botão e usa o design de form do Auth.tsx (space-y-4 + space-y-2 + submit full) */}
             <Dialog>
               <DialogTrigger asChild>
                 <Button>
@@ -225,7 +224,6 @@ const UsersContent = () => {
                   <DialogTitle>Novo Usuário</DialogTitle>
                 </DialogHeader>
 
-                {/* Padrão de layout de /Auth.tsx: form space-y-4 e blocos space-y-2 */}
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
@@ -289,11 +287,10 @@ const UsersContent = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Senha (opcional)</Label>
+                    <Label htmlFor="password">Senha</Label>
                     <Input id="password" name="password" type="password" placeholder="••••••••" />
                   </div>
 
-                  {/* Botão full width, como no Auth */}
                   <Button type="submit" className="w-full">
                     Criar
                   </Button>
