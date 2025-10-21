@@ -212,7 +212,7 @@ const UsersContent = () => {
               <p className="text-muted-foreground">Visualize e gerencie usuários do sistema</p>
             </div>
 
-            {/* Botão habilitado com Dialog — mantém o mesmo visual externo */}
+            {/* Mantém o mesmo visual do botão e usa o design de form do Auth.tsx (space-y-4 + space-y-2 + submit full) */}
             <Dialog>
               <DialogTrigger asChild>
                 <Button>
@@ -225,9 +225,8 @@ const UsersContent = () => {
                   <DialogTitle>Novo Usuário</DialogTitle>
                 </DialogHeader>
 
+                {/* Padrão de layout de /Auth.tsx: form space-y-4 e blocos space-y-2 */}
                 <form
-                  id="create-user-form"
-                  className="space-y-4"
                   onSubmit={async (e) => {
                     e.preventDefault();
                     const form = e.target as HTMLFormElement;
@@ -241,18 +240,15 @@ const UsersContent = () => {
                       Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 
                     try {
-                      // Cria usuário de autenticação
                       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
                       if (signUpError) throw signUpError;
 
                       const newUser = signUpData?.user;
 
-                      // Insere profile
                       if (newUser) {
                         const { error: profileError } = await supabase
                           .from("profiles")
                           .insert([{ id: newUser.id, email, full_name, role }]);
-
                         if (profileError) throw profileError;
 
                         toast.success("Usuário criado com sucesso!");
@@ -267,41 +263,40 @@ const UsersContent = () => {
                       toast.error("Falha ao criar usuário");
                     }
                   }}
+                  className="space-y-4"
                 >
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="full_name">Nome completo</Label>
-                      <Input id="full_name" name="full_name" required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" name="email" type="email" required />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Nome completo</Label>
+                    <Input id="full_name" name="full_name" placeholder="Nome e sobrenome" required />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Função</Label>
-                      <select
-                        id="role"
-                        name="role"
-                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                        defaultValue="client"
-                      >
-                        <option value="client">Cliente</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Senha (opcional)</Label>
-                      <Input id="password" name="password" type="text" placeholder="Gerada automaticamente se vazio" />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" name="email" type="email" placeholder="seu@email.com" required />
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button type="submit">Criar</Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Função</Label>
+                    <select
+                      id="role"
+                      name="role"
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                      defaultValue="client"
+                    >
+                      <option value="client">Cliente</option>
+                      <option value="admin">Admin</option>
+                    </select>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Senha (opcional)</Label>
+                    <Input id="password" name="password" type="password" placeholder="••••••••" />
+                  </div>
+
+                  {/* Botão full width, como no Auth */}
+                  <Button type="submit" className="w-full">
+                    Criar
+                  </Button>
                 </form>
               </DialogContent>
             </Dialog>
