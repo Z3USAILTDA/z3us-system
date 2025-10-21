@@ -73,6 +73,7 @@ const ProjectsContent = () => {
   const [filterClient, setFilterClient] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterResponsible, setFilterResponsible] = useState("");
+  const [filterManager, setFilterManager] = useState(""); // << NOVO
 
   // Sorting
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -115,7 +116,7 @@ const ProjectsContent = () => {
         .order("created_at", { ascending: false }),
       supabase.from("clients").select("*").eq("status", "active"),
       supabase.from("teams").select("*").eq("status", "active").order("name"),
-      // << NOVO: buscar perfis que podem ser gerentes (admin/manager)
+      // << NOVO: buscar possíveis gerentes (admin/manager)
       supabase.from("profiles").select("id, full_name, role, email").in("role", ["admin", "manager"]),
     ]);
 
@@ -272,6 +273,8 @@ const ProjectsContent = () => {
     if (filterClient && filterClient !== "all" && project.client_id !== filterClient) return false;
     if (filterStatus && filterStatus !== "all" && project.status !== filterStatus) return false;
     if (filterResponsible && filterResponsible !== "all" && project.responsible !== filterResponsible) return false;
+    // << NOVO: filtro por gerente
+    if (filterManager && filterManager !== "all" && project.project_manager_id !== filterManager) return false;
     return true;
   });
 
@@ -279,13 +282,19 @@ const ProjectsContent = () => {
   const sortedProjects = [...filteredProjects].sort((a, b) => {
     if (!sortColumn) return 0;
 
-    let aValue = a[sortColumn];
-    let bValue = b[sortColumn];
+    let aValue: any = a[sortColumn as keyof typeof a];
+    let bValue: any = b[sortColumn as keyof typeof b];
 
     // Handle nested client name
     if (sortColumn === "client") {
       aValue = a.clients?.company_name || "";
       bValue = b.clients?.company_name || "";
+    }
+
+    // << NOVO: ordenar por nome do gerente
+    if (sortColumn === "manager") {
+      aValue = getManagerName(a.project_manager_id);
+      bValue = getManagerName(b.project_manager_id);
     }
 
     // Handle null/undefined values
@@ -323,6 +332,7 @@ const ProjectsContent = () => {
   const uniqueSprints = [...new Set(projects.map((p) => p.sprint).filter(Boolean))];
   const uniqueAreas = [...new Set(projects.map((p) => p.area).filter(Boolean))];
   const uniqueResponsibles = [...new Set(projects.map((p) => p.responsible).filter(Boolean))];
+  const uniqueManagers = managers.map((m: any) => ({ id: m.id, label: m.full_name || m.email })); // << NOVO
 
   const clearFilters = () => {
     setFilterSprint("all");
@@ -330,6 +340,7 @@ const ProjectsContent = () => {
     setFilterClient("all");
     setFilterStatus("all");
     setFilterResponsible("all");
+    setFilterManager("all"); // << NOVO
   };
 
   const hasActiveFilters =
@@ -337,7 +348,8 @@ const ProjectsContent = () => {
     (filterArea && filterArea !== "all") ||
     (filterClient && filterClient !== "all") ||
     (filterStatus && filterStatus !== "all") ||
-    (filterResponsible && filterResponsible !== "all");
+    (filterResponsible && filterResponsible !== "all") ||
+    (filterManager && filterManager !== "all"); // << NOVO
 
   if (loading) {
     return (
@@ -484,8 +496,6 @@ const ProjectsContent = () => {
                           rows={3}
                         />
                       </div>
-
-                      {/* Linha 1: Cliente + Gerente + Status (mantém o grid 2 col; o 3º campo quebra para a próxima linha automaticamente) */}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="client_id">Cliente</Label>
@@ -540,8 +550,6 @@ const ProjectsContent = () => {
                           </select>
                         </div>
                       </div>
-
-                      {/* Linha 2: Prioridade + Datas */}
                       <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="priority">Prioridade</Label>
@@ -570,8 +578,6 @@ const ProjectsContent = () => {
                           <Input id="end_date" name="end_date" type="date" defaultValue={editingProject?.end_date} />
                         </div>
                       </div>
-
-                      {/* Linha 3: Área + Responsável + Sprint */}
                       <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="area">Área</Label>
@@ -610,8 +616,6 @@ const ProjectsContent = () => {
                           <Input id="sprint" name="sprint" defaultValue={editingProject?.sprint} />
                         </div>
                       </div>
-
-                      {/* Linha 4: Datas reais + Progresso */}
                       <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="actual_start_date">Data Real Início</Label>
@@ -643,8 +647,6 @@ const ProjectsContent = () => {
                           />
                         </div>
                       </div>
-
-                      {/* Observação */}
                       <div className="space-y-2">
                         <Label htmlFor="observation">Observação</Label>
                         <Textarea
@@ -848,6 +850,24 @@ const ProjectsContent = () => {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      {/* << NOVO: Filtro Gerente */}
+                      <div className="space-y-2">
+                        <Label className="text-xs">Gerente</Label>
+                        <Select value={filterManager || "all"} onValueChange={setFilterManager}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {uniqueManagers.map((mgr) => (
+                              <SelectItem key={mgr.id} value={mgr.id}>
+                                {mgr.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
 
@@ -900,8 +920,16 @@ const ProjectsContent = () => {
                           </div>
                         </TableHead>
 
-                        {/* << NOVO: Cabeçalho Gerente */}
-                        <TableHead>Gerente</TableHead>
+                        {/* << NOVO: Cabeçalho Gerente com ordenação */}
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("manager")}
+                        >
+                          <div className="flex items-center">
+                            Gerente
+                            <SortIcon column="manager" />
+                          </div>
+                        </TableHead>
 
                         <TableHead
                           className="cursor-pointer hover:bg-muted/50 transition-colors"
