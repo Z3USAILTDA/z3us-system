@@ -223,7 +223,6 @@ export type Database = {
           },
         ];
       };
-
       teams: {
         Row: {
           created_at: string;
