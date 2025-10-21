@@ -5,15 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { UserPlus, Shield, User, Mail, Calendar, Home, Users as UsersIcon, FolderKanban, Building2, LogOut, UserCircle } from "lucide-react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  UserPlus,
+  Shield,
+  User,
+  Mail,
+  Calendar,
+  Home,
+  Users as UsersIcon,
+  FolderKanban,
+  Building2,
+  LogOut,
+  UserCircle,
+} from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +34,9 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import logoWhite from "@/assets/logo-branco.png";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const UsersContent = () => {
   const navigate = useNavigate();
@@ -42,27 +50,21 @@ const UsersContent = () => {
   }, []);
 
   const checkAdminAndFetch = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
       navigate("/auth");
       return;
     }
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
+    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
 
     setProfile(profileData);
 
     // Check if user is admin
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", session.user.id)
-      .single();
+    const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).single();
 
     if (roleData?.role !== "admin") {
       toast.error("Acesso negado. Apenas administradores podem acessar esta página.");
@@ -82,13 +84,15 @@ const UsersContent = () => {
   const fetchUsers = async () => {
     const { data, error } = await supabase
       .from("profiles")
-      .select(`
+      .select(
+        `
         id,
         email,
         full_name,
         role,
         created_at
-      `)
+      `,
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -186,11 +190,7 @@ const UsersContent = () => {
                 <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={handleSignOut}
-            >
+            <Button variant="ghost" className="w-full justify-start" onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" />
               Sair
             </Button>
@@ -205,91 +205,179 @@ const UsersContent = () => {
             <h2 className="text-lg font-semibold">Gerenciar Usuários</h2>
           </div>
         </div>
-        
+
         <div className="p-6 space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground">Visualize e gerencie usuários do sistema</p>
             </div>
-            <Button disabled>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Adicionar Usuário
-            </Button>
+
+            {/* Botão habilitado com Dialog — mantém o mesmo visual externo */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Adicionar Usuário
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Novo Usuário</DialogTitle>
+                </DialogHeader>
+
+                <form
+                  id="create-user-form"
+                  className="space-y-4"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const form = e.target as HTMLFormElement;
+                    const formData = new FormData(form);
+
+                    const email = (formData.get("email") as string)?.trim();
+                    const full_name = (formData.get("full_name") as string)?.trim();
+                    const role = (formData.get("role") as string) || "client";
+                    const password =
+                      (formData.get("password") as string) ||
+                      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+
+                    try {
+                      // Cria usuário de autenticação
+                      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+                      if (signUpError) throw signUpError;
+
+                      const newUser = signUpData?.user;
+
+                      // Insere profile
+                      if (newUser) {
+                        const { error: profileError } = await supabase
+                          .from("profiles")
+                          .insert([{ id: newUser.id, email, full_name, role }]);
+
+                        if (profileError) throw profileError;
+
+                        toast.success("Usuário criado com sucesso!");
+                      } else {
+                        toast.success("Usuário criado! Confirmação enviada por e-mail.");
+                      }
+
+                      form.reset();
+                      await fetchUsers();
+                    } catch (err) {
+                      console.error(err);
+                      toast.error("Falha ao criar usuário");
+                    }
+                  }}
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="full_name">Nome completo</Label>
+                      <Input id="full_name" name="full_name" required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" name="email" type="email" required />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Função</Label>
+                      <select
+                        id="role"
+                        name="role"
+                        className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                        defaultValue="client"
+                      >
+                        <option value="client">Cliente</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Senha (opcional)</Label>
+                      <Input id="password" name="password" type="text" placeholder="Gerada automaticamente se vazio" />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button type="submit">Criar</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Usuários Cadastrados ({users.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {users.length === 0 ? (
-              <div className="text-center py-12">
-                <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">Nenhum usuário cadastrado</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Função</TableHead>
-                    <TableHead>Data de Cadastro</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-sm font-medium text-primary">
-                              {user.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <span className="font-medium">
-                            {user.full_name || "Sem nome"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Mail className="h-4 w-4" />
-                          {user.email}
-                        </div>
-                      </TableCell>
-                      <TableCell>{getRoleBadge(user.role)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(user.created_at)}
-                        </div>
-                      </TableCell>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Usuários Cadastrados ({users.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {users.length === 0 ? (
+                <div className="text-center py-12">
+                  <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <p className="text-muted-foreground">Nenhum usuário cadastrado</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Função</TableHead>
+                      <TableHead>Data de Cadastro</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-sm font-medium text-primary">
+                                {user.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <span className="font-medium">{user.full_name || "Sem nome"}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            {user.email}
+                          </div>
+                        </TableCell>
+                        <TableCell>{getRoleBadge(user.role)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(user.created_at)}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
 
-        <Card className="bg-muted/50">
-          <CardContent className="py-4">
-            <div className="flex items-start gap-3">
-              <Shield className="h-5 w-5 text-primary mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Acesso Restrito</p>
-                <p className="text-sm text-muted-foreground">
-                  Apenas administradores podem visualizar e gerenciar usuários do sistema.
-                  Novos usuários podem se cadastrar através da página de autenticação.
-                </p>
+          <Card className="bg-muted/50">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <Shield className="h-5 w-5 text-primary mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Acesso Restrito</p>
+                  <p className="text-sm text-muted-foreground">
+                    Apenas administradores podem visualizar e gerenciar usuários do sistema. Novos usuários podem se
+                    cadastrar através da página de autenticação.
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
