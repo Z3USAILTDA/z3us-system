@@ -115,8 +115,7 @@ const ProjectsContent = () => {
         .order("created_at", { ascending: false }),
       supabase.from("clients").select("*").eq("status", "active"),
       supabase.from("teams").select("*").eq("status", "active").order("name"),
-      // << NOVO: buscar perfis que podem ser gerentes (admin/manager)
-      supabase.from("profiles").select("id, full_name, role, email").in("role", ["admin", "manager"]),
+      supabase.from("profiles").select("id, full_name, role, email").eq("role", "admin"),
     ]);
 
     if (projectsRes.error) {

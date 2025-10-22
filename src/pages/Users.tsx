@@ -37,6 +37,18 @@ import logoWhite from "@/assets/logo-branco.png";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+/** Schema no mesmo padrão do Auth.tsx */
+const createUserSchema = z.object({
+  fullName: z.string().min(2, "Informe o nome completo"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(8, "Mínimo 8 caracteres"),
+  role: z.enum(["client", "admin"], { required_error: "Selecione a função" }),
+});
+type CreateUserFormData = z.infer<typeof createUserSchema>;
 
 const UsersContent = () => {
   const navigate = useNavigate();
@@ -44,6 +56,16 @@ const UsersContent = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+
+  // estado do dialog e do submit
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // form (igual ao Auth: hook-form + zod)
+  const form = useForm<CreateUserFormData>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: { role: "client" },
+  });
 
   useEffect(() => {
     checkAdminAndFetch();
@@ -144,6 +166,40 @@ const UsersContent = () => {
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
 
+  // === NOVO: criação no mesmo padrão do Auth.tsx ===
+  const onCreateUser = async (data: CreateUserFormData) => {
+    try {
+      setSubmitting(true);
+
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: {
+            full_name: data.fullName,
+            role: data.role,
+          },
+        },
+      });
+
+      if (error) {
+        toast.error(error.message || "Falha ao criar usuário");
+        return;
+      }
+
+      toast.success("Usuário criado! O convidado já pode confirmar e acessar.");
+      form.reset({ role: "client" });
+      setDialogOpen(false);
+      await fetchUsers();
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Falha ao criar usuário");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Carregando...</div>;
   }
@@ -212,7 +268,8 @@ const UsersContent = () => {
               <p className="text-muted-foreground">Visualize e gerencie usuários do sistema</p>
             </div>
 
-            <Dialog>
+            {/* Botão + Dialog com o MESMO padrão visual do Auth (space-y-4 e inputs com Label) */}
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <UserPlus className="h-4 w-4 mr-2" />
@@ -224,75 +281,52 @@ const UsersContent = () => {
                   <DialogTitle>Novo Usuário</DialogTitle>
                 </DialogHeader>
 
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const form = e.target as HTMLFormElement;
-                    const formData = new FormData(form);
-
-                    const email = (formData.get("email") as string)?.trim();
-                    const full_name = (formData.get("full_name") as string)?.trim();
-                    const role = (formData.get("role") as string) || "client";
-                    const password =
-                      (formData.get("password") as string) ||
-                      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-
-                    try {
-                      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-                      if (signUpError) throw signUpError;
-
-                      const newUser = signUpData?.user;
-
-                      if (newUser) {
-                        const { error: profileError } = await supabase
-                          .from("profiles")
-                          .insert([{ id: newUser.id, email, full_name, role }]);
-                        if (profileError) throw profileError;
-
-                        toast.success("Usuário criado com sucesso!");
-                      } else {
-                        toast.success("Usuário criado! Confirmação enviada por e-mail.");
-                      }
-
-                      form.reset();
-                      await fetchUsers();
-                    } catch (err) {
-                      console.error(err);
-                      toast.error("Falha ao criar usuário");
-                    }
-                  }}
-                  className="space-y-4"
-                >
+                <form onSubmit={form.handleSubmit(onCreateUser)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="full_name">Nome completo</Label>
-                    <Input id="full_name" name="full_name" placeholder="Nome e sobrenome" required />
+                    <Input id="full_name" placeholder="Nome e sobrenome" {...form.register("fullName")} />
+                    {form.formState.errors.fullName && (
+                      <p className="text-sm text-destructive">{form.formState.errors.fullName.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" name="email" type="email" placeholder="seu@email.com" required />
+                    <Input id="email" type="email" placeholder="seu@email.com" {...form.register("email")} />
+                    {form.formState.errors.email && (
+                      <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Senha</Label>
+                    <Input id="password" type="password" placeholder="••••••••" {...form.register("password")} />
+                    {form.formState.errors.password && (
+                      <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Mínimo 8 caracteres, com maiúscula, minúscula, número e caractere especial
+                    </p>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="role">Função</Label>
                     <select
                       id="role"
-                      name="role"
                       className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                      {...form.register("role")}
                       defaultValue="client"
                     >
                       <option value="client">Cliente</option>
                       <option value="admin">Admin</option>
                     </select>
+                    {form.formState.errors.role && (
+                      <p className="text-sm text-destructive">{form.formState.errors.role.message as string}</p>
+                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
-                    <Input id="password" name="password" type="password" placeholder="••••••••" />
-                  </div>
-
-                  <Button type="submit" className="w-full">
-                    Criar
+                  <Button type="submit" className="w-full" disabled={submitting}>
+                    {submitting ? "Criando..." : "Criar"}
                   </Button>
                 </form>
               </DialogContent>
