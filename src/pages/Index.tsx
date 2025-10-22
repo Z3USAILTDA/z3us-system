@@ -10,11 +10,17 @@ const Index = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Animated background grid */}
       <div className="absolute inset-0 tech-grid opacity-30" />
-      
+
       {/* Floating orbs */}
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
-      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "4s" }} />
+      <div
+        className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float"
+        style={{ animationDelay: "2s" }}
+      />
+      <div
+        className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/20 rounded-full blur-3xl animate-float"
+        style={{ animationDelay: "4s" }}
+      />
 
       <div className="container mx-auto px-4 py-16 relative z-10">
         {/* Hero Section */}
@@ -22,31 +28,29 @@ const Index = () => {
           <div className="flex justify-center mb-8">
             <img src={logoZ3us} alt="Z3US Logo" className="h-40 w-40 object-contain" />
           </div>
-          
+
           <div className="space-y-6">
-            
-            <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-foreground">
-              Gestão de Projetos
-            </h1>
-            
+            <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-foreground">Gestão de Projetos</h1>
+
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Plataforma tecnológica avançada para gerenciar projetos, equipes e dar visibilidade total aos seus clientes
+              Plataforma tecnológica avançada para gerenciar projetos, equipes e dar visibilidade total aos seus
+              clientes
             </p>
           </div>
 
           <div className="flex gap-4 justify-center flex-wrap">
-            <Button 
-              size="lg" 
-              onClick={() => navigate("/auth")} 
+            <Button
+              size="lg"
+              onClick={() => navigate("/auth")}
               className="text-lg px-8 bg-gradient-primary hover:shadow-lg hover:shadow-primary/50 transition-all group"
             >
               Acessar Sistema
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              onClick={() => navigate("/auth")} 
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate("/auth")}
               className="text-lg px-8 border-primary/30 hover:bg-primary/10"
             >
               Portal do Cliente
@@ -109,24 +113,22 @@ const Index = () => {
             <div className="absolute inset-0 bg-gradient-secondary opacity-50" />
             <div className="relative text-center space-y-6">
               <h2 className="text-4xl md:text-5xl font-bold">
-                <span className="bg-gradient-primary bg-clip-text text-transparent">
-                  Tecnologia Avançada
-                </span>
+                <span className="bg-gradient-primary bg-clip-text text-transparent">Tecnologia Avançada</span>
               </h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Transforme a gestão dos seus projetos com inteligência artificial, 
-                visibilidade total e controle em tempo real
+                Transforme a gestão dos seus projetos com inteligência artificial, visibilidade total e controle em
+                tempo real
               </p>
               <div className="flex gap-4 justify-center pt-4">
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   onClick={() => navigate("/auth")}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-lg hover:shadow-primary/50 transition-all"
                 >
                   Começar Agora
                 </Button>
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   variant="outline"
                   onClick={() => navigate("/auth")}
                   className="border-primary/30 hover:bg-primary/10"
