@@ -184,7 +184,12 @@ const UsersContent = () => {
       });
 
       if (error) {
-        toast.error(error.message || "Falha ao criar usuário");
+        // Tratamento específico para usuário já existente
+        if (error.message.includes("already registered") || error.message.includes("User already registered")) {
+          toast.error(`O email ${data.email} já está cadastrado no sistema.`);
+        } else {
+          toast.error(error.message || "Falha ao criar usuário");
+        }
         return;
       }
 
