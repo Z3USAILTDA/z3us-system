@@ -1,178 +1,80 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import {
-  UserPlus,
-  Shield,
-  User,
-  Mail,
-  Calendar,
-  Home,
-  Users as UsersIcon,
-  FolderKanban,
-  Building2,
-  LogOut,
-  UserCircle,
-} from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarHeader,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
-import logoWhite from "@/assets/logo-branco.png";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-/* === NOVO: mesma stack do Auth === */
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { LogIn, UserPlus, Loader2 } from "lucide-react";
+import logoZ3us from "@/assets/logo-z3us.png";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-/** Schema no mesmo padrão do Auth.tsx */
-const createUserSchema = z.object({
-  fullName: z.string().min(2, "Informe o nome completo"),
+const loginSchema = z.object({
   email: z.string().email("Email inválido"),
-  password: z.string().min(8, "Mínimo 8 caracteres"),
-  role: z.enum(["client", "admin"], { required_error: "Selecione a função" }),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
 });
-type CreateUserFormData = z.infer<typeof createUserSchema>;
 
-const UsersContent = () => {
+const signupSchema = z.object({
+  fullName: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+type SignupFormData = z.infer<typeof signupSchema>;
+
+const Auth = () => {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // estado do dialog e do submit
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  // form (igual ao Auth: hook-form + zod)
-  const form = useForm<CreateUserFormData>({
-    resolver: zodResolver(createUserSchema),
-    defaultValues: { role: "client" },
+  const signupForm = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
   });
 
   useEffect(() => {
-    checkAdminAndFetch();
+    checkUser();
   }, []);
 
-  const checkAdminAndFetch = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
-
-    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
-
-    setProfile(profileData);
-
-    // Check if user is admin
-    const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).single();
-
-    if (roleData?.role !== "admin") {
-      toast.error("Acesso negado. Apenas administradores podem acessar esta página.");
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
       navigate("/dashboard");
-      return;
     }
-
-    setIsAdmin(true);
-    await fetchUsers();
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
-
-  const fetchUsers = async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(
-        `
-        id,
-        email,
-        full_name,
-        role,
-        created_at
-      `,
-      )
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast.error("Erro ao carregar usuários");
-      console.error(error);
-    } else {
-      setUsers(data || []);
-    }
-
-    setLoading(false);
-  };
-
-  const getRoleBadge = (role: string) => {
-    if (role === "admin") {
-      return (
-        <Badge className="bg-primary">
-          <Shield className="h-3 w-3 mr-1" />
-          Administrador
-        </Badge>
-      );
-    }
-    return (
-      <Badge variant="secondary">
-        <User className="h-3 w-3 mr-1" />
-        Cliente
-      </Badge>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
-
-  const adminMenuItems = [
-    { title: "Dashboard", url: "/dashboard", icon: Home },
-    { title: "Equipes", url: "/dashboard/teams", icon: UsersIcon },
-    { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
-    { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
-  ];
-
-  const clientMenuItems = [
-    { title: "Dashboard", url: "/dashboard", icon: Home },
-    { title: "Meus Projetos", url: "/dashboard/projects", icon: FolderKanban },
-  ];
-
-  const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
-
-  // === NOVO: criação no mesmo padrão do Auth.tsx ===
-  const onCreateUser = async (data: CreateUserFormData) => {
+  const onLogin = async (data: LoginFormData) => {
     try {
-      setSubmitting(true);
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
 
+      if (error) {
+        toast.error(error.message || "Erro ao fazer login");
+        return;
+      }
+
+      toast.success("Login realizado com sucesso!");
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error("Erro ao fazer login");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSignup = async (data: SignupFormData) => {
+    try {
+      setIsLoading(true);
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -180,242 +82,175 @@ const UsersContent = () => {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             full_name: data.fullName,
-            role: data.role,
+            role: "client",
           },
         },
       });
 
       if (error) {
-        toast.error(error.message || "Falha ao criar usuário");
+        toast.error(error.message || "Erro ao criar conta");
         return;
       }
 
-      toast.success("Usuário criado! O convidado já pode confirmar e acessar.");
-      form.reset({ role: "client" });
-      setDialogOpen(false);
-      await fetchUsers();
-    } catch (e: any) {
-      console.error(e);
-      toast.error("Falha ao criar usuário");
+      toast.success("Conta criada com sucesso! Você já pode fazer login.");
+      signupForm.reset();
+    } catch (error: any) {
+      toast.error("Erro ao criar conta");
     } finally {
-      setSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Carregando...</div>;
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen flex w-full">
-      <Sidebar>
-        <SidebarHeader className="border-b p-4">
-          <div className="flex items-center gap-3">
-            <img src={logoWhite} alt="Z3US Logo" className="h-8 w-auto" />
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Menu</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                      <a href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter className="border-t p-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 px-2">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <UserCircle className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{profile?.full_name || "Usuário"}</p>
-                <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
-              </div>
-            </div>
-            <Button variant="ghost" className="w-full justify-start" onClick={handleSignOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        </SidebarFooter>
-      </Sidebar>
+    <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center">
+      {/* Animated background */}
+      <div className="absolute inset-0 tech-grid opacity-30" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float" />
+      <div
+        className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float"
+        style={{ animationDelay: "2s" }}
+      />
 
-      <main className="flex-1 overflow-auto">
-        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex h-14 items-center px-4 gap-4">
-            <SidebarTrigger />
-            <h2 className="text-lg font-semibold">Gerenciar Usuários</h2>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-muted-foreground">Visualize e gerencie usuários do sistema</p>
-            </div>
-
-            {/* Botão + Dialog com o MESMO padrão visual do Auth (space-y-4 e inputs com Label) */}
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Adicionar Usuário
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Novo Usuário</DialogTitle>
-                </DialogHeader>
-
-                <form onSubmit={form.handleSubmit(onCreateUser)} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name">Nome completo</Label>
-                    <Input id="full_name" placeholder="Nome e sobrenome" {...form.register("fullName")} />
-                    {form.formState.errors.fullName && (
-                      <p className="text-sm text-destructive">{form.formState.errors.fullName.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="seu@email.com" {...form.register("email")} />
-                    {form.formState.errors.email && (
-                      <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
-                    <Input id="password" type="password" placeholder="••••••••" {...form.register("password")} />
-                    {form.formState.errors.password && (
-                      <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      Mínimo 8 caracteres, com maiúscula, minúscula, número e caractere especial
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Função</Label>
-                    <select
-                      id="role"
-                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                      {...form.register("role")}
-                      defaultValue="client"
-                    >
-                      <option value="client">Cliente</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                    {form.formState.errors.role && (
-                      <p className="text-sm text-destructive">{form.formState.errors.role.message as string}</p>
-                    )}
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={submitting}>
-                    {submitting ? "Criando..." : "Criar"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-md mx-auto">
+          <div className="flex justify-center mb-8">
+            <img src={logoZ3us} alt="Z3US Logo" className="h-24 w-24 object-contain" />
           </div>
 
-          <Card>
+          <Card className="border-primary/20 shadow-xl">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Usuários Cadastrados ({users.length})
-              </CardTitle>
+              <CardTitle className="text-2xl text-center">Bem-vindo</CardTitle>
+              <CardDescription className="text-center">
+                Acesse sua conta ou crie uma nova para começar
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {users.length === 0 ? (
-                <div className="text-center py-12">
-                  <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                  <p className="text-muted-foreground">Nenhum usuário cadastrado</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Função</TableHead>
-                      <TableHead>Data de Cadastro</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <span className="text-sm font-medium text-primary">
-                                {user.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <span className="font-medium">{user.full_name || "Sem nome"}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Mail className="h-4 w-4" />
-                            {user.email}
-                          </div>
-                        </TableCell>
-                        <TableCell>{getRoleBadge(user.role)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            {formatDate(user.created_at)}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+              <Tabs defaultValue="login" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="login">
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Login
+                  </TabsTrigger>
+                  <TabsTrigger value="signup">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Cadastro
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="login">
+                  <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email</Label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        {...loginForm.register("email")}
+                      />
+                      {loginForm.formState.errors.email && (
+                        <p className="text-sm text-destructive">{loginForm.formState.errors.email.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Senha</Label>
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="••••••••"
+                        {...loginForm.register("password")}
+                      />
+                      {loginForm.formState.errors.password && (
+                        <p className="text-sm text-destructive">{loginForm.formState.errors.password.message}</p>
+                      )}
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Entrando...
+                        </>
+                      ) : (
+                        <>
+                          <LogIn className="mr-2 h-4 w-4" />
+                          Entrar
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="signup">
+                  <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name">Nome Completo</Label>
+                      <Input
+                        id="signup-name"
+                        type="text"
+                        placeholder="Seu nome completo"
+                        {...signupForm.register("fullName")}
+                      />
+                      {signupForm.formState.errors.fullName && (
+                        <p className="text-sm text-destructive">{signupForm.formState.errors.fullName.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        {...signupForm.register("email")}
+                      />
+                      {signupForm.formState.errors.email && (
+                        <p className="text-sm text-destructive">{signupForm.formState.errors.email.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Senha</Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="••••••••"
+                        {...signupForm.register("password")}
+                      />
+                      {signupForm.formState.errors.password && (
+                        <p className="text-sm text-destructive">{signupForm.formState.errors.password.message}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres</p>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Criando conta...
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Criar Conta
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
 
-          <Card className="bg-muted/50">
-            <CardContent className="py-4">
-              <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-primary mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Acesso Restrito</p>
-                  <p className="text-sm text-muted-foreground">
-                    Apenas administradores podem visualizar e gerenciar usuários do sistema. Novos usuários podem se
-                    cadastrar através da página de autenticação.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mt-6 text-center">
+            <Button variant="ghost" onClick={() => navigate("/")} className="text-muted-foreground">
+              Voltar para página inicial
+            </Button>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
 
-const Users = () => (
-  <SidebarProvider>
-    <UsersContent />
-  </SidebarProvider>
-);
-
-export default Users;
+export default Auth;
