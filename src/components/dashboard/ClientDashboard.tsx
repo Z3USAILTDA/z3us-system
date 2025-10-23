@@ -146,18 +146,13 @@ const ClientDashboard = () => {
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     <div className="text-sm">
-                      <p className="text-muted-foreground">Prioridade</p>
-                      <p className="font-medium capitalize">{project.priority}</p>
+                      <p className="text-muted-foreground">Observação</p>
+                      <p className="font-medium">
+                        {project.client_observation || "Sem observação"}
+                      </p>
                     </div>
                   </div>
                 </div>
-
-                {project.client_observation && (
-                  <div className="pt-4 border-t">
-                    <p className="text-sm text-muted-foreground mb-1">Observação</p>
-                    <p className="text-sm">{project.client_observation}</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))}
