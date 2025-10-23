@@ -157,6 +157,7 @@ export type Database = {
           actual_start_date: string | null
           area: string | null
           client_id: string
+          client_observation: string | null
           created_at: string
           description: string | null
           end_date: string | null
@@ -177,6 +178,7 @@ export type Database = {
           actual_start_date?: string | null
           area?: string | null
           client_id: string
+          client_observation?: string | null
           created_at?: string
           description?: string | null
           end_date?: string | null
@@ -197,6 +199,7 @@ export type Database = {
           actual_start_date?: string | null
           area?: string | null
           client_id?: string
+          client_observation?: string | null
           created_at?: string
           description?: string | null
           end_date?: string | null

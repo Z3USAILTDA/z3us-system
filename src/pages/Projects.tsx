@@ -176,12 +176,13 @@ const ProjectsContent = () => {
       end_date: endDate || null,
       progress: parseInt(formData.get("progress") as string) || 0,
       observation: formData.get("observation") as string,
+      client_observation: formData.get("client_observation") as string,
       responsible: formData.get("responsible") as string,
       sprint: formData.get("sprint") as string,
       actual_start_date: actualStartDate || null,
       actual_end_date: actualEndDate || null,
       area: formData.get("area") as string,
-      project_manager_id: (formData.get("project_manager_id") as string) || null, // << NOVO
+      project_manager_id: (formData.get("project_manager_id") as string) || null,
     };
 
     if (editingProject) {
@@ -643,9 +644,9 @@ const ProjectsContent = () => {
                         </div>
                       </div>
 
-                      {/* Observação */}
+                      {/* Observação Interna */}
                       <div className="space-y-2">
-                        <Label htmlFor="observation">Observação</Label>
+                        <Label htmlFor="observation">Observação Interna</Label>
                         <Textarea
                           id="observation"
                           name="observation"
@@ -653,6 +654,19 @@ const ProjectsContent = () => {
                           rows={3}
                         />
                       </div>
+
+                      {/* Observação para o Cliente */}
+                      <div className="space-y-2">
+                        <Label htmlFor="client_observation">Observação para o Cliente</Label>
+                        <Textarea
+                          id="client_observation"
+                          name="client_observation"
+                          defaultValue={editingProject?.client_observation}
+                          rows={3}
+                          placeholder="Esta observação será visível para o cliente no dashboard dele"
+                        />
+                      </div>
+
                       <Button type="submit" className="w-full">
                         {editingProject ? "Atualizar" : "Adicionar"}
                       </Button>

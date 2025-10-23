@@ -141,6 +141,13 @@ const ClientDashboard = () => {
                     </div>
                   </div>
                 </div>
+
+                {project.client_observation && (
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-muted-foreground mb-1">Observação</p>
+                    <p className="text-sm">{project.client_observation}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
