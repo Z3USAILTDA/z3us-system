@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FolderKanban, Calendar, MessageSquare, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,6 +12,7 @@ import logoBranco from "@/assets/logo-branco.png";
 const ClientDashboard = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchProjects();
@@ -92,11 +94,30 @@ const ClientDashboard = () => {
     );
   }
 
+  const filteredProjects = statusFilter === "all" 
+    ? projects 
+    : projects.filter(p => p.status === statusFilter);
+
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="relative flex items-center gap-4">
-        <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-primary rounded-full" />
-        <img src={logoBranco} alt="Z3US" className="h-16 object-contain" />
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="absolute -left-4 top-0 w-1 h-16 bg-gradient-primary rounded-full" />
+          <img src={logoBranco} alt="Z3US" className="h-16 object-contain" />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filtrar por status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="planning">Planejamento</SelectItem>
+            <SelectItem value="in_progress">Em Andamento</SelectItem>
+            <SelectItem value="on_hold">Pausado</SelectItem>
+            <SelectItem value="completed">Concluído</SelectItem>
+            <SelectItem value="cancelled">Cancelado</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {projects.length === 0 ? (
@@ -111,7 +132,7 @@ const ClientDashboard = () => {
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
-          {projects.map((project, index) => (
+          {filteredProjects.map((project, index) => (
             <Card 
               key={project.id} 
               className="relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 group overflow-hidden"
