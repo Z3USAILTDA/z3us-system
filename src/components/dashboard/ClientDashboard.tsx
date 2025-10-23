@@ -13,6 +13,7 @@ const ClientDashboard = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sprintFilter, setSprintFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchProjects();
@@ -94,11 +95,15 @@ const ClientDashboard = () => {
     );
   }
 
-  const filteredProjects = statusFilter === "all" 
-    ? projects 
-    : projects.filter(p => p.status === statusFilter);
+  const filteredProjects = projects.filter(p => {
+    const matchesStatus = statusFilter === "all" || p.status === statusFilter;
+    const matchesSprint = sprintFilter === "all" || p.sprint === sprintFilter;
+    return matchesStatus && matchesSprint;
+  });
 
   const availableStatuses = Array.from(new Set(projects.map(p => p.status)));
+  const availableSprints = Array.from(new Set(projects.map(p => p.sprint).filter(Boolean)));
+  const hasSprints = availableSprints.length > 0;
 
   // Estatísticas
   const totalProjects = projects.length;
@@ -118,30 +123,49 @@ const ClientDashboard = () => {
           <div className="flex items-center gap-4">
             <img src={logoBranco} alt="Z3US" className="h-16 object-contain" />
           </div>
-          <div className="w-[280px]">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="bg-card">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os status</SelectItem>
-                {availableStatuses.includes("planning") && (
-                  <SelectItem value="planning">Planejamento</SelectItem>
-                )}
-                {availableStatuses.includes("in_progress") && (
-                  <SelectItem value="in_progress">Em Andamento</SelectItem>
-                )}
-                {availableStatuses.includes("on_hold") && (
-                  <SelectItem value="on_hold">Pausado</SelectItem>
-                )}
-                {availableStatuses.includes("completed") && (
-                  <SelectItem value="completed">Concluído</SelectItem>
-                )}
-                {availableStatuses.includes("cancelled") && (
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-3">
+            <div className="w-[280px]">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="bg-card">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  {availableStatuses.includes("planning") && (
+                    <SelectItem value="planning">Planejamento</SelectItem>
+                  )}
+                  {availableStatuses.includes("in_progress") && (
+                    <SelectItem value="in_progress">Em Andamento</SelectItem>
+                  )}
+                  {availableStatuses.includes("on_hold") && (
+                    <SelectItem value="on_hold">Pausado</SelectItem>
+                  )}
+                  {availableStatuses.includes("completed") && (
+                    <SelectItem value="completed">Concluído</SelectItem>
+                  )}
+                  {availableStatuses.includes("cancelled") && (
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            {hasSprints && (
+              <div className="w-[280px]">
+                <Select value={sprintFilter} onValueChange={setSprintFilter}>
+                  <SelectTrigger className="bg-card">
+                    <SelectValue placeholder="Filtrar por sprint" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as sprints</SelectItem>
+                    {availableSprints.map((sprint) => (
+                      <SelectItem key={sprint} value={sprint}>
+                        {sprint}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
       </div>
