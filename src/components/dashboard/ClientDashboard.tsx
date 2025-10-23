@@ -98,6 +98,8 @@ const ClientDashboard = () => {
     ? projects 
     : projects.filter(p => p.status === statusFilter);
 
+  const availableStatuses = Array.from(new Set(projects.map(p => p.status)));
+
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="relative flex items-center justify-between gap-4">
@@ -111,11 +113,21 @@ const ClientDashboard = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="planning">Planejamento</SelectItem>
-            <SelectItem value="in_progress">Em Andamento</SelectItem>
-            <SelectItem value="on_hold">Pausado</SelectItem>
-            <SelectItem value="completed">Concluído</SelectItem>
-            <SelectItem value="cancelled">Cancelado</SelectItem>
+            {availableStatuses.includes("planning") && (
+              <SelectItem value="planning">Planejamento</SelectItem>
+            )}
+            {availableStatuses.includes("in_progress") && (
+              <SelectItem value="in_progress">Em Andamento</SelectItem>
+            )}
+            {availableStatuses.includes("on_hold") && (
+              <SelectItem value="on_hold">Pausado</SelectItem>
+            )}
+            {availableStatuses.includes("completed") && (
+              <SelectItem value="completed">Concluído</SelectItem>
+            )}
+            {availableStatuses.includes("cancelled") && (
+              <SelectItem value="cancelled">Cancelado</SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>
