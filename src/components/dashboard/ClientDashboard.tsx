@@ -144,7 +144,7 @@ const ClientDashboard = () => {
 
       {/* Cards de Estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+        <Card className="bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Projetos</CardTitle>
             <FolderKanban className="h-4 w-4 text-muted-foreground" />
@@ -157,7 +157,7 @@ const ClientDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 backdrop-blur-sm border-warning/20">
+        <Card className="bg-card/50 backdrop-blur-sm border-warning/20 hover:border-warning/40 transition-all hover:shadow-lg hover:shadow-warning/10 cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Em Andamento</CardTitle>
             <TrendingUp className="h-4 w-4 text-warning" />
@@ -170,7 +170,7 @@ const ClientDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 backdrop-blur-sm border-success/20">
+        <Card className="bg-card/50 backdrop-blur-sm border-success/20 hover:border-success/40 transition-all hover:shadow-lg hover:shadow-success/10 cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-success" />
@@ -183,7 +183,7 @@ const ClientDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 backdrop-blur-sm border-muted/20">
+        <Card className="bg-card/50 backdrop-blur-sm border-muted/20 hover:border-muted/40 transition-all hover:shadow-lg hover:shadow-muted/10 cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Progresso Médio</CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
