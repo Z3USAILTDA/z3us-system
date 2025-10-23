@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FolderKanban, Calendar, MessageSquare, Clock } from "lucide-react";
+import { FolderKanban, Calendar, MessageSquare, Clock, TrendingUp, CheckCircle2, AlertCircle, Pause } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import logoBranco from "@/assets/logo-branco.png";
@@ -100,8 +100,18 @@ const ClientDashboard = () => {
 
   const availableStatuses = Array.from(new Set(projects.map(p => p.status)));
 
+  // Estatísticas
+  const totalProjects = projects.length;
+  const inProgressCount = projects.filter(p => p.status === 'in_progress').length;
+  const completedCount = projects.filter(p => p.status === 'completed').length;
+  const onHoldCount = projects.filter(p => p.status === 'on_hold').length;
+  const averageProgress = projects.length > 0 
+    ? Math.round(projects.reduce((acc, p) => acc + (p.progress || 0), 0) / projects.length)
+    : 0;
+
   return (
     <div className="space-y-8 animate-fade-in">
+      {/* Header */}
       <div className="relative flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="absolute -left-4 top-0 w-1 h-16 bg-gradient-primary rounded-full" />
@@ -130,6 +140,59 @@ const ClientDashboard = () => {
             )}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Cards de Estatísticas */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Projetos</CardTitle>
+            <FolderKanban className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalProjects}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalProjects === 1 ? 'projeto cadastrado' : 'projetos cadastrados'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 backdrop-blur-sm border-warning/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Em Andamento</CardTitle>
+            <TrendingUp className="h-4 w-4 text-warning" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{inProgressCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              projetos ativos
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 backdrop-blur-sm border-success/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-success" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{completedCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              projetos finalizados
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 backdrop-blur-sm border-muted/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Progresso Médio</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{averageProgress}%</div>
+            <Progress value={averageProgress} className="h-2 mt-2" />
+          </CardContent>
+        </Card>
       </div>
 
       {projects.length === 0 ? (
