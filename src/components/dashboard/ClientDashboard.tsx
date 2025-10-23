@@ -123,7 +123,7 @@ const ClientDashboard = () => {
                   <div className="space-y-1 flex-1">
                     <CardTitle className="text-xl bg-gradient-primary bg-clip-text text-transparent">{project.title}</CardTitle>
                     <CardDescription className="line-clamp-2">
-                      {project.description || "Sem descrição"}
+                      {project.area || "Área não definida"}
                     </CardDescription>
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
                       <Clock className="h-3 w-3" />
