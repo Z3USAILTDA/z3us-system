@@ -105,13 +105,13 @@ const ClientDashboard = () => {
   const availableSprints = Array.from(new Set(projects.map(p => p.sprint).filter(Boolean)));
   const hasSprints = availableSprints.length > 0;
 
-  // Estatísticas
-  const totalProjects = projects.length;
-  const inProgressCount = projects.filter(p => p.status === 'in_progress').length;
-  const completedCount = projects.filter(p => p.status === 'completed').length;
-  const onHoldCount = projects.filter(p => p.status === 'on_hold').length;
-  const averageProgress = projects.length > 0 
-    ? Math.round(projects.reduce((acc, p) => acc + (p.progress || 0), 0) / projects.length)
+  // Estatísticas - usando projetos filtrados
+  const totalProjects = filteredProjects.length;
+  const inProgressCount = filteredProjects.filter(p => p.status === 'in_progress').length;
+  const completedCount = filteredProjects.filter(p => p.status === 'completed').length;
+  const onHoldCount = filteredProjects.filter(p => p.status === 'on_hold').length;
+  const averageProgress = filteredProjects.length > 0 
+    ? Math.round(filteredProjects.reduce((acc, p) => acc + (p.progress || 0), 0) / filteredProjects.length)
     : 0;
 
   return (
