@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { FolderKanban, Calendar, TrendingUp } from "lucide-react";
+import { FolderKanban, Calendar, MessageSquare } from "lucide-react";
 import logoBranco from "@/assets/logo-branco.png";
 
 const ClientDashboard = () => {
@@ -144,7 +144,7 @@ const ClientDashboard = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
                     <div className="text-sm">
                       <p className="text-muted-foreground">Observação</p>
                       <p className="font-medium">
