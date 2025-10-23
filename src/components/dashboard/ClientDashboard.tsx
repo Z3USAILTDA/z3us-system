@@ -112,84 +112,114 @@ const ClientDashboard = () => {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="relative flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="absolute -left-4 top-0 w-1 h-16 bg-gradient-primary rounded-full" />
-          <img src={logoBranco} alt="Z3US" className="h-16 object-contain" />
+      <div className="relative">
+        <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-primary rounded-full" />
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4">
+            <img src={logoBranco} alt="Z3US" className="h-16 object-contain" />
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight">
+                Meus <span className="bg-gradient-primary bg-clip-text text-transparent">Projetos</span>
+              </h1>
+              <p className="text-muted-foreground text-lg mt-2">Acompanhe o andamento dos seus projetos</p>
+            </div>
+          </div>
+          <div className="w-[280px]">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="bg-card">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                {availableStatuses.includes("planning") && (
+                  <SelectItem value="planning">Planejamento</SelectItem>
+                )}
+                {availableStatuses.includes("in_progress") && (
+                  <SelectItem value="in_progress">Em Andamento</SelectItem>
+                )}
+                {availableStatuses.includes("on_hold") && (
+                  <SelectItem value="on_hold">Pausado</SelectItem>
+                )}
+                {availableStatuses.includes("completed") && (
+                  <SelectItem value="completed">Concluído</SelectItem>
+                )}
+                {availableStatuses.includes("cancelled") && (
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            {availableStatuses.includes("planning") && (
-              <SelectItem value="planning">Planejamento</SelectItem>
-            )}
-            {availableStatuses.includes("in_progress") && (
-              <SelectItem value="in_progress">Em Andamento</SelectItem>
-            )}
-            {availableStatuses.includes("on_hold") && (
-              <SelectItem value="on_hold">Pausado</SelectItem>
-            )}
-            {availableStatuses.includes("completed") && (
-              <SelectItem value="completed">Concluído</SelectItem>
-            )}
-            {availableStatuses.includes("cancelled") && (
-              <SelectItem value="cancelled">Cancelado</SelectItem>
-            )}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Cards de Estatísticas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/10 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Projetos</CardTitle>
-            <FolderKanban className="h-4 w-4 text-muted-foreground" />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card 
+          className="relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 group overflow-hidden"
+          style={{ animationDelay: '0s' }}
+        >
+          <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total de Projetos</CardTitle>
+            <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+              <FolderKanban className="h-5 w-5 text-primary" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalProjects}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="relative z-10">
+            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">{totalProjects}</div>
+            <p className="text-xs text-muted-foreground mt-2">
               {totalProjects === 1 ? 'projeto cadastrado' : 'projetos cadastrados'}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 backdrop-blur-sm border-warning/20 hover:border-warning/40 transition-all hover:shadow-lg hover:shadow-warning/10 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Em Andamento</CardTitle>
-            <TrendingUp className="h-4 w-4 text-warning" />
+        <Card 
+          className="relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 group overflow-hidden"
+          style={{ animationDelay: '0.1s' }}
+        >
+          <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Em Andamento</CardTitle>
+            <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+              <TrendingUp className="h-5 w-5 text-warning" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{inProgressCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              projetos ativos
-            </p>
+          <CardContent className="relative z-10">
+            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">{inProgressCount}</div>
+            <p className="text-xs text-muted-foreground mt-2">projetos ativos</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 backdrop-blur-sm border-success/20 hover:border-success/40 transition-all hover:shadow-lg hover:shadow-success/10 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-success" />
+        <Card 
+          className="relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 group overflow-hidden"
+          style={{ animationDelay: '0.2s' }}
+        >
+          <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Concluídos</CardTitle>
+            <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+              <CheckCircle2 className="h-5 w-5 text-success" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              projetos finalizados
-            </p>
+          <CardContent className="relative z-10">
+            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">{completedCount}</div>
+            <p className="text-xs text-muted-foreground mt-2">projetos finalizados</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 backdrop-blur-sm border-muted/20 hover:border-muted/40 transition-all hover:shadow-lg hover:shadow-muted/10 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Progresso Médio</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+        <Card 
+          className="relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 group overflow-hidden"
+          style={{ animationDelay: '0.3s' }}
+        >
+          <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Progresso Médio</CardTitle>
+            <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+              <AlertCircle className="h-5 w-5 text-info" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{averageProgress}%</div>
+          <CardContent className="relative z-10">
+            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">{averageProgress}%</div>
             <Progress value={averageProgress} className="h-2 mt-2" />
           </CardContent>
         </Card>
