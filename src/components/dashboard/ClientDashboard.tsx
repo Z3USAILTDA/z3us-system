@@ -95,6 +95,12 @@ const ClientDashboard = () => {
     );
   }
 
+  // Filtrar apenas por sprint para estatísticas
+  const sprintFilteredProjects = sprintFilter === "all" 
+    ? projects 
+    : projects.filter(p => p.sprint === sprintFilter);
+
+  // Filtrar por status e sprint para exibição
   const filteredProjects = projects.filter(p => {
     const matchesStatus = statusFilter === "all" || p.status === statusFilter;
     const matchesSprint = sprintFilter === "all" || p.sprint === sprintFilter;
@@ -105,13 +111,13 @@ const ClientDashboard = () => {
   const availableSprints = Array.from(new Set(projects.map(p => p.sprint).filter(Boolean)));
   const hasSprints = availableSprints.length > 0;
 
-  // Estatísticas - usando projetos filtrados
-  const totalProjects = filteredProjects.length;
-  const inProgressCount = filteredProjects.filter(p => p.status === 'in_progress').length;
-  const completedCount = filteredProjects.filter(p => p.status === 'completed').length;
-  const onHoldCount = filteredProjects.filter(p => p.status === 'on_hold').length;
-  const averageProgress = filteredProjects.length > 0 
-    ? Math.round(filteredProjects.reduce((acc, p) => acc + (p.progress || 0), 0) / filteredProjects.length)
+  // Estatísticas - usando apenas filtro de sprint
+  const totalProjects = sprintFilteredProjects.length;
+  const inProgressCount = sprintFilteredProjects.filter(p => p.status === 'in_progress').length;
+  const completedCount = sprintFilteredProjects.filter(p => p.status === 'completed').length;
+  const onHoldCount = sprintFilteredProjects.filter(p => p.status === 'on_hold').length;
+  const averageProgress = sprintFilteredProjects.length > 0 
+    ? Math.round(sprintFilteredProjects.reduce((acc, p) => acc + (p.progress || 0), 0) / sprintFilteredProjects.length)
     : 0;
 
   return (
