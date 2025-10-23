@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { FolderKanban, Calendar, MessageSquare } from "lucide-react";
+import { FolderKanban, Calendar, MessageSquare, Clock } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import logoBranco from "@/assets/logo-branco.png";
 
 const ClientDashboard = () => {
@@ -72,6 +74,13 @@ const ClientDashboard = () => {
     return labels[status] || status;
   };
 
+  const getTimeAgo = (date: string) => {
+    return formatDistanceToNow(new Date(date), {
+      addSuffix: true,
+      locale: ptBR,
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -116,6 +125,10 @@ const ClientDashboard = () => {
                     <CardDescription className="line-clamp-2">
                       {project.description || "Sem descrição"}
                     </CardDescription>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
+                      <Clock className="h-3 w-3" />
+                      <span>Atualizado {getTimeAgo(project.updated_at)}</span>
+                    </div>
                   </div>
                   <Badge className={`${getStatusColor(project.status)} ml-2`}>
                     {getStatusLabel(project.status)}
