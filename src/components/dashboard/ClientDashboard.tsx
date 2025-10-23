@@ -117,12 +117,6 @@ const ClientDashboard = () => {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
             <img src={logoBranco} alt="Z3US" className="h-16 object-contain" />
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight">
-                Meus <span className="bg-gradient-primary bg-clip-text text-transparent">Projetos</span>
-              </h1>
-              <p className="text-muted-foreground text-lg mt-2">Acompanhe o andamento dos seus projetos</p>
-            </div>
           </div>
           <div className="w-[280px]">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
