@@ -36,7 +36,17 @@ const ClientDashboard = () => {
       .eq("client_id", clientData.id)
       .order("created_at", { ascending: false });
 
-    setProjects(projectsData || []);
+    // Ordena projetos: primeiro os que têm client_observation, depois os demais
+    const sortedProjects = (projectsData || []).sort((a, b) => {
+      const aHasObservation = a.client_observation && a.client_observation.trim() !== '';
+      const bHasObservation = b.client_observation && b.client_observation.trim() !== '';
+      
+      if (aHasObservation && !bHasObservation) return -1;
+      if (!aHasObservation && bHasObservation) return 1;
+      return 0;
+    });
+
+    setProjects(sortedProjects);
     setLoading(false);
   };
 
