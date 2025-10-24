@@ -189,7 +189,8 @@ const ProjectsContent = () => {
       const { error } = await supabase.from("projects").update(projectData).eq("id", editingProject.id);
 
       if (error) {
-        toast.error("Erro ao atualizar projeto");
+        console.error("Erro ao atualizar projeto:", error);
+        toast.error(`Erro ao atualizar projeto: ${error.message}`);
       } else {
         toast.success("Projeto atualizado com sucesso!");
         fetchData();
@@ -200,7 +201,8 @@ const ProjectsContent = () => {
       const { error } = await supabase.from("projects").insert([projectData]);
 
       if (error) {
-        toast.error("Erro ao adicionar projeto");
+        console.error("Erro ao inserir projeto:", error);
+        toast.error(`Erro ao adicionar projeto: ${error.message}`);
       } else {
         toast.success("Projeto adicionado com sucesso!");
         fetchData();
