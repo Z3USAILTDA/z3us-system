@@ -59,7 +59,7 @@ const ClientDashboard = () => {
     const colors: Record<string, string> = {
       planning: "bg-info",
       in_progress: "bg-warning",
-      on_hold: "bg-yellow-500",
+      on_hold: "bg-destructive",
       completed: "bg-success",
       cancelled: "bg-destructive",
     };
