@@ -240,7 +240,7 @@ const ProjectsContent = () => {
     const colors: Record<string, string> = {
       planning: "bg-info",
       in_progress: "bg-warning",
-      on_hold: "bg-warning",
+      on_hold: "bg-yellow-500",
       completed: "bg-success",
       cancelled: "bg-destructive",
       test: "bg-purple-500",
