@@ -847,7 +847,7 @@ const ProjectsContent = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="overdue">🔴 Em Atraso</SelectItem>
+                            <SelectItem value="overdue" className="text-destructive font-semibold">Em Atraso</SelectItem>
                             <SelectItem value="planning">Planejamento</SelectItem>
                             <SelectItem value="in_progress">Em Andamento</SelectItem>
                             <SelectItem value="on_hold">Pausado</SelectItem>
