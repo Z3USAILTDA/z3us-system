@@ -272,7 +272,17 @@ const ProjectsContent = () => {
     if (filterSprint && filterSprint !== "all" && project.sprint !== filterSprint) return false;
     if (filterArea && filterArea !== "all" && project.area !== filterArea) return false;
     if (filterClient && filterClient !== "all" && project.client_id !== filterClient) return false;
-    if (filterStatus && filterStatus !== "all" && project.status !== filterStatus) return false;
+    
+    // Special filter for overdue projects
+    if (filterStatus === "overdue") {
+      const now = new Date();
+      const endDate = project.end_date ? new Date(project.end_date) : null;
+      const isOverdue = endDate && endDate < now && project.status !== "completed" && project.status !== "cancelled";
+      if (!isOverdue) return false;
+    } else if (filterStatus && filterStatus !== "all" && project.status !== filterStatus) {
+      return false;
+    }
+    
     if (filterResponsible && filterResponsible !== "all" && project.responsible !== filterResponsible) return false;
     return true;
   });
@@ -781,7 +791,7 @@ const ProjectsContent = () => {
                       <div className="space-y-2">
                         <Label className="text-xs">Sprint</Label>
                         <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
-                          <SelectTrigger className="h-9">
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Todos" />
                           </SelectTrigger>
                           <SelectContent>
@@ -798,7 +808,7 @@ const ProjectsContent = () => {
                       <div className="space-y-2">
                         <Label className="text-xs">Área</Label>
                         <Select value={filterArea || "all"} onValueChange={setFilterArea}>
-                          <SelectTrigger className="h-9">
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Todas" />
                           </SelectTrigger>
                           <SelectContent>
@@ -815,7 +825,7 @@ const ProjectsContent = () => {
                       <div className="space-y-2">
                         <Label className="text-xs">Cliente</Label>
                         <Select value={filterClient || "all"} onValueChange={setFilterClient}>
-                          <SelectTrigger className="h-9">
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Todos" />
                           </SelectTrigger>
                           <SelectContent>
@@ -832,11 +842,12 @@ const ProjectsContent = () => {
                       <div className="space-y-2">
                         <Label className="text-xs">Status</Label>
                         <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
-                          <SelectTrigger className="h-9">
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Todos" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="overdue">🔴 Em Atraso</SelectItem>
                             <SelectItem value="planning">Planejamento</SelectItem>
                             <SelectItem value="in_progress">Em Andamento</SelectItem>
                             <SelectItem value="on_hold">Pausado</SelectItem>
@@ -850,7 +861,7 @@ const ProjectsContent = () => {
                       <div className="space-y-2">
                         <Label className="text-xs">Responsável</Label>
                         <Select value={filterResponsible || "all"} onValueChange={setFilterResponsible}>
-                          <SelectTrigger className="h-9">
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Todos" />
                           </SelectTrigger>
                           <SelectContent>
