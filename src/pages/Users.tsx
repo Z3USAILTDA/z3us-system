@@ -17,6 +17,7 @@ import {
   Building2,
   LogOut,
   UserCircle,
+  KeyRound,
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -60,6 +61,13 @@ const UsersContent = () => {
   // estado do dialog e do submit
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
+  // estado do dialog de troca de senha
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserEmail, setSelectedUserEmail] = useState<string>("");
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   // form (igual ao Auth: hook-form + zod)
   const form = useForm<CreateUserFormData>({
@@ -165,6 +173,44 @@ const UsersContent = () => {
   ];
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
+
+  const handleChangePassword = async () => {
+    if (!selectedUserId || !newPassword) {
+      toast.error("Preencha a nova senha");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error("A senha deve ter no mínimo 8 caracteres");
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+
+      // Usar o service role key para atualizar a senha do usuário
+      const { error } = await supabase.auth.admin.updateUserById(
+        selectedUserId,
+        { password: newPassword }
+      );
+
+      if (error) {
+        toast.error("Erro ao alterar senha: " + error.message);
+        return;
+      }
+
+      toast.success(`Senha alterada com sucesso para ${selectedUserEmail}`);
+      setPasswordDialogOpen(false);
+      setNewPassword("");
+      setSelectedUserId(null);
+      setSelectedUserEmail("");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Falha ao alterar senha");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   // === NOVO: criação no mesmo padrão do Auth.tsx ===
   const onCreateUser = async (data: CreateUserFormData) => {
@@ -359,6 +405,7 @@ const UsersContent = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Função</TableHead>
                       <TableHead>Data de Cadastro</TableHead>
+                      <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -387,6 +434,20 @@ const UsersContent = () => {
                             {formatDate(user.created_at)}
                           </div>
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUserId(user.id);
+                              setSelectedUserEmail(user.email);
+                              setPasswordDialogOpen(true);
+                            }}
+                          >
+                            <KeyRound className="h-4 w-4 mr-2" />
+                            Trocar Senha
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -394,6 +455,41 @@ const UsersContent = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Dialog para trocar senha */}
+          <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Alterar Senha</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Usuário</Label>
+                  <Input value={selectedUserEmail} disabled />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new_password">Nova Senha</Label>
+                  <Input
+                    id="new_password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Mínimo 8 caracteres
+                  </p>
+                </div>
+                <Button
+                  onClick={handleChangePassword}
+                  className="w-full"
+                  disabled={changingPassword}
+                >
+                  {changingPassword ? "Alterando..." : "Confirmar"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <Card className="bg-muted/50">
             <CardContent className="py-4">
