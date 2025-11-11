@@ -18,6 +18,7 @@ import {
   LogOut,
   UserCircle,
   KeyRound,
+  UserCog,
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -68,6 +69,12 @@ const UsersContent = () => {
   const [selectedUserEmail, setSelectedUserEmail] = useState<string>("");
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  
+  // estado do dialog de troca de perfil
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [selectedUserRole, setSelectedUserRole] = useState<string>("");
+  const [newRole, setNewRole] = useState<string>("");
+  const [changingRole, setChangingRole] = useState(false);
 
   // form (igual ao Auth: hook-form + zod)
   const form = useForm<CreateUserFormData>({
@@ -173,6 +180,59 @@ const UsersContent = () => {
   ];
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
+
+  const handleChangeRole = async () => {
+    if (!selectedUserId || !newRole) {
+      toast.error("Selecione um perfil");
+      return;
+    }
+
+    if (selectedUserId === profile?.id) {
+      toast.error("Você não pode alterar seu próprio perfil");
+      return;
+    }
+
+    try {
+      setChangingRole(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return;
+      }
+
+      const response = await supabase.functions.invoke('update-user-role', {
+        body: {
+          userId: selectedUserId,
+          newRole: newRole,
+        },
+      });
+
+      if (response.error) {
+        toast.error(response.error.message || "Falha ao alterar perfil");
+        return;
+      }
+
+      if (response.data?.error) {
+        toast.error(response.data.error);
+        return;
+      }
+
+      toast.success(`Perfil alterado com sucesso para ${selectedUserEmail}`);
+      setRoleDialogOpen(false);
+      setNewRole("");
+      setSelectedUserId(null);
+      setSelectedUserEmail("");
+      setSelectedUserRole("");
+      await fetchUsers();
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Falha ao alterar perfil");
+    } finally {
+      setChangingRole(false);
+    }
+  };
 
   const handleChangePassword = async () => {
     if (!selectedUserId || !newPassword) {
@@ -439,18 +499,34 @@ const UsersContent = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUserId(user.id);
-                              setSelectedUserEmail(user.email);
-                              setPasswordDialogOpen(true);
-                            }}
-                          >
-                            <KeyRound className="h-4 w-4 mr-2" />
-                            Trocar Senha
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUserId(user.id);
+                                setSelectedUserEmail(user.email);
+                                setSelectedUserRole(user.role);
+                                setNewRole(user.role);
+                                setRoleDialogOpen(true);
+                              }}
+                            >
+                              <UserCog className="h-4 w-4 mr-2" />
+                              Perfil
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUserId(user.id);
+                                setSelectedUserEmail(user.email);
+                                setPasswordDialogOpen(true);
+                              }}
+                            >
+                              <KeyRound className="h-4 w-4 mr-2" />
+                              Senha
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -459,6 +535,43 @@ const UsersContent = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Dialog para trocar perfil */}
+          <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Alterar Perfil</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Usuário</Label>
+                  <Input value={selectedUserEmail} disabled />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new_role">Novo Perfil</Label>
+                  <select
+                    id="new_role"
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                    value={newRole}
+                    onChange={(e) => setNewRole(e.target.value)}
+                  >
+                    <option value="client">Cliente</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Administradores têm acesso total ao sistema
+                  </p>
+                </div>
+                <Button
+                  onClick={handleChangeRole}
+                  className="w-full"
+                  disabled={changingRole}
+                >
+                  {changingRole ? "Alterando..." : "Confirmar"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Dialog para trocar senha */}
           <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
