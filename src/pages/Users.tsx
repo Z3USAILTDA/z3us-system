@@ -212,34 +212,38 @@ const UsersContent = () => {
     }
   };
 
-  // === NOVO: criação no mesmo padrão do Auth.tsx ===
+  // === NOVO: criação usando edge function ===
   const onCreateUser = async (data: CreateUserFormData) => {
     try {
       setSubmitting(true);
 
-      const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-          data: {
-            full_name: data.fullName,
-            role: data.role,
-          },
-        },
-      });
-
-      if (error) {
-        // Tratamento específico para usuário já existente
-        if (error.message.includes("already registered") || error.message.includes("User already registered")) {
-          toast.error(`O email ${data.email} já está cadastrado no sistema.`);
-        } else {
-          toast.error(error.message || "Falha ao criar usuário");
-        }
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.");
         return;
       }
 
-      toast.success("Usuário criado! O convidado já pode confirmar e acessar.");
+      const response = await supabase.functions.invoke('create-user', {
+        body: {
+          email: data.email,
+          password: data.password,
+          fullName: data.fullName,
+          role: data.role,
+        },
+      });
+
+      if (response.error) {
+        toast.error(response.error.message || "Falha ao criar usuário");
+        return;
+      }
+
+      if (response.data?.error) {
+        toast.error(response.data.error);
+        return;
+      }
+
+      toast.success("Usuário criado com sucesso!");
       form.reset({ role: "client" });
       setDialogOpen(false);
       await fetchUsers();
