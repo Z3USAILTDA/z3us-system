@@ -172,12 +172,13 @@ const AdminDashboard = () => {
       demandaMap.set(demanda, (demandaMap.get(demanda) || 0) + 1);
     });
 
-    const totalProjects = projectsWithDemanda?.length || 0;
+    const totalDemandas = demandaMap.size;
+    const averagePercentage = totalDemandas > 0 ? 100 / totalDemandas : 0;
     setProjectsByDemanda(
       Array.from(demandaMap.entries()).map(([demanda, total]) => ({
         demanda,
         total,
-        percentage: totalProjects > 0 ? (total / totalProjects) * 100 : 0,
+        percentage: averagePercentage,
       }))
     );
 
