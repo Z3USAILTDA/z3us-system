@@ -37,6 +37,12 @@ const AdminDashboard = () => {
     total: number;
   }>>([]);
 
+  const [projectsByDemanda, setProjectsByDemanda] = useState<Array<{
+    demanda: string;
+    total: number;
+    percentage: number;
+  }>>([]);
+
   useEffect(() => {
     fetchClients();
   }, []);
@@ -150,6 +156,28 @@ const AdminDashboard = () => {
       Array.from(priorityMap.entries()).map(([priority, total]) => ({
         priority,
         total,
+      }))
+    );
+
+    // Fetch projects by demanda
+    let demandaQuery = supabase.from("projects").select("demanda");
+    if (selectedClient !== "all") {
+      demandaQuery = demandaQuery.eq("client_id", selectedClient);
+    }
+    const { data: projectsWithDemanda } = await demandaQuery;
+
+    const demandaMap = new Map<string, number>();
+    projectsWithDemanda?.forEach(project => {
+      const demanda = project.demanda || "Sem demanda";
+      demandaMap.set(demanda, (demandaMap.get(demanda) || 0) + 1);
+    });
+
+    const totalProjects = projectsWithDemanda?.length || 0;
+    setProjectsByDemanda(
+      Array.from(demandaMap.entries()).map(([demanda, total]) => ({
+        demanda,
+        total,
+        percentage: totalProjects > 0 ? (total / totalProjects) * 100 : 0,
       }))
     );
 
@@ -381,6 +409,40 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Projects by Demanda */}
+      <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
+        <CardHeader>
+          <CardTitle>Resumo de Demandas</CardTitle>
+          <CardDescription>Distribuição de projetos por demanda</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Demanda</TableHead>
+                <TableHead className="text-center">Total</TableHead>
+                <TableHead className="text-center">Percentual</TableHead>
+                <TableHead>Distribuição</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {projectsByDemanda.map((demanda) => (
+                <TableRow key={demanda.demanda}>
+                  <TableCell className="font-medium">{demanda.demanda}</TableCell>
+                  <TableCell className="text-center">{demanda.total}</TableCell>
+                  <TableCell className="text-center">
+                    <span className="text-primary font-semibold">{demanda.percentage.toFixed(1)}%</span>
+                  </TableCell>
+                  <TableCell>
+                    <Progress value={demanda.percentage} className="h-2" />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-secondary opacity-30" />
