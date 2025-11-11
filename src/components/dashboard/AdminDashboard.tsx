@@ -160,25 +160,31 @@ const AdminDashboard = () => {
     );
 
     // Fetch projects by demanda
-    let demandaQuery = supabase.from("projects").select("demanda");
+    let demandaQuery = supabase.from("projects").select("demanda, progress");
     if (selectedClient !== "all") {
       demandaQuery = demandaQuery.eq("client_id", selectedClient);
     }
     const { data: projectsWithDemanda } = await demandaQuery;
 
-    const demandaMap = new Map<string, number>();
+    const demandaMap = new Map<string, { total: number; progressSum: number }>();
     projectsWithDemanda?.forEach(project => {
       const demanda = project.demanda || "Sem demanda";
-      demandaMap.set(demanda, (demandaMap.get(demanda) || 0) + 1);
+      const progress = project.progress || 0;
+      
+      if (!demandaMap.has(demanda)) {
+        demandaMap.set(demanda, { total: 0, progressSum: 0 });
+      }
+      
+      const stats = demandaMap.get(demanda)!;
+      stats.total++;
+      stats.progressSum += progress;
     });
 
-    const totalDemandas = demandaMap.size;
-    const averagePercentage = totalDemandas > 0 ? 100 / totalDemandas : 0;
     setProjectsByDemanda(
-      Array.from(demandaMap.entries()).map(([demanda, total]) => ({
+      Array.from(demandaMap.entries()).map(([demanda, stats]) => ({
         demanda,
-        total,
-        percentage: averagePercentage,
+        total: stats.total,
+        percentage: stats.total > 0 ? stats.progressSum / stats.total : 0,
       }))
     );
 
