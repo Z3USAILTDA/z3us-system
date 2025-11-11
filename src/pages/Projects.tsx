@@ -166,7 +166,7 @@ const ProjectsContent = () => {
     const actualStartDate = formData.get("actual_start_date") as string;
     const actualEndDate = formData.get("actual_end_date") as string;
 
-    const projectData = {
+      const projectData = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
       client_id: formData.get("client_id") as string,
@@ -183,6 +183,7 @@ const ProjectsContent = () => {
       actual_end_date: actualEndDate || null,
       area: formData.get("area") as string,
       project_manager_id: (formData.get("project_manager_id") as string) || null,
+      demanda: formData.get("demanda") as string,
     };
 
     if (editingProject) {
@@ -679,6 +680,17 @@ const ProjectsContent = () => {
                         />
                       </div>
 
+                      {/* Demanda */}
+                      <div className="space-y-2">
+                        <Label htmlFor="demanda">Demanda</Label>
+                        <Input
+                          id="demanda"
+                          name="demanda"
+                          defaultValue={editingProject?.demanda}
+                          placeholder="Ex: Desenvolvimento de sistema"
+                        />
+                      </div>
+
                       <Button type="submit" className="w-full">
                         {editingProject ? "Atualizar" : "Adicionar"}
                       </Button>
@@ -965,6 +977,15 @@ const ProjectsContent = () => {
                             <SortIcon column="observation" />
                           </div>
                         </TableHead>
+                        <TableHead
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleSort("demanda")}
+                        >
+                          <div className="flex items-center">
+                            Demanda
+                            <SortIcon column="demanda" />
+                          </div>
+                        </TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -998,6 +1019,11 @@ const ProjectsContent = () => {
                             <div className="line-clamp-2 text-sm text-muted-foreground">
                               {project.observation || "-"}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-muted-foreground">
+                              {project.demanda || "-"}
+                            </span>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
