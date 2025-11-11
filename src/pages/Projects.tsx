@@ -78,6 +78,10 @@ const ProjectsContent = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
+  // Inline editing
+  const [editingCell, setEditingCell] = useState<{ projectId: string; field: string } | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+
   useEffect(() => {
     checkUser();
   }, []);
@@ -351,6 +355,88 @@ const ProjectsContent = () => {
     (filterClient && filterClient !== "all") ||
     (filterStatus && filterStatus !== "all") ||
     (filterResponsible && filterResponsible !== "all");
+
+  const startEditing = (projectId: string, field: string, currentValue: any) => {
+    setEditingCell({ projectId, field });
+    setEditValue(currentValue || "");
+  };
+
+  const saveEdit = async (projectId: string, field: string) => {
+    if (!editingCell) return;
+
+    const { error } = await supabase
+      .from("projects")
+      .update({ [field]: editValue || null })
+      .eq("id", projectId);
+
+    if (error) {
+      toast.error(`Erro ao atualizar ${field}`);
+    } else {
+      toast.success("Atualizado com sucesso!");
+      fetchData();
+    }
+
+    setEditingCell(null);
+    setEditValue("");
+  };
+
+  const cancelEdit = () => {
+    setEditingCell(null);
+    setEditValue("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, projectId: string, field: string) => {
+    if (e.key === "Enter") {
+      saveEdit(projectId, field);
+    } else if (e.key === "Escape") {
+      cancelEdit();
+    }
+  };
+
+  const renderEditableCell = (project: any, field: string, displayValue: string, isSelect = false, options?: { value: string; label: string }[]) => {
+    const isEditing = editingCell?.projectId === project.id && editingCell?.field === field;
+
+    if (isEditing && isSelect && options) {
+      return (
+        <select
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={() => saveEdit(project.id, field)}
+          onKeyDown={(e) => handleKeyDown(e, project.id, field)}
+          autoFocus
+          className="w-full px-2 py-1 border border-primary rounded-md bg-background text-sm"
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (isEditing) {
+      return (
+        <Input
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={() => saveEdit(project.id, field)}
+          onKeyDown={(e) => handleKeyDown(e, project.id, field)}
+          autoFocus
+          className="h-8 text-sm"
+        />
+      );
+    }
+
+    return (
+      <div
+        onClick={() => startEditing(project.id, field, project[field])}
+        className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors min-h-[32px] flex items-center"
+      >
+        {displayValue}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -992,38 +1078,165 @@ const ProjectsContent = () => {
                     <TableBody>
                       {sortedProjects.map((project) => (
                         <TableRow key={project.id}>
-                          <TableCell>{project.sprint || "-"}</TableCell>
-                          <TableCell>{project.area && <Badge variant="outline">{project.area}</Badge>}</TableCell>
+                          <TableCell>
+                            {renderEditableCell(project, "sprint", project.sprint || "-")}
+                          </TableCell>
+                          <TableCell>
+                            {renderEditableCell(
+                              project,
+                              "area",
+                              project.area || "-",
+                              true,
+                              [
+                                { value: "", label: "Nenhuma" },
+                                { value: "Aereo", label: "Aéreo" },
+                                { value: "Maritimo", label: "Marítimo" },
+                                { value: "Desembaraço", label: "Desembaraço" },
+                                { value: "Financeiro", label: "Financeiro" },
+                                { value: "Operacional", label: "Operacional" },
+                              ]
+                            )}
+                          </TableCell>
                           <TableCell className="max-w-md">
-                            <div className="line-clamp-2">{project.title}</div>
+                            {renderEditableCell(project, "title", project.title)}
                           </TableCell>
-                          <TableCell>{project.clients?.company_name}</TableCell>
                           <TableCell>
-                            <Badge className={getStatusColor(project.status)}>{getStatusLabel(project.status)}</Badge>
+                            <span className="text-sm">{project.clients?.company_name}</span>
+                          </TableCell>
+                          <TableCell>
+                            {editingCell?.projectId === project.id && editingCell?.field === "status" ? (
+                              <select
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={() => saveEdit(project.id, "status")}
+                                onKeyDown={(e) => handleKeyDown(e, project.id, "status")}
+                                autoFocus
+                                className="w-full px-2 py-1 border border-primary rounded-md bg-background text-sm"
+                              >
+                                <option value="planning">Planejamento</option>
+                                <option value="in_progress">Em Andamento</option>
+                                <option value="on_hold">Pausado</option>
+                                <option value="test">Teste</option>
+                                <option value="completed">Concluído</option>
+                                <option value="cancelled">Cancelado</option>
+                              </select>
+                            ) : (
+                              <Badge
+                                className={`${getStatusColor(project.status)} cursor-pointer`}
+                                onClick={() => startEditing(project.id, "status", project.status)}
+                              >
+                                {getStatusLabel(project.status)}
+                              </Badge>
+                            )}
                           </TableCell>
 
-                          {/* << NOVO: célula Gerente */}
-                          <TableCell>{getManagerName(project.project_manager_id)}</TableCell>
+                          <TableCell>
+                            {editingCell?.projectId === project.id && editingCell?.field === "project_manager_id" ? (
+                              <select
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={() => saveEdit(project.id, "project_manager_id")}
+                                onKeyDown={(e) => handleKeyDown(e, project.id, "project_manager_id")}
+                                autoFocus
+                                className="w-full px-2 py-1 border border-primary rounded-md bg-background text-sm"
+                              >
+                                <option value="">Nenhum</option>
+                                {managers.map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    {m.full_name || m.email}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div
+                                onClick={() => startEditing(project.id, "project_manager_id", project.project_manager_id)}
+                                className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                              >
+                                {getManagerName(project.project_manager_id)}
+                              </div>
+                            )}
+                          </TableCell>
 
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Progress value={project.progress} className="h-2 w-20" />
-                              <span className="text-sm">{project.progress}%</span>
-                            </div>
+                            {editingCell?.projectId === project.id && editingCell?.field === "progress" ? (
+                              <Input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={() => saveEdit(project.id, "progress")}
+                                onKeyDown={(e) => handleKeyDown(e, project.id, "progress")}
+                                autoFocus
+                                className="h-8 w-20 text-sm"
+                              />
+                            ) : (
+                              <div
+                                onClick={() => startEditing(project.id, "progress", project.progress)}
+                                className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Progress value={project.progress} className="h-2 w-20" />
+                                  <span className="text-sm">{project.progress}%</span>
+                                </div>
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell>
-                            {project.end_date ? new Date(project.end_date).toLocaleDateString("pt-BR") : "-"}
+                            {editingCell?.projectId === project.id && editingCell?.field === "end_date" ? (
+                              <Input
+                                type="date"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={() => saveEdit(project.id, "end_date")}
+                                onKeyDown={(e) => handleKeyDown(e, project.id, "end_date")}
+                                autoFocus
+                                className="h-8 text-sm"
+                              />
+                            ) : (
+                              <div
+                                onClick={() => startEditing(project.id, "end_date", project.end_date)}
+                                className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                              >
+                                {project.end_date ? new Date(project.end_date).toLocaleDateString("pt-BR") : "-"}
+                              </div>
+                            )}
                           </TableCell>
-                          <TableCell>{project.responsible || "-"}</TableCell>
+                          <TableCell>
+                            {editingCell?.projectId === project.id && editingCell?.field === "responsible" ? (
+                              <select
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={() => saveEdit(project.id, "responsible")}
+                                onKeyDown={(e) => handleKeyDown(e, project.id, "responsible")}
+                                autoFocus
+                                className="w-full px-2 py-1 border border-primary rounded-md bg-background text-sm"
+                              >
+                                <option value="">Nenhum</option>
+                                {teams.map((team) => (
+                                  <option key={team.id} value={team.name}>
+                                    {team.name}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div
+                                onClick={() => startEditing(project.id, "responsible", project.responsible)}
+                                className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                              >
+                                {project.responsible || "-"}
+                              </div>
+                            )}
+                          </TableCell>
                           <TableCell className="max-w-xs">
-                            <div className="line-clamp-2 text-sm text-muted-foreground">
-                              {project.observation || "-"}
-                            </div>
+                            {renderEditableCell(
+                              project,
+                              "observation",
+                              project.observation || "-"
+                            )}
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm text-muted-foreground">
-                              {project.demanda || "-"}
-                            </span>
+                            {renderEditableCell(project, "demanda", project.demanda || "-")}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
