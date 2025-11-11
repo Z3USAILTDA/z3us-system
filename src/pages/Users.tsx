@@ -127,7 +127,8 @@ const UsersContent = () => {
         email,
         full_name,
         role,
-        created_at
+        created_at,
+        demanda
       `,
       )
       .order("created_at", { ascending: false });
@@ -468,6 +469,7 @@ const UsersContent = () => {
                       <TableHead>Nome</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Função</TableHead>
+                      <TableHead>Demanda</TableHead>
                       <TableHead>Data de Cadastro</TableHead>
                       <TableHead>Ações</TableHead>
                     </TableRow>
@@ -509,6 +511,11 @@ const UsersContent = () => {
                               <UserCog className="h-3 w-3" />
                             </Button>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {user.demanda || "-"}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2 text-muted-foreground">
