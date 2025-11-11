@@ -491,18 +491,13 @@ const UsersContent = () => {
                             {user.email}
                           </div>
                         </TableCell>
-                        <TableCell>{getRoleBadge(user.role)}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            {formatDate(user.created_at)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
+                          <div className="flex items-center gap-2">
+                            {getRoleBadge(user.role)}
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
+                              className="h-7"
                               onClick={() => {
                                 setSelectedUserId(user.id);
                                 setSelectedUserEmail(user.email);
@@ -511,22 +506,29 @@ const UsersContent = () => {
                                 setRoleDialogOpen(true);
                               }}
                             >
-                              <UserCog className="h-4 w-4 mr-2" />
-                              Perfil
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedUserId(user.id);
-                                setSelectedUserEmail(user.email);
-                                setPasswordDialogOpen(true);
-                              }}
-                            >
-                              <KeyRound className="h-4 w-4 mr-2" />
-                              Senha
+                              <UserCog className="h-3 w-3" />
                             </Button>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(user.created_at)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUserId(user.id);
+                              setSelectedUserEmail(user.email);
+                              setPasswordDialogOpen(true);
+                            }}
+                          >
+                            <KeyRound className="h-4 w-4 mr-2" />
+                            Senha
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
