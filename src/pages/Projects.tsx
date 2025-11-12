@@ -687,6 +687,7 @@ const ProjectsContent = () => {
                             <option value="Financeiro">Financeiro</option>
                             <option value="Operacional">Operacional</option>
                             <option value="Recursos Humanos">Recursos Humanos</option>
+                            <option value="Cliente">Cliente</option>
                           </select>
                         </div>
                         <div className="space-y-2">
@@ -1096,6 +1097,7 @@ const ProjectsContent = () => {
                                 { value: "Financeiro", label: "Financeiro" },
                                 { value: "Operacional", label: "Operacional" },
                                 { value: "Recursos Humanos", label: "Recursos Humanos" },
+                                { value: "Cliente", label: "Cliente" },
                               ]
                             )}
                           </TableCell>
