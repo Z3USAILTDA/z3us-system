@@ -18,7 +18,7 @@ const ClientDashboard = () => {
   const [sprintFilter, setSprintFilter] = useState<string>("all");
   const [isDemandaOpen, setIsDemandaOpen] = useState(false);
   const [demandaSortColumn, setDemandaSortColumn] = useState<"number" | "percentage">("percentage");
-  const [demandaSortDirection, setDemandaSortDirection] = useState<"asc" | "desc">("desc");
+  const [demandaSortDirection, setDemandaSortDirection] = useState<"asc" | "desc">("asc");
   const [projectsByDemanda, setProjectsByDemanda] = useState<Array<{
     demanda: string;
     total: number;
