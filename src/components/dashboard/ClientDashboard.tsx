@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { FolderKanban, Calendar, MessageSquare, Clock, TrendingUp, CheckCircle2, AlertCircle, Pause, ChevronDown } from "lucide-react";
+import { FolderKanban, Calendar, MessageSquare, Clock, TrendingUp, CheckCircle2, AlertCircle, Pause, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import logoBranco from "@/assets/logo-branco.png";
@@ -17,7 +17,8 @@ const ClientDashboard = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sprintFilter, setSprintFilter] = useState<string>("all");
   const [isDemandaOpen, setIsDemandaOpen] = useState(false);
-  const [demandaSortBy, setDemandaSortBy] = useState<"number" | "percentage">("percentage");
+  const [demandaSortColumn, setDemandaSortColumn] = useState<"number" | "percentage">("percentage");
+  const [demandaSortDirection, setDemandaSortDirection] = useState<"asc" | "desc">("desc");
   const [projectsByDemanda, setProjectsByDemanda] = useState<Array<{
     demanda: string;
     total: number;
@@ -114,6 +115,22 @@ const ClientDashboard = () => {
       addSuffix: true,
       locale: ptBR,
     });
+  };
+
+  const handleDemandaSort = (column: "number" | "percentage") => {
+    if (demandaSortColumn === column) {
+      setDemandaSortDirection(demandaSortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setDemandaSortColumn(column);
+      setDemandaSortDirection("desc");
+    }
+  };
+
+  const DemandaSortIcon = ({ column }: { column: "number" | "percentage" }) => {
+    if (demandaSortColumn !== column) {
+      return <ArrowUpDown className="ml-2 h-4 w-4" />;
+    }
+    return demandaSortDirection === "asc" ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
   };
 
   if (loading) {
@@ -302,37 +319,43 @@ const ClientDashboard = () => {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent>
-                <div className="mb-4">
-                  <Select value={demandaSortBy} onValueChange={(value: "number" | "percentage") => setDemandaSortBy(value)}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="percentage">Ordenar por Percentual</SelectItem>
-                      <SelectItem value="number">Ordenar por Número</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Demanda</TableHead>
+                      <TableHead 
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleDemandaSort("number")}
+                      >
+                        <div className="flex items-center">
+                          Demanda
+                          <DemandaSortIcon column="number" />
+                        </div>
+                      </TableHead>
                       <TableHead className="text-center">Total</TableHead>
-                      <TableHead className="text-center">Percentual</TableHead>
+                      <TableHead 
+                        className="text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleDemandaSort("percentage")}
+                      >
+                        <div className="flex items-center justify-center">
+                          Percentual
+                          <DemandaSortIcon column="percentage" />
+                        </div>
+                      </TableHead>
                       <TableHead>Distribuição</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {[...projectsByDemanda].sort((a, b) => {
-                      if (demandaSortBy === "percentage") {
-                        return b.percentage - a.percentage;
+                      if (demandaSortColumn === "percentage") {
+                        const diff = b.percentage - a.percentage;
+                        return demandaSortDirection === "asc" ? -diff : diff;
                       } else {
-                        // Extrai o número após # da demanda
                         const extractNumber = (demanda: string) => {
                           const match = demanda.match(/#(\d+)/);
                           return match ? parseInt(match[1]) : 0;
                         };
-                        return extractNumber(a.demanda) - extractNumber(b.demanda);
+                        const diff = extractNumber(a.demanda) - extractNumber(b.demanda);
+                        return demandaSortDirection === "asc" ? diff : -diff;
                       }
                     }).map((demanda) => (
                       <TableRow key={demanda.demanda}>
