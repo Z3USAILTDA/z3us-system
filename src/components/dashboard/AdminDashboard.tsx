@@ -42,6 +42,7 @@ const AdminDashboard = () => {
     total: number;
     percentage: number;
   }>>([]);
+  const [demandaSortBy, setDemandaSortBy] = useState<"number" | "percentage">("percentage");
 
   useEffect(() => {
     fetchClients();
@@ -420,8 +421,21 @@ const AdminDashboard = () => {
       {/* Projects by Demanda */}
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
         <CardHeader>
-          <CardTitle>Resumo de Demandas</CardTitle>
-          <CardDescription>Distribuição de projetos por demanda</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Resumo de Demandas</CardTitle>
+              <CardDescription>Distribuição de projetos por demanda</CardDescription>
+            </div>
+            <Select value={demandaSortBy} onValueChange={(value: "number" | "percentage") => setDemandaSortBy(value)}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="percentage">Ordenar por Percentual</SelectItem>
+                <SelectItem value="number">Ordenar por Número</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -434,7 +448,18 @@ const AdminDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {projectsByDemanda.map((demanda) => (
+              {[...projectsByDemanda].sort((a, b) => {
+                if (demandaSortBy === "percentage") {
+                  return b.percentage - a.percentage;
+                } else {
+                  // Extrai o número após # da demanda
+                  const extractNumber = (demanda: string) => {
+                    const match = demanda.match(/#(\d+)/);
+                    return match ? parseInt(match[1]) : 0;
+                  };
+                  return extractNumber(a.demanda) - extractNumber(b.demanda);
+                }
+              }).map((demanda) => (
                 <TableRow key={demanda.demanda}>
                   <TableCell className="font-medium">{demanda.demanda}</TableCell>
                   <TableCell className="text-center">{demanda.total}</TableCell>
