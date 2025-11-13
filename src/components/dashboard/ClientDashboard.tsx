@@ -17,6 +17,7 @@ const ClientDashboard = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sprintFilter, setSprintFilter] = useState<string>("all");
   const [isDemandaOpen, setIsDemandaOpen] = useState(false);
+  const [demandaSortBy, setDemandaSortBy] = useState<"number" | "percentage">("percentage");
   const [projectsByDemanda, setProjectsByDemanda] = useState<Array<{
     demanda: string;
     total: number;
@@ -74,15 +75,13 @@ const ClientDashboard = () => {
       stats.progressSum += progress;
     });
 
-    setProjectsByDemanda(
-      Array.from(demandaMap.entries())
-        .map(([demanda, stats]) => ({
-          demanda,
-          total: stats.total,
-          percentage: stats.total > 0 ? stats.progressSum / stats.total : 0,
-        }))
-        .sort((a, b) => b.percentage - a.percentage)
-    );
+    const demandaArray = Array.from(demandaMap.entries()).map(([demanda, stats]) => ({
+      demanda,
+      total: stats.total,
+      percentage: stats.total > 0 ? stats.progressSum / stats.total : 0,
+    }));
+
+    setProjectsByDemanda(demandaArray);
 
     setProjects(sortedProjects);
     setLoading(false);
@@ -303,6 +302,17 @@ const ClientDashboard = () => {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent>
+                <div className="mb-4">
+                  <Select value={demandaSortBy} onValueChange={(value: "number" | "percentage") => setDemandaSortBy(value)}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Ordenar por Percentual</SelectItem>
+                      <SelectItem value="number">Ordenar por Número</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -313,7 +323,18 @@ const ClientDashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {projectsByDemanda.map((demanda) => (
+                    {[...projectsByDemanda].sort((a, b) => {
+                      if (demandaSortBy === "percentage") {
+                        return b.percentage - a.percentage;
+                      } else {
+                        // Extrai o número após # da demanda
+                        const extractNumber = (demanda: string) => {
+                          const match = demanda.match(/#(\d+)/);
+                          return match ? parseInt(match[1]) : 0;
+                        };
+                        return extractNumber(a.demanda) - extractNumber(b.demanda);
+                      }
+                    }).map((demanda) => (
                       <TableRow key={demanda.demanda}>
                         <TableCell className="font-medium">{demanda.demanda}</TableCell>
                         <TableCell className="text-center">{demanda.total}</TableCell>
