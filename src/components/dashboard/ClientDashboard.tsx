@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FolderKanban, Calendar, MessageSquare, Clock, TrendingUp, CheckCircle2, AlertCircle, Pause } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,6 +15,11 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sprintFilter, setSprintFilter] = useState<string>("all");
+  const [projectsByDemanda, setProjectsByDemanda] = useState<Array<{
+    demanda: string;
+    total: number;
+    percentage: number;
+  }>>([]);
 
   useEffect(() => {
     fetchProjects();
@@ -50,6 +56,29 @@ const ClientDashboard = () => {
       if (!aHasObservation && bHasObservation) return 1;
       return 0;
     });
+
+    // Calcula resumo de demandas
+    const demandaMap = new Map<string, { total: number; progressSum: number }>();
+    projectsData?.forEach(project => {
+      const demanda = project.demanda || "Sem demanda";
+      const progress = project.progress || 0;
+      
+      if (!demandaMap.has(demanda)) {
+        demandaMap.set(demanda, { total: 0, progressSum: 0 });
+      }
+      
+      const stats = demandaMap.get(demanda)!;
+      stats.total++;
+      stats.progressSum += progress;
+    });
+
+    setProjectsByDemanda(
+      Array.from(demandaMap.entries()).map(([demanda, stats]) => ({
+        demanda,
+        total: stats.total,
+        percentage: stats.total > 0 ? stats.progressSum / stats.total : 0,
+      }))
+    );
 
     setProjects(sortedProjects);
     setLoading(false);
@@ -248,6 +277,42 @@ const ClientDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Resumo de Demandas */}
+      {projectsByDemanda.length > 0 && (
+        <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+          <CardHeader>
+            <CardTitle>Resumo de Demandas</CardTitle>
+            <CardDescription>Distribuição de projetos por demanda</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Demanda</TableHead>
+                  <TableHead className="text-center">Total</TableHead>
+                  <TableHead className="text-center">Percentual</TableHead>
+                  <TableHead>Distribuição</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projectsByDemanda.map((demanda) => (
+                  <TableRow key={demanda.demanda}>
+                    <TableCell className="font-medium">{demanda.demanda}</TableCell>
+                    <TableCell className="text-center">{demanda.total}</TableCell>
+                    <TableCell className="text-center">
+                      <span className="text-primary font-semibold">{demanda.percentage.toFixed(1)}%</span>
+                    </TableCell>
+                    <TableCell>
+                      <Progress value={demanda.percentage} className="h-2" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {projects.length === 0 ? (
         <Card>
