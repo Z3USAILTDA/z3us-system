@@ -122,7 +122,7 @@ const ClientDashboard = () => {
       setDemandaSortDirection(demandaSortDirection === "asc" ? "desc" : "asc");
     } else {
       setDemandaSortColumn(column);
-      setDemandaSortDirection("desc");
+      setDemandaSortDirection("asc");
     }
   };
 
