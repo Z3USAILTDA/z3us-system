@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FolderKanban, Calendar, MessageSquare, Clock, TrendingUp, CheckCircle2, AlertCircle, Pause } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { FolderKanban, Calendar, MessageSquare, Clock, TrendingUp, CheckCircle2, AlertCircle, Pause, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import logoBranco from "@/assets/logo-branco.png";
@@ -15,6 +16,7 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sprintFilter, setSprintFilter] = useState<string>("all");
+  const [isDemandaOpen, setIsDemandaOpen] = useState(false);
   const [projectsByDemanda, setProjectsByDemanda] = useState<Array<{
     demanda: string;
     total: number;
@@ -280,38 +282,49 @@ const ClientDashboard = () => {
 
       {/* Resumo de Demandas */}
       {projectsByDemanda.length > 0 && (
-        <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
-          <CardHeader>
-            <CardTitle>Resumo de Demandas</CardTitle>
-            <CardDescription>Distribuição de projetos por demanda</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Demanda</TableHead>
-                  <TableHead className="text-center">Total</TableHead>
-                  <TableHead className="text-center">Percentual</TableHead>
-                  <TableHead>Distribuição</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {projectsByDemanda.map((demanda) => (
-                  <TableRow key={demanda.demanda}>
-                    <TableCell className="font-medium">{demanda.demanda}</TableCell>
-                    <TableCell className="text-center">{demanda.total}</TableCell>
-                    <TableCell className="text-center">
-                      <span className="text-primary font-semibold">{demanda.percentage.toFixed(1)}%</span>
-                    </TableCell>
-                    <TableCell>
-                      <Progress value={demanda.percentage} className="h-2" />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <Collapsible open={isDemandaOpen} onOpenChange={setIsDemandaOpen}>
+          <Card className="bg-card/50 backdrop-blur-sm border-primary/20">
+            <CollapsibleTrigger className="w-full">
+              <CardHeader className="cursor-pointer hover:bg-primary/5 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="text-left">
+                    <CardTitle>Resumo de Demandas</CardTitle>
+                    <CardDescription>Distribuição de projetos por demanda</CardDescription>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isDemandaOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Demanda</TableHead>
+                      <TableHead className="text-center">Total</TableHead>
+                      <TableHead className="text-center">Percentual</TableHead>
+                      <TableHead>Distribuição</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {projectsByDemanda.map((demanda) => (
+                      <TableRow key={demanda.demanda}>
+                        <TableCell className="font-medium">{demanda.demanda}</TableCell>
+                        <TableCell className="text-center">{demanda.total}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-primary font-semibold">{demanda.percentage.toFixed(1)}%</span>
+                        </TableCell>
+                        <TableCell>
+                          <Progress value={demanda.percentage} className="h-2" />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       )}
 
       {projects.length === 0 ? (
