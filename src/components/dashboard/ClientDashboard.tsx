@@ -75,11 +75,13 @@ const ClientDashboard = () => {
     });
 
     setProjectsByDemanda(
-      Array.from(demandaMap.entries()).map(([demanda, stats]) => ({
-        demanda,
-        total: stats.total,
-        percentage: stats.total > 0 ? stats.progressSum / stats.total : 0,
-      }))
+      Array.from(demandaMap.entries())
+        .map(([demanda, stats]) => ({
+          demanda,
+          total: stats.total,
+          percentage: stats.total > 0 ? stats.progressSum / stats.total : 0,
+        }))
+        .sort((a, b) => b.percentage - a.percentage)
     );
 
     setProjects(sortedProjects);
