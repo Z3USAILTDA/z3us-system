@@ -337,7 +337,11 @@ const ProjectsContent = () => {
   };
 
   // Get unique values for filters
-  const uniqueSprints = [...new Set(projects.map((p) => p.sprint).filter(Boolean))];
+  const uniqueSprints = [...new Set(projects.map((p) => p.sprint).filter(Boolean))].sort((a, b) => {
+    const numA = parseInt(a);
+    const numB = parseInt(b);
+    return numA - numB;
+  });
   const uniqueAreas = [...new Set(projects.map((p) => p.area).filter(Boolean))];
   const uniqueResponsibles = [...new Set(projects.map((p) => p.responsible).filter(Boolean))];
 
