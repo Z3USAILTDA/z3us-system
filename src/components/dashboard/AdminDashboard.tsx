@@ -206,7 +206,7 @@ const AdminDashboard = () => {
       setDemandaSortDirection(demandaSortDirection === "asc" ? "desc" : "asc");
     } else {
       setDemandaSortColumn(column);
-      setDemandaSortDirection("desc");
+      setDemandaSortDirection("asc");
     }
   };
 
