@@ -43,7 +43,7 @@ const AdminDashboard = () => {
     percentage: number;
   }>>([]);
   const [demandaSortColumn, setDemandaSortColumn] = useState<"number" | "percentage">("percentage");
-  const [demandaSortDirection, setDemandaSortDirection] = useState<"asc" | "desc">("desc");
+  const [demandaSortDirection, setDemandaSortDirection] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     fetchClients();
