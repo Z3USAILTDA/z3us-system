@@ -141,7 +141,11 @@ const ClientDashboard = () => {
   });
 
   const availableStatuses = Array.from(new Set(projects.map(p => p.status)));
-  const availableSprints = Array.from(new Set(projects.map(p => p.sprint).filter(Boolean)));
+  const availableSprints = Array.from(new Set(projects.map(p => p.sprint).filter(Boolean))).sort((a, b) => {
+    const numA = parseInt(a);
+    const numB = parseInt(b);
+    return numA - numB;
+  });
   const hasSprints = availableSprints.length > 0;
 
   // Estatísticas - usando apenas filtro de sprint
