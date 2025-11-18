@@ -800,8 +800,113 @@ const ProjectsContent = () => {
                 </CardContent>
               </Card>
             ) : viewMode === "cards" ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {sortedProjects.map((project) => (
+              <>
+                {/* Filters for Cards View */}
+                <Card className="mb-6">
+                  <CardContent className="p-6">
+                    <div className="mb-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-medium">Filtros</h3>
+                        {hasActiveFilters && (
+                          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
+                            <X className="h-4 w-4 mr-1" />
+                            Limpar Filtros
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Sprint</Label>
+                          <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="Todos" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              {uniqueSprints.map((sprint) => (
+                                <SelectItem key={sprint} value={sprint}>
+                                  {sprint}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs">Área</Label>
+                          <Select value={filterArea || "all"} onValueChange={setFilterArea}>
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="Todas" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todas</SelectItem>
+                              {uniqueAreas.map((area) => (
+                                <SelectItem key={area} value={area}>
+                                  {area}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs">Cliente</Label>
+                          <Select value={filterClient || "all"} onValueChange={setFilterClient}>
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="Todos" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              {clients.map((client) => (
+                                <SelectItem key={client.id} value={client.id}>
+                                  {client.company_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs">Status</Label>
+                          <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="Todos" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              <SelectItem value="overdue" className="text-destructive font-semibold">Em Atraso</SelectItem>
+                              <SelectItem value="planning">Planejamento</SelectItem>
+                              <SelectItem value="in_progress">Em Andamento</SelectItem>
+                              <SelectItem value="on_hold">Pausado</SelectItem>
+                              <SelectItem value="completed">Concluído</SelectItem>
+                              <SelectItem value="cancelled">Cancelado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs">Responsável</Label>
+                          <Select value={filterResponsible || "all"} onValueChange={setFilterResponsible}>
+                            <SelectTrigger className="h-8">
+                              <SelectValue placeholder="Todos" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              {uniqueResponsibles.map((responsible) => (
+                                <SelectItem key={responsible} value={responsible}>
+                                  {responsible}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {sortedProjects.map((project) => (
                   <Card key={project.id} className="hover:shadow-lg transition-all">
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -878,6 +983,7 @@ const ProjectsContent = () => {
                   </Card>
                 ))}
               </div>
+              </>
             ) : (
               <Card>
                 <CardContent className="p-6">
