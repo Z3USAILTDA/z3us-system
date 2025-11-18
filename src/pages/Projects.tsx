@@ -807,48 +807,14 @@ const ProjectsContent = () => {
                     <div className="mb-6 space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium">Filtros</h3>
-                        {hasActiveFilters && (
+                        {((filterClient && filterClient !== "all") || (filterSprint && filterSprint !== "all")) && (
                           <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
                             <X className="h-4 w-4 mr-1" />
                             Limpar Filtros
                           </Button>
                         )}
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-xs">Sprint</Label>
-                          <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="Todos" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Todos</SelectItem>
-                              {uniqueSprints.map((sprint) => (
-                                <SelectItem key={sprint} value={sprint}>
-                                  {sprint}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-xs">Área</Label>
-                          <Select value={filterArea || "all"} onValueChange={setFilterArea}>
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="Todas" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Todas</SelectItem>
-                              {uniqueAreas.map((area) => (
-                                <SelectItem key={area} value={area}>
-                                  {area}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-xs">Cliente</Label>
                           <Select value={filterClient || "all"} onValueChange={setFilterClient}>
@@ -867,34 +833,16 @@ const ProjectsContent = () => {
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs">Status</Label>
-                          <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
+                          <Label className="text-xs">Sprint</Label>
+                          <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="Todos" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="all">Todos</SelectItem>
-                              <SelectItem value="overdue" className="text-destructive font-semibold">Em Atraso</SelectItem>
-                              <SelectItem value="planning">Planejamento</SelectItem>
-                              <SelectItem value="in_progress">Em Andamento</SelectItem>
-                              <SelectItem value="on_hold">Pausado</SelectItem>
-                              <SelectItem value="completed">Concluído</SelectItem>
-                              <SelectItem value="cancelled">Cancelado</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-xs">Responsável</Label>
-                          <Select value={filterResponsible || "all"} onValueChange={setFilterResponsible}>
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="Todos" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Todos</SelectItem>
-                              {uniqueResponsibles.map((responsible) => (
-                                <SelectItem key={responsible} value={responsible}>
-                                  {responsible}
+                              {uniqueSprints.map((sprint) => (
+                                <SelectItem key={sprint} value={sprint}>
+                                  {sprint}
                                 </SelectItem>
                               ))}
                             </SelectContent>
