@@ -539,12 +539,49 @@ const ProjectsContent = () => {
 
         <main className="flex-1 p-6 overflow-auto">
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-4">
               <div>
                 <h1 className="text-3xl font-bold">Gerenciar Projetos</h1>
                 <p className="text-muted-foreground">Cadastre e gerencie projetos</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center flex-wrap">
+                {viewMode === "cards" && (
+                  <>
+                    <Select value={filterClient || "all"} onValueChange={setFilterClient}>
+                      <SelectTrigger className="h-9 w-[180px]">
+                        <SelectValue placeholder="Todos os clientes" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os clientes</SelectItem>
+                        {clients.map((client) => (
+                          <SelectItem key={client.id} value={client.id}>
+                            {client.company_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
+                      <SelectTrigger className="h-9 w-[140px]">
+                        <SelectValue placeholder="Todas as sprints" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as sprints</SelectItem>
+                        {uniqueSprints.map((sprint) => (
+                          <SelectItem key={sprint} value={sprint}>
+                            {sprint}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {((filterClient && filterClient !== "all") || (filterSprint && filterSprint !== "all")) && (
+                      <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </>
+                )}
                 <div className="flex border rounded-md">
                   <Button
                     variant={viewMode === "cards" ? "default" : "ghost"}
@@ -800,61 +837,8 @@ const ProjectsContent = () => {
                 </CardContent>
               </Card>
             ) : viewMode === "cards" ? (
-              <>
-                {/* Filters for Cards View */}
-                <Card className="mb-6">
-                  <CardContent className="p-6">
-                    <div className="mb-6 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium">Filtros</h3>
-                        {((filterClient && filterClient !== "all") || (filterSprint && filterSprint !== "all")) && (
-                          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
-                            <X className="h-4 w-4 mr-1" />
-                            Limpar Filtros
-                          </Button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-xs">Cliente</Label>
-                          <Select value={filterClient || "all"} onValueChange={setFilterClient}>
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="Todos" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Todos</SelectItem>
-                              {clients.map((client) => (
-                                <SelectItem key={client.id} value={client.id}>
-                                  {client.company_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-xs">Sprint</Label>
-                          <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="Todos" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Todos</SelectItem>
-                              {uniqueSprints.map((sprint) => (
-                                <SelectItem key={sprint} value={sprint}>
-                                  {sprint}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {sortedProjects.map((project) => (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {sortedProjects.map((project) => (
                   <Card key={project.id} className="hover:shadow-lg transition-all">
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -931,7 +915,6 @@ const ProjectsContent = () => {
                   </Card>
                 ))}
               </div>
-              </>
             ) : (
               <Card>
                 <CardContent className="p-6">
