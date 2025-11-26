@@ -95,6 +95,7 @@ const ClientDashboard = () => {
       on_hold: "bg-destructive",
       completed: "bg-success",
       cancelled: "bg-destructive",
+      waiting_client: "bg-orange-500",
     };
     return colors[status] || "bg-muted";
   };
@@ -106,6 +107,7 @@ const ClientDashboard = () => {
       on_hold: "Pausado",
       completed: "Concluído",
       cancelled: "Cancelado",
+      waiting_client: "Aguardando Cliente",
     };
     return labels[status] || status;
   };
@@ -198,6 +200,9 @@ const ClientDashboard = () => {
                   )}
                   {availableStatuses.includes("on_hold") && (
                     <SelectItem value="on_hold">Pausado</SelectItem>
+                  )}
+                  {availableStatuses.includes("waiting_client") && (
+                    <SelectItem value="waiting_client">Aguardando Cliente</SelectItem>
                   )}
                   {availableStatuses.includes("completed") && (
                     <SelectItem value="completed">Concluído</SelectItem>
