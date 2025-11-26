@@ -249,6 +249,7 @@ const ProjectsContent = () => {
       completed: "bg-success",
       cancelled: "bg-destructive",
       test: "bg-purple-500",
+      waiting_client: "bg-orange-500",
     };
     return colors[status] || "bg-muted";
   };
@@ -261,6 +262,7 @@ const ProjectsContent = () => {
       completed: "Concluído",
       cancelled: "Cancelado",
       test: "Teste",
+      waiting_client: "Aguardando Cliente",
     };
     return labels[status] || status;
   };
@@ -282,7 +284,7 @@ const ProjectsContent = () => {
     if (filterStatus === "overdue") {
       const now = new Date();
       const endDate = project.end_date ? new Date(project.end_date) : null;
-      const isOverdue = endDate && endDate < now && project.status !== "completed" && project.status !== "cancelled";
+      const isOverdue = endDate && endDate < now && project.status !== "completed" && project.status !== "cancelled" && project.status !== "waiting_client";
       if (!isOverdue) return false;
     } else if (filterStatus && filterStatus !== "all" && project.status !== filterStatus) {
       return false;
@@ -675,6 +677,7 @@ const ProjectsContent = () => {
                             <option value="in_progress">Em Andamento</option>
                             <option value="on_hold">Pausado</option>
                             <option value="test">Teste</option>
+                            <option value="waiting_client">Aguardando Cliente</option>
                             <option value="completed">Concluído</option>
                             <option value="cancelled">Cancelado</option>
                           </select>
@@ -994,6 +997,7 @@ const ProjectsContent = () => {
                             <SelectItem value="in_progress">Em Andamento</SelectItem>
                             <SelectItem value="on_hold">Pausado</SelectItem>
                             <SelectItem value="test">Teste</SelectItem>
+                            <SelectItem value="waiting_client">Aguardando Cliente</SelectItem>
                             <SelectItem value="completed">Concluído</SelectItem>
                             <SelectItem value="cancelled">Cancelado</SelectItem>
                           </SelectContent>
@@ -1164,6 +1168,7 @@ const ProjectsContent = () => {
                                 <option value="in_progress">Em Andamento</option>
                                 <option value="on_hold">Pausado</option>
                                 <option value="test">Teste</option>
+                                <option value="waiting_client">Aguardando Cliente</option>
                                 <option value="completed">Concluído</option>
                                 <option value="cancelled">Cancelado</option>
                               </select>
