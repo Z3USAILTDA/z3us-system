@@ -34,13 +34,32 @@ const ClientDashboard = () => {
     
     if (!user) return;
 
-    const { data: clientData } = await supabase
-      .from("clients")
-      .select("id")
+    // Primeiro tenta buscar pela tabela client_users (nova estrutura de múltiplos usuários)
+    let clientId: string | null = null;
+    
+    const { data: clientUserData } = await supabase
+      .from("client_users")
+      .select("client_id")
       .eq("user_id", user.id)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
-    if (!clientData) {
+    if (clientUserData) {
+      clientId = clientUserData.client_id;
+    } else {
+      // Fallback: busca pelo user_id direto na tabela clients (compatibilidade)
+      const { data: clientData } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (clientData) {
+        clientId = clientData.id;
+      }
+    }
+
+    if (!clientId) {
       setLoading(false);
       return;
     }
@@ -48,7 +67,7 @@ const ClientDashboard = () => {
     const { data: projectsData } = await supabase
       .from("projects")
       .select("*")
-      .eq("client_id", clientData.id)
+      .eq("client_id", clientId)
       .order("created_at", { ascending: false });
 
     // Ordena projetos: primeiro os que têm client_observation, depois os demais
