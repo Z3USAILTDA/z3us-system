@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle, UserPlus, X } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -43,6 +43,13 @@ import {
 } from "@/components/ui/sidebar";
 import logoWhite from "@/assets/logo-branco.png";
 
+interface ClientUser {
+  id: string;
+  user_id: string;
+  email?: string;
+  full_name?: string;
+}
+
 const ClientsContent = () => {
   const navigate = useNavigate();
   const [clients, setClients] = useState<any[]>([]);
@@ -50,6 +57,13 @@ const ClientsContent = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  
+  // Estado para gerenciar usuários do cliente
+  const [usersDialogOpen, setUsersDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [clientUsers, setClientUsers] = useState<ClientUser[]>([]);
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
@@ -96,6 +110,96 @@ const ClientsContent = () => {
       setClients(data || []);
     }
     setLoading(false);
+  };
+
+  const fetchClientUsers = async (clientId: string) => {
+    setLoadingUsers(true);
+    const { data, error } = await supabase
+      .from("client_users")
+      .select(`
+        id,
+        user_id,
+        profiles:user_id (
+          email,
+          full_name
+        )
+      `)
+      .eq("client_id", clientId);
+
+    if (error) {
+      toast.error("Erro ao carregar usuários vinculados");
+      setClientUsers([]);
+    } else {
+      const users = (data || []).map((item: any) => ({
+        id: item.id,
+        user_id: item.user_id,
+        email: item.profiles?.email,
+        full_name: item.profiles?.full_name,
+      }));
+      setClientUsers(users);
+    }
+    setLoadingUsers(false);
+  };
+
+  const handleOpenUsersDialog = (client: any) => {
+    setSelectedClient(client);
+    setUsersDialogOpen(true);
+    fetchClientUsers(client.id);
+  };
+
+  const handleAddUserToClient = async () => {
+    if (!newUserEmail.trim() || !selectedClient) return;
+
+    // Buscar usuário pelo email
+    const { data: userData, error: userError } = await supabase
+      .from("profiles")
+      .select("id, email, full_name")
+      .eq("email", newUserEmail.trim())
+      .single();
+
+    if (userError || !userData) {
+      toast.error("Usuário não encontrado com este e-mail");
+      return;
+    }
+
+    // Verificar se já está vinculado
+    const existingUser = clientUsers.find(u => u.user_id === userData.id);
+    if (existingUser) {
+      toast.error("Este usuário já está vinculado a este cliente");
+      return;
+    }
+
+    // Adicionar vínculo
+    const { error } = await supabase
+      .from("client_users")
+      .insert({
+        client_id: selectedClient.id,
+        user_id: userData.id,
+      });
+
+    if (error) {
+      toast.error("Erro ao vincular usuário");
+    } else {
+      toast.success("Usuário vinculado com sucesso!");
+      setNewUserEmail("");
+      fetchClientUsers(selectedClient.id);
+    }
+  };
+
+  const handleRemoveUserFromClient = async (clientUserId: string) => {
+    if (!confirm("Tem certeza que deseja remover este usuário do cliente?")) return;
+
+    const { error } = await supabase
+      .from("client_users")
+      .delete()
+      .eq("id", clientUserId);
+
+    if (error) {
+      toast.error("Erro ao remover usuário");
+    } else {
+      toast.success("Usuário removido com sucesso!");
+      fetchClientUsers(selectedClient.id);
+    }
   };
 
   const handleSubmit = async (data: ClientFormData) => {
@@ -395,6 +499,14 @@ const ClientsContent = () => {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => handleOpenUsersDialog(client)}
+                        title="Gerenciar Usuários"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleEdit(client)}
                       >
                         <Edit2 className="h-4 w-4" />
@@ -414,6 +526,63 @@ const ClientsContent = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Dialog para gerenciar usuários do cliente */}
+      <Dialog open={usersDialogOpen} onOpenChange={setUsersDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Usuários Vinculados</DialogTitle>
+            <DialogDescription>
+              Gerencie os usuários com acesso ao portal de {selectedClient?.company_name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Adicionar novo usuário */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="Digite o e-mail do usuário"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddUserToClient()}
+              />
+              <Button onClick={handleAddUserToClient}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Vincular
+              </Button>
+            </div>
+
+            {/* Lista de usuários vinculados */}
+            <div className="border rounded-lg divide-y">
+              {loadingUsers ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  Carregando...
+                </div>
+              ) : clientUsers.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  Nenhum usuário vinculado a este cliente
+                </div>
+              ) : (
+                clientUsers.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-3">
+                    <div>
+                      <p className="font-medium">{user.full_name || "Sem nome"}</p>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveUserFromClient(user.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
         </div>
       </main>
     </div>
