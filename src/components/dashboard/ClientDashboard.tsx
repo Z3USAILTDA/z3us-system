@@ -452,8 +452,8 @@ const ClientDashboard = () => {
                     <div className="text-sm">
                       <p className="text-muted-foreground">Entrega</p>
                       <p className="font-medium">
-                        {project.end_date
-                          ? new Date(project.end_date).toLocaleDateString("pt-BR")
+                        {project.actual_end_date
+                          ? new Date(project.actual_end_date).toLocaleDateString("pt-BR")
                           : "Não definido"}
                       </p>
                     </div>
