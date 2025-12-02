@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_emails: {
+        Row: {
+          client_id: string
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_emails_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_users: {
         Row: {
           client_id: string

@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle, UserPlus, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle, X, Mail } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -43,13 +43,6 @@ import {
 } from "@/components/ui/sidebar";
 import logoWhite from "@/assets/logo-branco.png";
 
-interface ClientUser {
-  id: string;
-  user_id: string;
-  email?: string;
-  full_name?: string;
-}
-
 const ClientsContent = () => {
   const navigate = useNavigate();
   const [clients, setClients] = useState<any[]>([]);
@@ -58,12 +51,9 @@ const ClientsContent = () => {
   const [editingClient, setEditingClient] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   
-  // Estado para gerenciar usuários do cliente
-  const [usersDialogOpen, setUsersDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<any>(null);
-  const [clientUsers, setClientUsers] = useState<ClientUser[]>([]);
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [loadingUsers, setLoadingUsers] = useState(false);
+  // Estado para emails adicionais
+  const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
+  const [newEmail, setNewEmail] = useState("");
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
@@ -112,94 +102,47 @@ const ClientsContent = () => {
     setLoading(false);
   };
 
-  const fetchClientUsers = async (clientId: string) => {
-    setLoadingUsers(true);
+  const fetchClientEmails = async (clientId: string) => {
     const { data, error } = await supabase
-      .from("client_users")
-      .select(`
-        id,
-        user_id,
-        profiles:user_id (
-          email,
-          full_name
-        )
-      `)
+      .from("client_emails")
+      .select("email")
       .eq("client_id", clientId);
 
-    if (error) {
-      toast.error("Erro ao carregar usuários vinculados");
-      setClientUsers([]);
-    } else {
-      const users = (data || []).map((item: any) => ({
-        id: item.id,
-        user_id: item.user_id,
-        email: item.profiles?.email,
-        full_name: item.profiles?.full_name,
-      }));
-      setClientUsers(users);
+    if (!error && data) {
+      return data.map(e => e.email);
     }
-    setLoadingUsers(false);
+    return [];
   };
 
-  const handleOpenUsersDialog = (client: any) => {
-    setSelectedClient(client);
-    setUsersDialogOpen(true);
-    fetchClientUsers(client.id);
-  };
-
-  const handleAddUserToClient = async () => {
-    if (!newUserEmail.trim() || !selectedClient) return;
-
-    // Buscar usuário pelo email
-    const { data: userData, error: userError } = await supabase
-      .from("profiles")
-      .select("id, email, full_name")
-      .eq("email", newUserEmail.trim())
-      .single();
-
-    if (userError || !userData) {
-      toast.error("Usuário não encontrado com este e-mail");
+  const handleAddEmail = () => {
+    const email = newEmail.trim().toLowerCase();
+    if (!email) return;
+    
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("E-mail inválido");
       return;
     }
 
-    // Verificar se já está vinculado
-    const existingUser = clientUsers.find(u => u.user_id === userData.id);
-    if (existingUser) {
-      toast.error("Este usuário já está vinculado a este cliente");
+    if (additionalEmails.includes(email)) {
+      toast.error("Este e-mail já foi adicionado");
       return;
     }
 
-    // Adicionar vínculo
-    const { error } = await supabase
-      .from("client_users")
-      .insert({
-        client_id: selectedClient.id,
-        user_id: userData.id,
-      });
-
-    if (error) {
-      toast.error("Erro ao vincular usuário");
-    } else {
-      toast.success("Usuário vinculado com sucesso!");
-      setNewUserEmail("");
-      fetchClientUsers(selectedClient.id);
+    // Verificar se é igual ao email principal
+    const mainEmail = form.getValues("email")?.toLowerCase();
+    if (email === mainEmail) {
+      toast.error("Este é o e-mail principal do cliente");
+      return;
     }
+
+    setAdditionalEmails([...additionalEmails, email]);
+    setNewEmail("");
   };
 
-  const handleRemoveUserFromClient = async (clientUserId: string) => {
-    if (!confirm("Tem certeza que deseja remover este usuário do cliente?")) return;
-
-    const { error } = await supabase
-      .from("client_users")
-      .delete()
-      .eq("id", clientUserId);
-
-    if (error) {
-      toast.error("Erro ao remover usuário");
-    } else {
-      toast.success("Usuário removido com sucesso!");
-      fetchClientUsers(selectedClient.id);
-    }
+  const handleRemoveEmail = (emailToRemove: string) => {
+    setAdditionalEmails(additionalEmails.filter(e => e !== emailToRemove));
   };
 
   const handleSubmit = async (data: ClientFormData) => {
@@ -221,24 +164,57 @@ const ClientsContent = () => {
 
       if (error) {
         toast.error("Erro ao atualizar cliente");
-      } else {
-        toast.success("Cliente atualizado com sucesso!");
-        fetchClients();
-        setDialogOpen(false);
-        setEditingClient(null);
-        form.reset();
+        return;
       }
+
+      // Atualizar emails adicionais
+      // Primeiro remove todos
+      await supabase
+        .from("client_emails")
+        .delete()
+        .eq("client_id", editingClient.id);
+
+      // Depois adiciona os novos
+      if (additionalEmails.length > 0) {
+        const emailsToInsert = additionalEmails.map(email => ({
+          client_id: editingClient.id,
+          email,
+        }));
+        await supabase.from("client_emails").insert(emailsToInsert);
+      }
+
+      toast.success("Cliente atualizado com sucesso!");
+      fetchClients();
+      setDialogOpen(false);
+      setEditingClient(null);
+      setAdditionalEmails([]);
+      form.reset();
     } else {
-      const { error } = await supabase.from("clients").insert([clientData]);
+      const { data: newClient, error } = await supabase
+        .from("clients")
+        .insert([clientData])
+        .select()
+        .single();
 
       if (error) {
         toast.error("Erro ao adicionar cliente");
-      } else {
-        toast.success("Cliente adicionado com sucesso!");
-        fetchClients();
-        setDialogOpen(false);
-        form.reset();
+        return;
       }
+
+      // Adicionar emails adicionais
+      if (additionalEmails.length > 0 && newClient) {
+        const emailsToInsert = additionalEmails.map(email => ({
+          client_id: newClient.id,
+          email,
+        }));
+        await supabase.from("client_emails").insert(emailsToInsert);
+      }
+
+      toast.success("Cliente adicionado com sucesso!");
+      fetchClients();
+      setDialogOpen(false);
+      setAdditionalEmails([]);
+      form.reset();
     }
   };
 
@@ -255,9 +231,14 @@ const ClientsContent = () => {
     }
   };
 
-  const handleEdit = (client: any) => {
+  const handleEdit = async (client: any) => {
     setEditingClient(client);
     form.reset(client);
+    
+    // Carregar emails adicionais
+    const emails = await fetchClientEmails(client.id);
+    setAdditionalEmails(emails);
+    
     setDialogOpen(true);
   };
 
@@ -265,6 +246,8 @@ const ClientsContent = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingClient(null);
+      setAdditionalEmails([]);
+      setNewEmail("");
       form.reset({
         company_name: "",
         cnpj: "",
@@ -355,237 +338,260 @@ const ClientsContent = () => {
         
         <div className="p-6 space-y-6">
           <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Gerenciar Clientes</h1>
-          <p className="text-muted-foreground">Cadastre e gerencie seus clientes</p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Cliente
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingClient ? "Editar Cliente" : "Adicionar Novo Cliente"}
-              </DialogTitle>
-              <DialogDescription>
-                Preencha os dados do cliente
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company_name">Nome da Empresa</Label>
-                  <Input
-                    id="company_name"
-                    {...form.register("company_name")}
-                  />
-                  {form.formState.errors.company_name && (
-                    <p className="text-sm text-destructive">{form.formState.errors.company_name.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ</Label>
-                  <Input
-                    id="cnpj"
-                    placeholder="00.000.000/0000-00"
-                    {...form.register("cnpj")}
-                  />
-                  {form.formState.errors.cnpj && (
-                    <p className="text-sm text-destructive">{form.formState.errors.cnpj.message}</p>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="contact_name">Nome do Contato</Label>
-                  <Input
-                    id="contact_name"
-                    {...form.register("contact_name")}
-                  />
-                  {form.formState.errors.contact_name && (
-                    <p className="text-sm text-destructive">{form.formState.errors.contact_name.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...form.register("email")}
-                  />
-                  {form.formState.errors.email && (
-                    <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  placeholder="(XX) XXXXX-XXXX"
-                  {...form.register("phone")}
-                />
-                {form.formState.errors.phone && (
-                  <p className="text-sm text-destructive">{form.formState.errors.phone.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">Endereço</Label>
-                <Textarea
-                  id="address"
-                  rows={3}
-                  {...form.register("address")}
-                />
-                {form.formState.errors.address && (
-                  <p className="text-sm text-destructive">{form.formState.errors.address.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <select
-                  id="status"
-                  {...form.register("status")}
-                  className="w-full px-3 py-2 border border-input rounded-md bg-background"
-                >
-                  <option value="active">Ativo</option>
-                  <option value="inactive">Inativo</option>
-                </select>
-              </div>
-              <Button type="submit" className="w-full">
-                {editingClient ? "Atualizar" : "Adicionar"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Empresa</TableHead>
-              <TableHead>CNPJ</TableHead>
-              <TableHead>Contato</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clients.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  Nenhum cliente cadastrado
-                </TableCell>
-              </TableRow>
-            ) : (
-              clients.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell className="font-medium">{client.company_name}</TableCell>
-                  <TableCell>{client.cnpj}</TableCell>
-                  <TableCell>{client.contact_name}</TableCell>
-                  <TableCell>{client.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={client.status === "active" ? "default" : "secondary"}>
-                      {client.status === "active" ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenUsersDialog(client)}
-                        title="Gerenciar Usuários"
-                      >
-                        <UserPlus className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(client)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(client.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Dialog para gerenciar usuários do cliente */}
-      <Dialog open={usersDialogOpen} onOpenChange={setUsersDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Usuários Vinculados</DialogTitle>
-            <DialogDescription>
-              Gerencie os usuários com acesso ao portal de {selectedClient?.company_name}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {/* Adicionar novo usuário */}
-            <div className="flex gap-2">
-              <Input
-                placeholder="Digite o e-mail do usuário"
-                value={newUserEmail}
-                onChange={(e) => setNewUserEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddUserToClient()}
-              />
-              <Button onClick={handleAddUserToClient}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Vincular
-              </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Gerenciar Clientes</h1>
+              <p className="text-muted-foreground">Cadastre e gerencie seus clientes</p>
             </div>
-
-            {/* Lista de usuários vinculados */}
-            <div className="border rounded-lg divide-y">
-              {loadingUsers ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  Carregando...
-                </div>
-              ) : clientUsers.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  Nenhum usuário vinculado a este cliente
-                </div>
-              ) : (
-                clientUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-3">
-                    <div>
-                      <p className="font-medium">{user.full_name || "Sem nome"}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
+            <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Cliente
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingClient ? "Editar Cliente" : "Adicionar Novo Cliente"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados do cliente
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company_name">Nome da Empresa</Label>
+                      <Input
+                        id="company_name"
+                        {...form.register("company_name")}
+                      />
+                      {form.formState.errors.company_name && (
+                        <p className="text-sm text-destructive">{form.formState.errors.company_name.message}</p>
+                      )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveUserFromClient(user.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <div className="space-y-2">
+                      <Label htmlFor="cnpj">CNPJ</Label>
+                      <Input
+                        id="cnpj"
+                        placeholder="00.000.000/0000-00"
+                        {...form.register("cnpj")}
+                      />
+                      {form.formState.errors.cnpj && (
+                        <p className="text-sm text-destructive">{form.formState.errors.cnpj.message}</p>
+                      )}
+                    </div>
                   </div>
-                ))
-              )}
-            </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="contact_name">Nome do Contato</Label>
+                      <Input
+                        id="contact_name"
+                        {...form.register("contact_name")}
+                      />
+                      {form.formState.errors.contact_name && (
+                        <p className="text-sm text-destructive">{form.formState.errors.contact_name.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Principal</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        {...form.register("email")}
+                      />
+                      {form.formState.errors.email && (
+                        <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Seção de emails adicionais */}
+                  <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+                    <Label className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Emails Adicionais de Contato
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Adicione outros emails que terão acesso ao portal do cliente
+                    </p>
+                    
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Digite o e-mail adicional"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddEmail();
+                          }
+                        }}
+                      />
+                      <Button type="button" variant="secondary" onClick={handleAddEmail}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {additionalEmails.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {additionalEmails.map((email) => (
+                          <Badge key={email} variant="secondary" className="flex items-center gap-1 py-1">
+                            {email}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEmail(email)}
+                              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefone</Label>
+                    <Input
+                      id="phone"
+                      placeholder="(XX) XXXXX-XXXX"
+                      {...form.register("phone")}
+                    />
+                    {form.formState.errors.phone && (
+                      <p className="text-sm text-destructive">{form.formState.errors.phone.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Endereço</Label>
+                    <Textarea
+                      id="address"
+                      rows={3}
+                      {...form.register("address")}
+                    />
+                    {form.formState.errors.address && (
+                      <p className="text-sm text-destructive">{form.formState.errors.address.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <select
+                      id="status"
+                      {...form.register("status")}
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                    >
+                      <option value="active">Ativo</option>
+                      <option value="inactive">Inativo</option>
+                    </select>
+                  </div>
+                  <Button type="submit" className="w-full">
+                    {editingClient ? "Atualizar" : "Adicionar"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
-        </DialogContent>
-      </Dialog>
+
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Empresa</TableHead>
+                  <TableHead>CNPJ</TableHead>
+                  <TableHead>Contato</TableHead>
+                  <TableHead>Emails</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {clients.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      Nenhum cliente cadastrado
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  clients.map((client) => (
+                    <ClientRow 
+                      key={client.id} 
+                      client={client} 
+                      onEdit={handleEdit} 
+                      onDelete={handleDelete} 
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </main>
     </div>
+  );
+};
+
+// Componente separado para a linha do cliente (para carregar emails adicionais)
+const ClientRow = ({ 
+  client, 
+  onEdit, 
+  onDelete 
+}: { 
+  client: any; 
+  onEdit: (client: any) => void; 
+  onDelete: (id: string) => void;
+}) => {
+  const [emailCount, setEmailCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("client_emails")
+        .select("*", { count: "exact", head: true })
+        .eq("client_id", client.id);
+      setEmailCount(count || 0);
+    };
+    fetchCount();
+  }, [client.id]);
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{client.company_name}</TableCell>
+      <TableCell>{client.cnpj}</TableCell>
+      <TableCell>{client.contact_name}</TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <span className="text-sm">{client.email}</span>
+          {emailCount > 0 && (
+            <Badge variant="outline" className="text-xs">
+              +{emailCount}
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <Badge variant={client.status === "active" ? "default" : "secondary"}>
+          {client.status === "active" ? "Ativo" : "Inativo"}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(client)}
+          >
+            <Edit2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(client.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
   );
 };
 
