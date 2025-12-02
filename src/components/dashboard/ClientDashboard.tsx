@@ -450,10 +450,10 @@ const ClientDashboard = () => {
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div className="text-sm">
-                      <p className="text-muted-foreground">Início</p>
+                      <p className="text-muted-foreground">Entrega</p>
                       <p className="font-medium">
-                        {project.start_date
-                          ? new Date(project.start_date).toLocaleDateString("pt-BR")
+                        {project.end_date
+                          ? new Date(project.end_date).toLocaleDateString("pt-BR")
                           : "Não definido"}
                       </p>
                     </div>
