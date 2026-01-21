@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatDateBR } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1266,7 +1267,7 @@ const ProjectsContent = () => {
                                 onClick={() => startEditing(project.id, "end_date", project.end_date)}
                                 className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
                               >
-                                {project.end_date ? new Date(project.end_date).toLocaleDateString("pt-BR") : "-"}
+                                {formatDateBR(project.end_date)}
                               </div>
                             )}
                           </TableCell>
