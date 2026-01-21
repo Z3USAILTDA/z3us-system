@@ -376,6 +376,18 @@ const ProjectsContent = () => {
       updateData.progress = 100;
     }
 
+    // Atualização otimista - atualiza o estado local imediatamente
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId ? { ...p, ...updateData } : p
+      )
+    );
+
+    // Limpa o estado de edição imediatamente para feedback instantâneo
+    setEditingCell(null);
+    setEditValue("");
+
+    // Salva no banco em background
     const { error } = await supabase
       .from("projects")
       .update(updateData)
@@ -383,13 +395,11 @@ const ProjectsContent = () => {
 
     if (error) {
       toast.error(`Erro ao atualizar ${field}`);
-    } else {
-      toast.success("Atualizado com sucesso!");
+      // Em caso de erro, recarrega os dados para sincronizar
       fetchData();
+    } else {
+      toast.success("Atualizado!");
     }
-
-    setEditingCell(null);
-    setEditValue("");
   };
 
   const cancelEdit = () => {
