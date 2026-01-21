@@ -919,7 +919,7 @@ const ProjectsContent = () => {
                       {project.end_date && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4" />
-                          <span>Entrega: {new Date(project.end_date).toLocaleDateString("pt-BR")}</span>
+                          <span>Entrega: {formatDateBR(project.end_date)}</span>
                         </div>
                       )}
 
