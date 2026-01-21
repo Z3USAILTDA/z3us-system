@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getTodayLocalDate } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,7 @@ interface TodayDeliveriesProps {
 const TodayDeliveries = ({ projects, printMode = false }: TodayDeliveriesProps) => {
   const [expanded, setExpanded] = useState(false);
   
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayLocalDate();
   
   // Filter only pending deliveries (not completed) with end_date = today
   const pendingDeliveries = projects.filter(p => 

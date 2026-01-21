@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getTodayLocalDate, getYesterdayLocalDate } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
@@ -125,14 +126,11 @@ const AdminDashboard = () => {
   };
 
   const getToday = () => {
-    const now = new Date();
-    return now.toISOString().split('T')[0];
+    return getTodayLocalDate();
   };
 
   const getYesterday = () => {
-    const now = new Date();
-    now.setDate(now.getDate() - 1);
-    return now.toISOString().split('T')[0];
+    return getYesterdayLocalDate();
   };
 
   const fetchTodayDemands = async () => {
