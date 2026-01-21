@@ -9,6 +9,7 @@ import { Users, Building2, FolderKanban, TrendingUp, AlertTriangle, CheckCircle2
 import TodayDemandsByPerson from "./TodayDemandsByPerson";
 import TodayDemandsByClient from "./TodayDemandsByClient";
 import YesterdaySummary from "./YesterdaySummary";
+import TodayDeliveries from "./TodayDeliveries";
 
 interface Project {
   id: string;
@@ -91,6 +92,7 @@ const AdminDashboard = () => {
   // New states for today's demands
   const [todayDemandsByPerson, setTodayDemandsByPerson] = useState<PersonDemands[]>([]);
   const [todayDemandsByClient, setTodayDemandsByClient] = useState<ClientDemands[]>([]);
+  const [todayProjects, setTodayProjects] = useState<Project[]>([]);
   const [yesterdayStats, setYesterdayStats] = useState<YesterdayStats>({
     created: 0,
     completed: 0,
@@ -273,6 +275,20 @@ const AdminDashboard = () => {
     setTodayDemandsByClient(
       Array.from(clientMap.values()).sort((a, b) => b.total - a.total)
     );
+
+    // Store all today's projects for the deliveries component
+    const allTodayProjectsData: Project[] = filteredProjects.map(project => ({
+      id: project.id,
+      title: project.title,
+      status: project.status,
+      end_date: project.end_date,
+      priority: project.priority,
+      responsible: project.responsible,
+      client_name: (project.clients as any)?.company_name || "Sem cliente",
+      created_at: project.created_at,
+      client_id: project.client_id,
+    }));
+    setTodayProjects(allTodayProjectsData);
   };
 
   const fetchYesterdayStats = async () => {
@@ -702,6 +718,9 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* NEW: Today's Deliveries - Full width */}
+      <TodayDeliveries projects={todayProjects} printMode={printMode} />
 
       {/* NEW: Today's Demands - Person and Client side by side */}
       <div className="grid gap-6 md:grid-cols-2">
