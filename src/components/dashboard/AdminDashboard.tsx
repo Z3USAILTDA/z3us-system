@@ -6,7 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Users, Building2, FolderKanban, TrendingUp, AlertTriangle, CheckCircle2, Clock, Flag, ArrowUpDown, ArrowUp, ArrowDown, Printer } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Building2, FolderKanban, AlertTriangle, CheckCircle2, Clock, Flag, ArrowUpDown, ArrowUp, ArrowDown, Printer, CalendarX } from "lucide-react";
 import TodayDemandsByPerson from "./TodayDemandsByPerson";
 import TodayDemandsByClient from "./TodayDemandsByClient";
 import YesterdaySummary from "./YesterdaySummary";
@@ -50,16 +52,28 @@ interface YesterdayStats {
   highlights: Array<{ type: "blocked" | "delayed" | "completed"; text: string; priority?: string }>;
 }
 
+// Helper to translate status labels
+const getStatusLabel = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    planning: "Planejamento",
+    in_progress: "Em Andamento",
+    completed: "Concluído",
+    on_hold: "Pausado",
+    waiting_client: "Aguardando cliente",
+  };
+  return statusMap[status] || status;
+};
+
 const AdminDashboard = () => {
   const [printMode, setPrintMode] = useState(false);
   const [stats, setStats] = useState({
-    teams: 0,
     clients: 0,
     projects: 0,
     activeProjects: 0,
     delayed: 0,
     completed: 0,
     open: 0,
+    withoutDeadline: 0,
   });
 
   const [clients, setClients] = useState<Array<{ id: string; company_name: string }>>([]);
@@ -70,7 +84,13 @@ const AdminDashboard = () => {
     total: number;
     onTime: number;
     delayed: number;
+    projects: Project[];
   }>>([]);
+
+  const [selectedPersonProjects, setSelectedPersonProjects] = useState<{
+    responsible: string;
+    projects: Project[];
+  } | null>(null);
 
   const [projectsByClient, setProjectsByClient] = useState<Array<{
     clientName: string;
@@ -81,14 +101,6 @@ const AdminDashboard = () => {
     priority: string;
     total: number;
   }>>([]);
-
-  const [projectsByDemanda, setProjectsByDemanda] = useState<Array<{
-    demanda: string;
-    total: number;
-    percentage: number;
-  }>>([]);
-  const [demandaSortColumn, setDemandaSortColumn] = useState<"number" | "percentage">("percentage");
-  const [demandaSortDirection, setDemandaSortDirection] = useState<"asc" | "desc">("asc");
 
   // New states for today's demands
   const [todayDemandsByPerson, setTodayDemandsByPerson] = useState<PersonDemands[]>([]);
@@ -221,7 +233,8 @@ const AdminDashboard = () => {
         stats.completed++;
       } else {
         stats.inProgress++;
-        if (project.end_date && project.end_date < today) {
+        // Don't count as delayed if status is waiting_client
+        if (project.end_date && project.end_date < today && project.status !== "waiting_client") {
           stats.delayed++;
         }
       }
@@ -324,12 +337,13 @@ const AdminDashboard = () => {
       .eq("status", "completed")
       .eq("actual_end_date", yesterday);
 
-    // Delayed projects (end_date <= yesterday and not completed)
+    // Delayed projects (end_date <= yesterday and not completed and not waiting_client)
     const { data: delayedProjects } = await supabase
       .from("projects")
       .select(`id, title, priority, responsible, end_date, client_id, clients(company_name)`)
       .lte("end_date", yesterday)
-      .neq("status", "completed");
+      .neq("status", "completed")
+      .neq("status", "waiting_client");
 
     // Filter by client if needed
     const filterByClient = (projects: any[] | null) => {
@@ -411,7 +425,7 @@ const AdminDashboard = () => {
   };
 
   const fetchStats = async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayLocalDate();
     
     // Build queries with optional client filter
     const buildQuery = (query: any) => {
@@ -421,35 +435,67 @@ const AdminDashboard = () => {
       return query;
     };
 
-    const [teamsRes, clientsRes, projectsRes, activeProjectsRes, completedRes, openRes, delayedRes] = await Promise.all([
-      supabase.from("teams").select("*", { count: "exact", head: true }),
+    const [clientsRes, projectsRes, completedRes, openRes, delayedRes, withoutDeadlineRes] = await Promise.all([
       supabase.from("clients").select("*", { count: "exact", head: true }),
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true })),
-      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).neq("status", "completed")),
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "completed")),
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).in("status", ["planning", "in_progress"])),
-      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).lt("end_date", today).neq("status", "completed")),
+      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).lt("end_date", today).neq("status", "completed").neq("status", "waiting_client")),
+      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).is("end_date", null)),
     ]);
 
-    // Fetch projects with responsible and dates
-    let projectsQuery = supabase.from("projects").select("responsible, end_date, status");
+    // Fetch projects with responsible, dates and client for "Atividades por responsável"
+    let projectsQuery = supabase.from("projects").select(`
+      id,
+      title,
+      responsible,
+      end_date,
+      status,
+      priority,
+      created_at,
+      client_id,
+      clients(company_name)
+    `);
     if (selectedClient !== "all") {
       projectsQuery = projectsQuery.eq("client_id", selectedClient);
     }
     const { data: allProjects } = await projectsQuery;
 
-    // Group by responsible
-    const personMap = new Map<string, { total: number; onTime: number; delayed: number }>();
+    // Group by responsible - exclude "Não atribuído"
+    const personMap = new Map<string, { 
+      total: number; 
+      onTime: number; 
+      delayed: number;
+      projects: Project[];
+    }>();
+    
     allProjects?.forEach(project => {
-      const person = project.responsible || "Não atribuído";
+      const person = project.responsible;
+      // Skip if no responsible assigned
+      if (!person || person.trim() === "") return;
+      
       if (!personMap.has(person)) {
-        personMap.set(person, { total: 0, onTime: 0, delayed: 0 });
+        personMap.set(person, { total: 0, onTime: 0, delayed: 0, projects: [] });
       }
       const stats = personMap.get(person)!;
       stats.total++;
       
+      const projectData: Project = {
+        id: project.id,
+        title: project.title,
+        status: project.status,
+        end_date: project.end_date,
+        priority: project.priority,
+        responsible: project.responsible,
+        client_name: (project.clients as any)?.company_name || "Sem cliente",
+        created_at: project.created_at,
+        client_id: project.client_id,
+      };
+      stats.projects.push(projectData);
+      
       if (project.end_date && project.status !== "completed") {
-        if (project.end_date < today) {
+        // Don't count as delayed if status is waiting_client
+        if (project.end_date < today && project.status !== "waiting_client") {
           stats.delayed++;
         } else {
           stats.onTime++;
@@ -506,70 +552,18 @@ const AdminDashboard = () => {
       }))
     );
 
-    // Fetch projects by demanda
-    let demandaQuery = supabase.from("projects").select("demanda, progress");
-    if (selectedClient !== "all") {
-      demandaQuery = demandaQuery.eq("client_id", selectedClient);
-    }
-    const { data: projectsWithDemanda } = await demandaQuery;
-
-    const demandaMap = new Map<string, { total: number; progressSum: number }>();
-    projectsWithDemanda?.forEach(project => {
-      const demanda = project.demanda || "Sem demanda";
-      const progress = project.progress || 0;
-      
-      if (!demandaMap.has(demanda)) {
-        demandaMap.set(demanda, { total: 0, progressSum: 0 });
-      }
-      
-      const stats = demandaMap.get(demanda)!;
-      stats.total++;
-      stats.progressSum += progress;
-    });
-
-    setProjectsByDemanda(
-      Array.from(demandaMap.entries()).map(([demanda, stats]) => ({
-        demanda,
-        total: stats.total,
-        percentage: stats.total > 0 ? stats.progressSum / stats.total : 0,
-      }))
-    );
-
     setStats({
-      teams: teamsRes.count || 0,
       clients: clientsRes.count || 0,
       projects: projectsRes.count || 0,
-      activeProjects: activeProjectsRes.count || 0,
+      activeProjects: 0,
       completed: completedRes.count || 0,
       open: openRes.count || 0,
       delayed: delayedRes.count || 0,
+      withoutDeadline: withoutDeadlineRes.count || 0,
     });
   };
 
-  const handleDemandaSort = (column: "number" | "percentage") => {
-    if (demandaSortColumn === column) {
-      setDemandaSortDirection(demandaSortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setDemandaSortColumn(column);
-      setDemandaSortDirection("asc");
-    }
-  };
-
-  const DemandaSortIcon = ({ column }: { column: "number" | "percentage" }) => {
-    if (demandaSortColumn !== column) {
-      return <ArrowUpDown className="ml-2 h-4 w-4" />;
-    }
-    return demandaSortDirection === "asc" ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
-  };
-
   const statCards = [
-    {
-      title: "Equipes",
-      value: stats.teams,
-      description: "Membros cadastrados",
-      icon: Users,
-      color: "text-primary",
-    },
     {
       title: "Clientes",
       value: stats.clients,
@@ -578,18 +572,18 @@ const AdminDashboard = () => {
       color: "text-accent",
     },
     {
-      title: "Projetos Totais",
+      title: "Atividades totais",
       value: stats.projects,
-      description: "Todos os projetos",
+      description: "Todas as atividades",
       icon: FolderKanban,
       color: "text-info",
     },
     {
-      title: "Projetos Ativos",
-      value: stats.activeProjects,
-      description: "Em andamento",
-      icon: TrendingUp,
-      color: "text-success",
+      title: "Atividades sem prazo",
+      value: stats.withoutDeadline,
+      description: "Sem data definida",
+      icon: CalendarX,
+      color: "text-warning",
     },
   ];
 
@@ -657,7 +651,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-3">
         {statCards.map((stat, index) => (
           <Card 
             key={stat.title} 
@@ -690,7 +684,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-destructive">{stats.delayed}</div>
-            <p className="text-xs text-muted-foreground mt-2">Projetos atrasados</p>
+            <p className="text-xs text-muted-foreground mt-2">Atividades atrasadas</p>
           </CardContent>
         </Card>
 
@@ -701,7 +695,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-success">{stats.completed}</div>
-            <p className="text-xs text-muted-foreground mt-2">Projetos completos</p>
+            <p className="text-xs text-muted-foreground mt-2">Atividades completas</p>
           </CardContent>
         </Card>
 
@@ -712,7 +706,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-info">{stats.open}</div>
-            <p className="text-xs text-muted-foreground mt-2">Projetos ativos</p>
+            <p className="text-xs text-muted-foreground mt-2">Atividades ativas</p>
           </CardContent>
         </Card>
       </div>
@@ -729,49 +723,110 @@ const AdminDashboard = () => {
       {/* NEW: Yesterday Summary - Full width */}
       <YesterdaySummary stats={yesterdayStats} printMode={printMode} />
 
-      {/* Projects by Person */}
+      {/* Activities by Person */}
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
         <CardHeader>
-          <CardTitle>Projetos por Responsável</CardTitle>
+          <CardTitle>Atividades por responsável</CardTitle>
           <CardDescription>Distribuição e status de entregas</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Responsável</TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead className="text-center">Em Tempo</TableHead>
-                <TableHead className="text-center">Atrasados</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(printMode ? projectsByPerson.slice(0, 8) : projectsByPerson).map((person) => (
-                <TableRow key={person.responsible}>
-                  <TableCell className="font-medium">{person.responsible}</TableCell>
-                  <TableCell className="text-center">{person.total}</TableCell>
-                  <TableCell className="text-center text-success">{person.onTime}</TableCell>
-                  <TableCell className="text-center text-destructive">{person.delayed}</TableCell>
-                  <TableCell>
-                    <Progress 
-                      value={person.total > 0 ? (person.onTime / person.total) * 100 : 0} 
-                      className="h-2"
-                    />
-                  </TableCell>
+          {projectsByPerson.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Sem atividades atribuídas</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead className="text-center">Total</TableHead>
+                  <TableHead className="text-center">Em Tempo</TableHead>
+                  <TableHead className="text-center">Atrasados</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {(printMode ? projectsByPerson.slice(0, 8) : projectsByPerson).map((person) => (
+                  <TableRow 
+                    key={person.responsible}
+                    className="cursor-pointer hover:bg-muted/70"
+                    onClick={() => setSelectedPersonProjects({ 
+                      responsible: person.responsible, 
+                      projects: person.projects 
+                    })}
+                  >
+                    <TableCell className="font-medium">{person.responsible}</TableCell>
+                    <TableCell className="text-center">{person.total}</TableCell>
+                    <TableCell className="text-center text-success">{person.onTime}</TableCell>
+                    <TableCell className="text-center text-destructive">{person.delayed}</TableCell>
+                    <TableCell>
+                      <Progress 
+                        value={person.total > 0 ? (person.onTime / person.total) * 100 : 0} 
+                        className="h-2"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
-      {/* Projects by Client and Priority */}
+      {/* Modal for Activities by Person details */}
+      <Dialog 
+        open={!!selectedPersonProjects} 
+        onOpenChange={(open) => !open && setSelectedPersonProjects(null)}
+      >
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Atividades — {selectedPersonProjects?.responsible}</DialogTitle>
+          </DialogHeader>
+          {selectedPersonProjects?.projects.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Sem atividades registradas</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Título</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Prazo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedPersonProjects?.projects.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell className="font-medium">{project.title}</TableCell>
+                    <TableCell className="text-muted-foreground">{project.client_name}</TableCell>
+                    <TableCell>
+                      <Badge variant={project.status === "completed" ? "secondary" : "default"}>
+                        {getStatusLabel(project.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {project.end_date 
+                        ? new Date(project.end_date + "T12:00:00").toLocaleDateString("pt-BR") 
+                        : "Não definido"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Activities by Client and Priority */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
           <CardHeader>
-            <CardTitle>Projetos por Cliente</CardTitle>
-            <CardDescription>Distribuição de projetos</CardDescription>
+            <CardTitle>Atividades por cliente</CardTitle>
+            <CardDescription>Distribuição de atividades</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -795,7 +850,7 @@ const AdminDashboard = () => {
 
         <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
           <CardHeader>
-            <CardTitle>Projetos por Prioridade</CardTitle>
+            <CardTitle>Atividades por prioridade</CardTitle>
             <CardDescription>Classificação de urgência</CardDescription>
           </CardHeader>
           <CardContent>
@@ -826,68 +881,6 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Projects by Demanda */}
-      <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-        <CardHeader>
-          <CardTitle>Resumo de Demandas</CardTitle>
-          <CardDescription>Distribuição de projetos por demanda</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead 
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => handleDemandaSort("number")}
-                >
-                  <div className="flex items-center">
-                    Demanda
-                    <DemandaSortIcon column="number" />
-                  </div>
-                </TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead 
-                  className="text-center cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => handleDemandaSort("percentage")}
-                >
-                  <div className="flex items-center justify-center">
-                    Percentual
-                    <DemandaSortIcon column="percentage" />
-                  </div>
-                </TableHead>
-                <TableHead>Distribuição</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[...(printMode ? projectsByDemanda.slice(0, 8) : projectsByDemanda)].sort((a, b) => {
-                if (demandaSortColumn === "percentage") {
-                  const diff = b.percentage - a.percentage;
-                  return demandaSortDirection === "asc" ? -diff : diff;
-                } else {
-                  const extractNumber = (demanda: string) => {
-                    const match = demanda.match(/#(\d+)/);
-                    return match ? parseInt(match[1]) : 0;
-                  };
-                  const diff = extractNumber(a.demanda) - extractNumber(b.demanda);
-                  return demandaSortDirection === "asc" ? diff : -diff;
-                }
-              }).map((demanda) => (
-                <TableRow key={demanda.demanda}>
-                  <TableCell className="font-medium">{demanda.demanda}</TableCell>
-                  <TableCell className="text-center">{demanda.total}</TableCell>
-                  <TableCell className="text-center">
-                    <span className="text-primary font-semibold">{demanda.percentage.toFixed(1)}%</span>
-                  </TableCell>
-                  <TableCell>
-                    <Progress value={demanda.percentage} className="h-2" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
 
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-secondary opacity-30" />
