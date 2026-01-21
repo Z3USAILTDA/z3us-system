@@ -370,9 +370,15 @@ const ProjectsContent = () => {
   const saveEdit = async (projectId: string, field: string) => {
     if (!editingCell) return;
 
+    // Se o campo for status e o valor for "completed", atualiza também o progresso para 100%
+    const updateData: Record<string, any> = { [field]: editValue || null };
+    if (field === "status" && editValue === "completed") {
+      updateData.progress = 100;
+    }
+
     const { error } = await supabase
       .from("projects")
-      .update({ [field]: editValue || null })
+      .update(updateData)
       .eq("id", projectId);
 
     if (error) {
