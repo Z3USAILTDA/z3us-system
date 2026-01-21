@@ -84,6 +84,7 @@ const AdminDashboard = () => {
     total: number;
     onTime: number;
     delayed: number;
+    delayedDays: number;
     projects: Project[];
   }>>([]);
 
@@ -461,21 +462,25 @@ const AdminDashboard = () => {
     }
     const { data: allProjects } = await projectsQuery;
 
-    // Group by responsible - exclude "Não atribuído"
+    // Users to exclude from the responsible block
+    const excludedUsers = ["Willian Renato", "Nicolas Freitas"];
+    
+    // Group by responsible - exclude "Não atribuído" and excluded users
     const personMap = new Map<string, { 
       total: number; 
       onTime: number; 
       delayed: number;
+      delayedDays: number;
       projects: Project[];
     }>();
     
     allProjects?.forEach(project => {
       const person = project.responsible;
-      // Skip if no responsible assigned
-      if (!person || person.trim() === "") return;
+      // Skip if no responsible assigned or if user is excluded
+      if (!person || person.trim() === "" || excludedUsers.includes(person)) return;
       
       if (!personMap.has(person)) {
-        personMap.set(person, { total: 0, onTime: 0, delayed: 0, projects: [] });
+        personMap.set(person, { total: 0, onTime: 0, delayed: 0, delayedDays: 0, projects: [] });
       }
       const stats = personMap.get(person)!;
       stats.total++;
@@ -497,6 +502,12 @@ const AdminDashboard = () => {
         // Don't count as delayed if status is waiting_client
         if (project.end_date < today && project.status !== "waiting_client") {
           stats.delayed++;
+          // Calculate days overdue
+          const endDate = new Date(project.end_date + "T12:00:00");
+          const todayDate = new Date(today + "T12:00:00");
+          const diffTime = todayDate.getTime() - endDate.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          stats.delayedDays += diffDays > 0 ? diffDays : 0;
         } else {
           stats.onTime++;
         }
@@ -743,6 +754,7 @@ const AdminDashboard = () => {
                   <TableHead className="text-center">Total</TableHead>
                   <TableHead className="text-center">Em Tempo</TableHead>
                   <TableHead className="text-center">Atrasados</TableHead>
+                  <TableHead className="text-center">Dias Atrasados</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -760,6 +772,9 @@ const AdminDashboard = () => {
                     <TableCell className="text-center">{person.total}</TableCell>
                     <TableCell className="text-center text-success">{person.onTime}</TableCell>
                     <TableCell className="text-center text-destructive">{person.delayed}</TableCell>
+                    <TableCell className="text-center text-destructive font-semibold">
+                      {person.delayedDays > 0 ? person.delayedDays : "-"}
+                    </TableCell>
                     <TableCell>
                       <Progress 
                         value={person.total > 0 ? (person.onTime / person.total) * 100 : 0} 
