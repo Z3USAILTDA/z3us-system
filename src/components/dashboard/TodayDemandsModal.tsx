@@ -20,15 +20,28 @@ interface TodayDemandsModalProps {
   projects: Project[];
 }
 
+// Helper to translate status labels
+const getStatusLabel = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    planning: "Planejamento",
+    in_progress: "Em Andamento",
+    completed: "Concluído",
+    on_hold: "Pausado",
+    waiting_client: "Aguardando cliente",
+  };
+  return statusMap[status] || status;
+};
+
 const getStatusBadge = (status: string) => {
   const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
     planning: { label: "Planejamento", variant: "outline" },
     in_progress: { label: "Em Andamento", variant: "default" },
     completed: { label: "Concluído", variant: "secondary" },
     on_hold: { label: "Pausado", variant: "destructive" },
+    waiting_client: { label: "Aguardando cliente", variant: "outline" },
   };
 
-  const config = statusConfig[status] || { label: status, variant: "outline" as const };
+  const config = statusConfig[status] || { label: getStatusLabel(status), variant: "outline" as const };
   return <Badge variant={config.variant}>{config.label}</Badge>;
 };
 
@@ -44,11 +57,11 @@ const getPriorityIcon = (priority: string) => {
 };
 
 const TodayDemandsModal = ({ open, onOpenChange, title, projects }: TodayDemandsModalProps) => {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -63,6 +76,7 @@ const TodayDemandsModal = ({ open, onOpenChange, title, projects }: TodayDemands
             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
+                <TableHead>Cliente</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Prioridade</TableHead>
                 <TableHead>Prazo</TableHead>
@@ -70,12 +84,21 @@ const TodayDemandsModal = ({ open, onOpenChange, title, projects }: TodayDemands
             </TableHeader>
             <TableBody>
               {projects.map((project) => {
-                const isOverdue = project.end_date && project.end_date < today && project.status !== "completed";
+                // Don't mark as overdue if status is waiting_client
+                const isOverdue = project.end_date && 
+                  project.end_date < today && 
+                  project.status !== "completed" &&
+                  project.status !== "waiting_client";
                 return (
                   <TableRow key={project.id} className={isOverdue ? "bg-destructive/10" : ""}>
                     <TableCell className="font-medium">
-                      {project.title}
-                      {isOverdue && <AlertTriangle className="h-4 w-4 text-destructive ml-2 inline" />}
+                      <div>
+                        {project.title}
+                        {isOverdue && <AlertTriangle className="h-4 w-4 text-destructive ml-2 inline" />}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {project.client_name || "Sem cliente"}
                     </TableCell>
                     <TableCell>{getStatusBadge(project.status)}</TableCell>
                     <TableCell>
@@ -87,7 +110,9 @@ const TodayDemandsModal = ({ open, onOpenChange, title, projects }: TodayDemands
                       </div>
                     </TableCell>
                     <TableCell>
-                      {project.end_date ? new Date(project.end_date).toLocaleDateString("pt-BR") : "Não definido"}
+                      {project.end_date 
+                        ? new Date(project.end_date + "T12:00:00").toLocaleDateString("pt-BR") 
+                        : "Não definido"}
                     </TableCell>
                   </TableRow>
                 );
