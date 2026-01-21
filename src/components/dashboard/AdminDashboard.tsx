@@ -4,9 +4,52 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Building2, FolderKanban, TrendingUp, AlertTriangle, CheckCircle2, Clock, Flag, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, Building2, FolderKanban, TrendingUp, AlertTriangle, CheckCircle2, Clock, Flag, ArrowUpDown, ArrowUp, ArrowDown, Printer } from "lucide-react";
+import TodayDemandsByPerson from "./TodayDemandsByPerson";
+import TodayDemandsByClient from "./TodayDemandsByClient";
+import YesterdaySummary from "./YesterdaySummary";
+
+interface Project {
+  id: string;
+  title: string;
+  status: string;
+  end_date: string | null;
+  priority: string;
+  responsible: string | null;
+  client_name?: string;
+  created_at: string;
+  client_id: string;
+}
+
+interface PersonDemands {
+  responsible: string;
+  total: number;
+  completed: number;
+  inProgress: number;
+  delayed: number;
+  projects: Project[];
+}
+
+interface ClientDemands {
+  clientName: string;
+  total: number;
+  completed: number;
+  inProgress: number;
+  projects: Project[];
+}
+
+interface YesterdayStats {
+  created: number;
+  completed: number;
+  delayed: number;
+  topResponsibles: Array<{ name: string; count: number }>;
+  topClients: Array<{ name: string; count: number }>;
+  highlights: Array<{ type: "blocked" | "delayed" | "completed"; text: string; priority?: string }>;
+}
 
 const AdminDashboard = () => {
+  const [printMode, setPrintMode] = useState(false);
   const [stats, setStats] = useState({
     teams: 0,
     clients: 0,
@@ -45,12 +88,26 @@ const AdminDashboard = () => {
   const [demandaSortColumn, setDemandaSortColumn] = useState<"number" | "percentage">("percentage");
   const [demandaSortDirection, setDemandaSortDirection] = useState<"asc" | "desc">("asc");
 
+  // New states for today's demands
+  const [todayDemandsByPerson, setTodayDemandsByPerson] = useState<PersonDemands[]>([]);
+  const [todayDemandsByClient, setTodayDemandsByClient] = useState<ClientDemands[]>([]);
+  const [yesterdayStats, setYesterdayStats] = useState<YesterdayStats>({
+    created: 0,
+    completed: 0,
+    delayed: 0,
+    topResponsibles: [],
+    topClients: [],
+    highlights: [],
+  });
+
   useEffect(() => {
     fetchClients();
   }, []);
 
   useEffect(() => {
     fetchStats();
+    fetchTodayDemands();
+    fetchYesterdayStats();
   }, [selectedClient]);
 
   const fetchClients = async () => {
@@ -63,6 +120,280 @@ const AdminDashboard = () => {
     if (data) {
       setClients(data);
     }
+  };
+
+  const getToday = () => {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  };
+
+  const getYesterday = () => {
+    const now = new Date();
+    now.setDate(now.getDate() - 1);
+    return now.toISOString().split('T')[0];
+  };
+
+  const fetchTodayDemands = async () => {
+    const today = getToday();
+    
+    let query = supabase.from("projects").select(`
+      id,
+      title,
+      status,
+      end_date,
+      priority,
+      responsible,
+      created_at,
+      client_id,
+      clients(company_name)
+    `);
+
+    if (selectedClient !== "all") {
+      query = query.eq("client_id", selectedClient);
+    }
+
+    // Get projects with end_date = today OR created_at = today
+    const { data: projectsWithEndDate } = await query.eq("end_date", today);
+    const { data: projectsCreatedToday } = await supabase
+      .from("projects")
+      .select(`
+        id,
+        title,
+        status,
+        end_date,
+        priority,
+        responsible,
+        created_at,
+        client_id,
+        clients(company_name)
+      `)
+      .gte("created_at", `${today}T00:00:00`)
+      .lt("created_at", `${today}T23:59:59`);
+
+    // Merge and deduplicate
+    const allProjects = [...(projectsWithEndDate || [])];
+    projectsCreatedToday?.forEach(p => {
+      if (!allProjects.find(existing => existing.id === p.id)) {
+        allProjects.push(p);
+      }
+    });
+
+    // Filter by client if needed
+    const filteredProjects = selectedClient === "all" 
+      ? allProjects 
+      : allProjects.filter(p => p.client_id === selectedClient);
+
+    // Group by person
+    const personMap = new Map<string, PersonDemands>();
+    filteredProjects.forEach(project => {
+      const person = project.responsible || "Não atribuído";
+      const clientName = (project.clients as any)?.company_name || "Sem cliente";
+      
+      if (!personMap.has(person)) {
+        personMap.set(person, {
+          responsible: person,
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          delayed: 0,
+          projects: [],
+        });
+      }
+      
+      const stats = personMap.get(person)!;
+      stats.total++;
+      
+      const projectData: Project = {
+        id: project.id,
+        title: project.title,
+        status: project.status,
+        end_date: project.end_date,
+        priority: project.priority,
+        responsible: project.responsible,
+        client_name: clientName,
+        created_at: project.created_at,
+        client_id: project.client_id,
+      };
+      
+      stats.projects.push(projectData);
+      
+      if (project.status === "completed") {
+        stats.completed++;
+      } else {
+        stats.inProgress++;
+        if (project.end_date && project.end_date < today) {
+          stats.delayed++;
+        }
+      }
+    });
+
+    setTodayDemandsByPerson(
+      Array.from(personMap.values()).sort((a, b) => b.total - a.total)
+    );
+
+    // Group by client
+    const clientMap = new Map<string, ClientDemands>();
+    filteredProjects.forEach(project => {
+      const clientName = (project.clients as any)?.company_name || "Sem cliente";
+      
+      if (!clientMap.has(clientName)) {
+        clientMap.set(clientName, {
+          clientName,
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          projects: [],
+        });
+      }
+      
+      const stats = clientMap.get(clientName)!;
+      stats.total++;
+      
+      const projectData: Project = {
+        id: project.id,
+        title: project.title,
+        status: project.status,
+        end_date: project.end_date,
+        priority: project.priority,
+        responsible: project.responsible,
+        client_name: clientName,
+        created_at: project.created_at,
+        client_id: project.client_id,
+      };
+      
+      stats.projects.push(projectData);
+      
+      if (project.status === "completed") {
+        stats.completed++;
+      } else {
+        stats.inProgress++;
+      }
+    });
+
+    setTodayDemandsByClient(
+      Array.from(clientMap.values()).sort((a, b) => b.total - a.total)
+    );
+  };
+
+  const fetchYesterdayStats = async () => {
+    const yesterday = getYesterday();
+    const today = getToday();
+
+    let baseQuery = supabase.from("projects").select(`
+      id,
+      title,
+      status,
+      end_date,
+      priority,
+      responsible,
+      created_at,
+      client_id,
+      clients(company_name)
+    `);
+
+    if (selectedClient !== "all") {
+      baseQuery = baseQuery.eq("client_id", selectedClient);
+    }
+
+    // Projects created yesterday
+    const { data: createdYesterday } = await supabase
+      .from("projects")
+      .select(`id, title, priority, responsible, client_id, clients(company_name)`)
+      .gte("created_at", `${yesterday}T00:00:00`)
+      .lt("created_at", `${yesterday}T23:59:59`);
+
+    // Projects with status = completed that might have been completed yesterday
+    // (we use actual_end_date if available, otherwise end_date)
+    const { data: completedProjects } = await supabase
+      .from("projects")
+      .select(`id, title, priority, responsible, actual_end_date, client_id, clients(company_name)`)
+      .eq("status", "completed")
+      .eq("actual_end_date", yesterday);
+
+    // Delayed projects (end_date <= yesterday and not completed)
+    const { data: delayedProjects } = await supabase
+      .from("projects")
+      .select(`id, title, priority, responsible, end_date, client_id, clients(company_name)`)
+      .lte("end_date", yesterday)
+      .neq("status", "completed");
+
+    // Filter by client if needed
+    const filterByClient = (projects: any[] | null) => {
+      if (!projects) return [];
+      if (selectedClient === "all") return projects;
+      return projects.filter(p => p.client_id === selectedClient);
+    };
+
+    const filteredCreated = filterByClient(createdYesterday);
+    const filteredCompleted = filterByClient(completedProjects);
+    const filteredDelayed = filterByClient(delayedProjects);
+
+    // Calculate top responsibles
+    const responsibleCount = new Map<string, number>();
+    [...filteredCreated, ...filteredCompleted].forEach(p => {
+      const name = p.responsible || "Não atribuído";
+      responsibleCount.set(name, (responsibleCount.get(name) || 0) + 1);
+    });
+
+    // Calculate top clients
+    const clientCount = new Map<string, number>();
+    [...filteredCreated, ...filteredCompleted].forEach(p => {
+      const name = (p.clients as any)?.company_name || "Sem cliente";
+      clientCount.set(name, (clientCount.get(name) || 0) + 1);
+    });
+
+    // Build highlights
+    const highlights: YesterdayStats["highlights"] = [];
+
+    // High priority delayed
+    filteredDelayed
+      .filter(p => p.priority === "high")
+      .slice(0, 2)
+      .forEach(p => {
+        highlights.push({
+          type: "delayed",
+          text: p.title,
+          priority: p.priority,
+        });
+      });
+
+    // High priority completed
+    filteredCompleted
+      .filter(p => p.priority === "high")
+      .slice(0, 2)
+      .forEach(p => {
+        highlights.push({
+          type: "completed",
+          text: p.title,
+          priority: p.priority,
+        });
+      });
+
+    // Regular delayed
+    filteredDelayed
+      .filter(p => p.priority !== "high")
+      .slice(0, 2)
+      .forEach(p => {
+        highlights.push({
+          type: "delayed",
+          text: p.title,
+        });
+      });
+
+    setYesterdayStats({
+      created: filteredCreated.length,
+      completed: filteredCompleted.length,
+      delayed: filteredDelayed.length,
+      topResponsibles: Array.from(responsibleCount.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3),
+      topClients: Array.from(clientCount.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3),
+      highlights: highlights.slice(0, 5),
+    });
   };
 
   const fetchStats = async () => {
@@ -249,7 +580,31 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className={`space-y-8 animate-fade-in ${printMode ? 'print-mode' : ''}`}>
+      {/* Print mode styles */}
+      <style>{`
+        .print-mode {
+          max-width: 100%;
+          overflow-x: hidden;
+        }
+        .print-mode .shadow-xl,
+        .print-mode .shadow-lg,
+        .print-mode .shadow-md {
+          box-shadow: none !important;
+        }
+        .print-mode .backdrop-blur-sm {
+          backdrop-filter: none !important;
+        }
+        @media print {
+          .print-mode {
+            padding: 0;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}</style>
+
       <div className="relative">
         <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-primary rounded-full" />
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -259,20 +614,31 @@ const AdminDashboard = () => {
             </h1>
             <p className="text-muted-foreground text-lg mt-2">Visão geral do sistema de gestão Z3US</p>
           </div>
-          <div className="w-[280px]">
-            <Select value={selectedClient} onValueChange={setSelectedClient}>
-              <SelectTrigger className="bg-card">
-                <SelectValue placeholder="Filtrar por cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os clientes</SelectItem>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.company_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-3">
+            <Button
+              variant={printMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPrintMode(!printMode)}
+              className="no-print"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              {printMode ? "Modo Normal" : "Modo Print"}
+            </Button>
+            <div className="w-[280px]">
+              <Select value={selectedClient} onValueChange={setSelectedClient}>
+                <SelectTrigger className="bg-card">
+                  <SelectValue placeholder="Filtrar por cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os clientes</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.company_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
@@ -281,7 +647,7 @@ const AdminDashboard = () => {
         {statCards.map((stat, index) => (
           <Card 
             key={stat.title} 
-            className="relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 group overflow-hidden"
+            className={`relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all ${!printMode ? 'hover:shadow-xl hover:shadow-primary/20' : ''} group overflow-hidden`}
             style={{ animationDelay: `${index * 0.1}s` }}
           >
             <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
@@ -337,6 +703,15 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
+      {/* NEW: Today's Demands - Person and Client side by side */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <TodayDemandsByPerson demandsByPerson={todayDemandsByPerson} printMode={printMode} />
+        <TodayDemandsByClient demandsByClient={todayDemandsByClient} printMode={printMode} />
+      </div>
+
+      {/* NEW: Yesterday Summary - Full width */}
+      <YesterdaySummary stats={yesterdayStats} printMode={printMode} />
+
       {/* Projects by Person */}
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
         <CardHeader>
@@ -355,7 +730,7 @@ const AdminDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {projectsByPerson.map((person) => (
+              {(printMode ? projectsByPerson.slice(0, 8) : projectsByPerson).map((person) => (
                 <TableRow key={person.responsible}>
                   <TableCell className="font-medium">{person.responsible}</TableCell>
                   <TableCell className="text-center">{person.total}</TableCell>
@@ -390,7 +765,7 @@ const AdminDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {projectsByClient.map((client) => (
+                {(printMode ? projectsByClient.slice(0, 6) : projectsByClient).map((client) => (
                   <TableRow key={client.clientName}>
                     <TableCell className="font-medium">{client.clientName}</TableCell>
                     <TableCell className="text-right">{client.total}</TableCell>
@@ -468,7 +843,7 @@ const AdminDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {[...projectsByDemanda].sort((a, b) => {
+              {[...(printMode ? projectsByDemanda.slice(0, 8) : projectsByDemanda)].sort((a, b) => {
                 if (demandaSortColumn === "percentage") {
                   const diff = b.percentage - a.percentage;
                   return demandaSortDirection === "asc" ? -diff : diff;
