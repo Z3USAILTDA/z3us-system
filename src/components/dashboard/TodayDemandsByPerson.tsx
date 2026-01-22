@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle2, Clock, User } from "lucide-react";
+import { X, CheckCircle2, Clock, User } from "lucide-react";
 import TodayDemandsModal from "./TodayDemandsModal";
 
 interface Project {
@@ -98,7 +98,7 @@ const TodayDemandsByPerson = ({ demandsByPerson, printMode }: TodayDemandsByPers
                   <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
                     {person.delayed > 0 ? (
                       <div className={`flex items-center justify-center gap-0.5 sm:gap-1 text-destructive ${printMode ? 'text-[10px] sm:text-xs' : ''}`}>
-                        <AlertTriangle className={printMode ? 'h-2.5 w-2.5 sm:h-3 sm:w-3' : 'h-4 w-4'} />
+                        <X className={printMode ? 'h-2.5 w-2.5 sm:h-3 sm:w-3' : 'h-4 w-4'} />
                         <span className="font-semibold">{person.delayed}</span>
                       </div>
                     ) : (
