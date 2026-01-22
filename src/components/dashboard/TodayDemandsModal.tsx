@@ -33,16 +33,16 @@ const getStatusLabel = (status: string): string => {
 };
 
 const getStatusBadge = (status: string) => {
-  const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
     planning: { label: "Planejamento", variant: "outline" },
     in_progress: { label: "Em Andamento", variant: "default" },
     completed: { label: "Concluído", variant: "secondary" },
     on_hold: { label: "Pausado", variant: "destructive" },
-    waiting_client: { label: "Aguardando cliente", variant: "outline" },
+    waiting_client: { label: "Aguardando cliente", variant: "outline", className: "bg-warning text-warning-foreground border-warning" },
   };
 
   const config = statusConfig[status] || { label: getStatusLabel(status), variant: "outline" as const };
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
 };
 
 const getPriorityIcon = (priority: string) => {
