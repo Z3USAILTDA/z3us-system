@@ -599,8 +599,8 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className={`animate-fade-in ${printMode ? 'print-mode space-y-3' : 'space-y-8'}`}>
-      {/* Print mode styles */}
+    <div className={`animate-fade-in ${printMode ? 'print-mode space-y-2 sm:space-y-3' : 'space-y-8'}`}>
+      {/* Print mode styles - responsive */}
       <style>{`
         .print-mode {
           max-width: 100%;
@@ -617,11 +617,22 @@ const AdminDashboard = () => {
           backdrop-filter: none !important;
         }
         .print-mode .print-compact-card {
-          padding: 0.5rem !important;
+          padding: 0.25rem !important;
+        }
+        @media (min-width: 640px) {
+          .print-mode .print-compact-card {
+            padding: 0.5rem !important;
+          }
         }
         .print-mode .print-compact-card .text-4xl,
         .print-mode .print-compact-card .text-3xl {
-          font-size: 1.5rem !important;
+          font-size: 1.25rem !important;
+        }
+        @media (min-width: 768px) {
+          .print-mode .print-compact-card .text-4xl,
+          .print-mode .print-compact-card .text-3xl {
+            font-size: 1.5rem !important;
+          }
         }
         .print-mode .print-hide {
           display: none !important;
@@ -674,8 +685,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Combined Stats - Compact for print */}
-      <div className={`grid ${printMode ? 'grid-cols-6 gap-2' : 'gap-6 md:grid-cols-3'}`}>
+      {/* Combined Stats - Compact and responsive for print */}
+      <div className={`grid ${printMode ? 'grid-cols-3 sm:grid-cols-6 gap-1 sm:gap-2' : 'gap-6 md:grid-cols-3'}`}>
         {statCards.map((stat, index) => (
           <Card 
             key={stat.title} 
@@ -683,8 +694,8 @@ const AdminDashboard = () => {
             style={{ animationDelay: `${index * 0.1}s` }}
           >
             <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
-            <CardHeader className={`flex flex-row items-center justify-between relative z-10 ${printMode ? 'pb-1 pt-2 px-3' : 'pb-2'}`}>
-              <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-xs' : 'text-sm'}`}>
+            <CardHeader className={`flex flex-row items-center justify-between relative z-10 ${printMode ? 'pb-0 pt-1 px-2 sm:pb-1 sm:pt-2 sm:px-3' : 'pb-2'}`}>
+              <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-[10px] sm:text-xs truncate' : 'text-sm'}`}>
                 {stat.title}
               </CardTitle>
               {!printMode && (
@@ -693,8 +704,8 @@ const AdminDashboard = () => {
                 </div>
               )}
             </CardHeader>
-            <CardContent className={`relative z-10 ${printMode ? 'pb-2 px-3' : ''}`}>
-              <div className={`font-bold bg-gradient-primary bg-clip-text text-transparent ${printMode ? 'text-2xl' : 'text-4xl'}`}>{stat.value}</div>
+            <CardContent className={`relative z-10 ${printMode ? 'pb-1 px-2 sm:pb-2 sm:px-3' : ''}`}>
+              <div className={`font-bold bg-gradient-primary bg-clip-text text-transparent ${printMode ? 'text-lg sm:text-2xl' : 'text-4xl'}`}>{stat.value}</div>
               {!printMode && <p className="text-xs text-muted-foreground mt-2">{stat.description}</p>}
             </CardContent>
           </Card>
@@ -702,29 +713,29 @@ const AdminDashboard = () => {
         
         {/* Status Cards inline for print mode */}
         <Card className={`relative bg-card/50 backdrop-blur-sm border-destructive/20 transition-all ${printMode ? 'print-compact-card' : 'hidden'}`}>
-          <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-1 pt-2 px-3' : 'pb-2'}`}>
-            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-xs' : 'text-sm'}`}>Em Atraso</CardTitle>
+          <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-0 pt-1 px-2 sm:pb-1 sm:pt-2 sm:px-3' : 'pb-2'}`}>
+            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-[10px] sm:text-xs' : 'text-sm'}`}>Em Atraso</CardTitle>
           </CardHeader>
-          <CardContent className={printMode ? 'pb-2 px-3' : ''}>
-            <div className={`font-bold text-destructive ${printMode ? 'text-2xl' : 'text-3xl'}`}>{stats.delayed}</div>
+          <CardContent className={printMode ? 'pb-1 px-2 sm:pb-2 sm:px-3' : ''}>
+            <div className={`font-bold text-destructive ${printMode ? 'text-lg sm:text-2xl' : 'text-3xl'}`}>{stats.delayed}</div>
           </CardContent>
         </Card>
 
         <Card className={`relative bg-card/50 backdrop-blur-sm border-success/20 transition-all ${printMode ? 'print-compact-card' : 'hidden'}`}>
-          <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-1 pt-2 px-3' : 'pb-2'}`}>
-            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-xs' : 'text-sm'}`}>Finalizados</CardTitle>
+          <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-0 pt-1 px-2 sm:pb-1 sm:pt-2 sm:px-3' : 'pb-2'}`}>
+            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-[10px] sm:text-xs' : 'text-sm'}`}>Finalizados</CardTitle>
           </CardHeader>
-          <CardContent className={printMode ? 'pb-2 px-3' : ''}>
-            <div className={`font-bold text-success ${printMode ? 'text-2xl' : 'text-3xl'}`}>{stats.completed}</div>
+          <CardContent className={printMode ? 'pb-1 px-2 sm:pb-2 sm:px-3' : ''}>
+            <div className={`font-bold text-success ${printMode ? 'text-lg sm:text-2xl' : 'text-3xl'}`}>{stats.completed}</div>
           </CardContent>
         </Card>
 
         <Card className={`relative bg-card/50 backdrop-blur-sm border-info/20 transition-all ${printMode ? 'print-compact-card' : 'hidden'}`}>
-          <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-1 pt-2 px-3' : 'pb-2'}`}>
-            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-xs' : 'text-sm'}`}>Em Aberto</CardTitle>
+          <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-0 pt-1 px-2 sm:pb-1 sm:pt-2 sm:px-3' : 'pb-2'}`}>
+            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-[10px] sm:text-xs' : 'text-sm'}`}>Em Aberto</CardTitle>
           </CardHeader>
-          <CardContent className={printMode ? 'pb-2 px-3' : ''}>
-            <div className={`font-bold text-info ${printMode ? 'text-2xl' : 'text-3xl'}`}>{stats.open}</div>
+          <CardContent className={printMode ? 'pb-1 px-2 sm:pb-2 sm:px-3' : ''}>
+            <div className={`font-bold text-info ${printMode ? 'text-lg sm:text-2xl' : 'text-3xl'}`}>{stats.open}</div>
           </CardContent>
         </Card>
       </div>
@@ -770,37 +781,37 @@ const AdminDashboard = () => {
       {/* Today's Deliveries - Full width */}
       <TodayDeliveries projects={todayProjects} printMode={printMode} />
 
-      {/* Today's Demands + Activities by Person - Side by side in print mode */}
-      <div className={`grid ${printMode ? 'grid-cols-3 gap-2' : 'gap-6 md:grid-cols-2'}`}>
+      {/* Today's Demands + Activities by Person - Responsive grid in print mode */}
+      <div className={`grid ${printMode ? 'grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2' : 'gap-6 md:grid-cols-2'}`}>
         <TodayDemandsByPerson demandsByPerson={todayDemandsByPerson} printMode={printMode} />
         <TodayDemandsByClient demandsByClient={todayDemandsByClient} printMode={printMode} />
         
         {/* Activities by Person - Compact for print */}
         {printMode && (
           <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-            <CardHeader className="py-2 px-3">
-              <CardTitle className="text-sm">Atividades por responsável</CardTitle>
+            <CardHeader className="py-1 px-2 sm:py-2 sm:px-3">
+              <CardTitle className="text-xs sm:text-sm">Atividades por responsável</CardTitle>
             </CardHeader>
-            <CardContent className="py-1 px-3">
+            <CardContent className="py-0.5 px-2 sm:py-1 sm:px-3">
               {projectsByPerson.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-2">Sem dados</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground text-center py-1 sm:py-2">Sem dados</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs py-1">Resp.</TableHead>
-                      <TableHead className="text-xs py-1 text-center">Total</TableHead>
-                      <TableHead className="text-xs py-1 text-center">Atraso</TableHead>
-                      <TableHead className="text-xs py-1 text-center">Dias</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs py-0.5 sm:py-1">Resp.</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs py-0.5 sm:py-1 text-center">Total</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs py-0.5 sm:py-1 text-center">Atraso</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs py-0.5 sm:py-1 text-center">Dias</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {projectsByPerson.slice(0, 5).map((person) => (
                       <TableRow key={person.responsible}>
-                        <TableCell className="py-1 text-xs truncate max-w-[80px]">{person.responsible}</TableCell>
-                        <TableCell className="py-1 text-xs text-center">{person.total}</TableCell>
-                        <TableCell className="py-1 text-xs text-center text-destructive">{person.delayed}</TableCell>
-                        <TableCell className="py-1 text-xs text-center text-destructive font-semibold">
+                        <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs truncate max-w-[60px] sm:max-w-[80px]">{person.responsible}</TableCell>
+                        <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs text-center">{person.total}</TableCell>
+                        <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs text-center text-destructive">{person.delayed}</TableCell>
+                        <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs text-center text-destructive font-semibold">
                           {person.delayedDays > 0 ? person.delayedDays : "-"}
                         </TableCell>
                       </TableRow>

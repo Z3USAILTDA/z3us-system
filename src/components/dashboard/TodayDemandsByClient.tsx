@@ -37,17 +37,17 @@ const TodayDemandsByClient = ({ demandsByClient, printMode }: TodayDemandsByClie
   if (demandsByClient.length === 0) {
     return (
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-        <CardHeader className={printMode ? 'py-2 px-3' : ''}>
-          <CardTitle className={`flex items-center gap-2 ${printMode ? 'text-sm' : ''}`}>
-            <Building2 className={`text-accent ${printMode ? 'h-4 w-4' : 'h-5 w-5'}`} />
+        <CardHeader className={printMode ? 'py-1 px-2 sm:py-2 sm:px-3' : ''}>
+          <CardTitle className={`flex items-center gap-2 ${printMode ? 'text-xs sm:text-sm' : ''}`}>
+            <Building2 className={`text-accent ${printMode ? 'h-3 w-3 sm:h-4 sm:w-4' : 'h-5 w-5'}`} />
             Demandas de Hoje — por Cliente
           </CardTitle>
           {!printMode && <CardDescription>Distribuição por cliente</CardDescription>}
         </CardHeader>
-        <CardContent className={printMode ? 'py-2 px-3' : ''}>
-          <div className={`text-center text-muted-foreground ${printMode ? 'py-2' : 'py-8'}`}>
-            <Clock className={`mx-auto mb-2 opacity-50 ${printMode ? 'h-6 w-6' : 'h-12 w-12 mb-4'}`} />
-            <p className={printMode ? 'text-xs' : ''}>Sem demandas registradas para hoje</p>
+        <CardContent className={printMode ? 'py-1 px-2 sm:py-2 sm:px-3' : ''}>
+          <div className={`text-center text-muted-foreground ${printMode ? 'py-1 sm:py-2' : 'py-8'}`}>
+            <Clock className={`mx-auto mb-1 sm:mb-2 opacity-50 ${printMode ? 'h-4 w-4 sm:h-6 sm:w-6' : 'h-12 w-12 mb-4'}`} />
+            <p className={printMode ? 'text-[10px] sm:text-xs' : ''}>Sem demandas registradas para hoje</p>
           </div>
         </CardContent>
       </Card>
@@ -57,21 +57,21 @@ const TodayDemandsByClient = ({ demandsByClient, printMode }: TodayDemandsByClie
   return (
     <>
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-        <CardHeader className={printMode ? 'py-2 px-3' : ''}>
-          <CardTitle className={`flex items-center gap-2 ${printMode ? 'text-sm' : ''}`}>
-            <Building2 className={`text-accent ${printMode ? 'h-4 w-4' : 'h-5 w-5'}`} />
-            Demandas de Hoje — por Cliente
+        <CardHeader className={printMode ? 'py-1 px-2 sm:py-2 sm:px-3' : ''}>
+          <CardTitle className={`flex items-center gap-1 sm:gap-2 ${printMode ? 'text-xs sm:text-sm' : ''}`}>
+            <Building2 className={`text-accent ${printMode ? 'h-3 w-3 sm:h-4 sm:w-4' : 'h-5 w-5'}`} />
+            <span className={printMode ? 'truncate' : ''}>Demandas de Hoje — por Cliente</span>
           </CardTitle>
           {!printMode && <CardDescription>Distribuição por cliente</CardDescription>}
         </CardHeader>
-        <CardContent className={printMode ? 'py-1 px-3' : ''}>
+        <CardContent className={printMode ? 'py-0.5 px-2 sm:py-1 sm:px-3' : ''}>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className={printMode ? 'text-xs py-1' : ''}>Cliente</TableHead>
-                <TableHead className={`text-center ${printMode ? 'text-xs py-1' : ''}`}>Total</TableHead>
+                <TableHead className={printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}>Cliente</TableHead>
+                <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Total</TableHead>
                 {!printMode && <TableHead className="text-center">Em Aberto</TableHead>}
-                <TableHead className={`text-center ${printMode ? 'text-xs py-1' : ''}`}>Concluídas</TableHead>
+                <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Concl.</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -81,17 +81,17 @@ const TodayDemandsByClient = ({ demandsByClient, printMode }: TodayDemandsByClie
                   className={`${!printMode ? 'cursor-pointer hover:bg-muted/70' : ''}`}
                   onClick={() => !printMode && setSelectedClient(client)}
                 >
-                  <TableCell className={`font-medium ${printMode ? 'py-1 text-xs truncate max-w-[100px]' : ''}`}>{client.clientName}</TableCell>
-                  <TableCell className={`text-center ${printMode ? 'py-1' : ''}`}>
-                    <Badge variant="outline" className={printMode ? 'text-xs px-1' : ''}>{client.total}</Badge>
+                  <TableCell className={`font-medium ${printMode ? 'py-0.5 sm:py-1 text-[10px] sm:text-xs truncate max-w-[60px] sm:max-w-[100px]' : ''}`}>{client.clientName}</TableCell>
+                  <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
+                    <Badge variant="outline" className={printMode ? 'text-[10px] sm:text-xs px-0.5 sm:px-1' : ''}>{client.total}</Badge>
                   </TableCell>
                   {!printMode && (
                     <TableCell className="text-center">
                       <span className="text-info font-semibold">{client.inProgress}</span>
                     </TableCell>
                   )}
-                  <TableCell className={`text-center ${printMode ? 'py-1' : ''}`}>
-                    <span className={`text-success font-semibold ${printMode ? 'text-xs' : ''}`}>{client.completed}</span>
+                  <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
+                    <span className={`text-success font-semibold ${printMode ? 'text-[10px] sm:text-xs' : ''}`}>{client.completed}</span>
                   </TableCell>
                 </TableRow>
               ))}
