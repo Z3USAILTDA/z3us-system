@@ -149,7 +149,7 @@ const AdminDashboard = () => {
   const fetchTodayDemands = async () => {
     const today = getToday();
     
-    let query = supabase.from("projects").select(`
+    const baseSelect = `
       id,
       title,
       status,
@@ -157,35 +157,44 @@ const AdminDashboard = () => {
       priority,
       responsible,
       created_at,
+      updated_at,
       client_id,
       clients(company_name)
-    `);
+    `;
 
+    // Get projects with end_date = today
+    let queryEndDate = supabase.from("projects").select(baseSelect).eq("end_date", today);
     if (selectedClient !== "all") {
-      query = query.eq("client_id", selectedClient);
+      queryEndDate = queryEndDate.eq("client_id", selectedClient);
     }
+    const { data: projectsWithEndDate } = await queryEndDate;
 
-    // Get projects with end_date = today OR created_at = today
-    const { data: projectsWithEndDate } = await query.eq("end_date", today);
-    const { data: projectsCreatedToday } = await supabase
-      .from("projects")
-      .select(`
-        id,
-        title,
-        status,
-        end_date,
-        priority,
-        responsible,
-        created_at,
-        client_id,
-        clients(company_name)
-      `)
+    // Get projects created today
+    let queryCreated = supabase.from("projects").select(baseSelect)
       .gte("created_at", `${today}T00:00:00`)
       .lt("created_at", `${today}T23:59:59`);
+    if (selectedClient !== "all") {
+      queryCreated = queryCreated.eq("client_id", selectedClient);
+    }
+    const { data: projectsCreatedToday } = await queryCreated;
+
+    // Get projects updated today
+    let queryUpdated = supabase.from("projects").select(baseSelect)
+      .gte("updated_at", `${today}T00:00:00`)
+      .lt("updated_at", `${today}T23:59:59`);
+    if (selectedClient !== "all") {
+      queryUpdated = queryUpdated.eq("client_id", selectedClient);
+    }
+    const { data: projectsUpdatedToday } = await queryUpdated;
 
     // Merge and deduplicate
     const allProjects = [...(projectsWithEndDate || [])];
     projectsCreatedToday?.forEach(p => {
+      if (!allProjects.find(existing => existing.id === p.id)) {
+        allProjects.push(p);
+      }
+    });
+    projectsUpdatedToday?.forEach(p => {
       if (!allProjects.find(existing => existing.id === p.id)) {
         allProjects.push(p);
       }
