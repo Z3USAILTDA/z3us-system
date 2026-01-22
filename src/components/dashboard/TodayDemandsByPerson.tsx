@@ -102,7 +102,7 @@ const TodayDemandsByPerson = ({ demandsByPerson, printMode }: TodayDemandsByPers
                         <span className="font-semibold">{person.delayed}</span>
                       </div>
                     ) : (
-                      <CheckCircle2 className={`text-success mx-auto ${printMode ? 'h-2.5 w-2.5 sm:h-3 sm:w-3' : 'h-4 w-4'}`} />
+                      <CheckCircle2 className={`text-destructive mx-auto ${printMode ? 'h-2.5 w-2.5 sm:h-3 sm:w-3' : 'h-4 w-4'}`} />
                     )}
                   </TableCell>
                 </TableRow>
