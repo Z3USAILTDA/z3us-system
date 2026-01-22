@@ -599,12 +599,14 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className={`space-y-8 animate-fade-in ${printMode ? 'print-mode' : ''}`}>
+    <div className={`animate-fade-in ${printMode ? 'print-mode space-y-3' : 'space-y-8'}`}>
       {/* Print mode styles */}
       <style>{`
         .print-mode {
           max-width: 100%;
           overflow-x: hidden;
+          overflow-y: hidden;
+          max-height: 100vh;
         }
         .print-mode .shadow-xl,
         .print-mode .shadow-lg,
@@ -613,6 +615,16 @@ const AdminDashboard = () => {
         }
         .print-mode .backdrop-blur-sm {
           backdrop-filter: none !important;
+        }
+        .print-mode .print-compact-card {
+          padding: 0.5rem !important;
+        }
+        .print-mode .print-compact-card .text-4xl,
+        .print-mode .print-compact-card .text-3xl {
+          font-size: 1.5rem !important;
+        }
+        .print-mode .print-hide {
+          display: none !important;
         }
         @media print {
           .print-mode {
@@ -625,15 +637,15 @@ const AdminDashboard = () => {
       `}</style>
 
       <div className="relative">
-        <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-primary rounded-full" />
+        <div className={`absolute -left-4 top-0 w-1 h-full bg-gradient-primary rounded-full ${printMode ? 'hidden' : ''}`} />
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight">
+            <h1 className={`font-bold tracking-tight ${printMode ? 'text-2xl' : 'text-4xl'}`}>
               Dashboard <span className="bg-gradient-primary bg-clip-text text-transparent">Administrativo</span>
             </h1>
-            <p className="text-muted-foreground text-lg mt-2">Visão geral do sistema de gestão Z3US</p>
+            {!printMode && <p className="text-muted-foreground text-lg mt-2">Visão geral do sistema de gestão Z3US</p>}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 no-print">
             <Button
               variant={printMode ? "default" : "outline"}
               size="sm"
@@ -662,132 +674,204 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Combined Stats - Compact for print */}
+      <div className={`grid ${printMode ? 'grid-cols-6 gap-2' : 'gap-6 md:grid-cols-3'}`}>
         {statCards.map((stat, index) => (
           <Card 
             key={stat.title} 
-            className={`relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all ${!printMode ? 'hover:shadow-xl hover:shadow-primary/20' : ''} group overflow-hidden`}
+            className={`relative bg-card/50 backdrop-blur-sm border-primary/20 transition-all ${!printMode ? 'hover:border-primary/50 hover:shadow-xl hover:shadow-primary/20' : 'print-compact-card'} group overflow-hidden`}
             style={{ animationDelay: `${index * 0.1}s` }}
           >
             <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className={`flex flex-row items-center justify-between relative z-10 ${printMode ? 'pb-1 pt-2 px-3' : 'pb-2'}`}>
+              <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-xs' : 'text-sm'}`}>
                 {stat.title}
               </CardTitle>
-              <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </div>
+              {!printMode && (
+                <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
+              )}
             </CardHeader>
-            <CardContent className="relative z-10">
-              <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">{stat.value}</div>
-              <p className="text-xs text-muted-foreground mt-2">{stat.description}</p>
+            <CardContent className={`relative z-10 ${printMode ? 'pb-2 px-3' : ''}`}>
+              <div className={`font-bold bg-gradient-primary bg-clip-text text-transparent ${printMode ? 'text-2xl' : 'text-4xl'}`}>{stat.value}</div>
+              {!printMode && <p className="text-xs text-muted-foreground mt-2">{stat.description}</p>}
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {/* Status Cards */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="relative bg-card/50 backdrop-blur-sm border-destructive/20 hover:border-destructive/50 transition-all">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Em Atraso</CardTitle>
-            <AlertTriangle className="h-5 w-5 text-destructive" />
+        
+        {/* Status Cards inline for print mode */}
+        <Card className={`relative bg-card/50 backdrop-blur-sm border-destructive/20 transition-all ${printMode ? 'print-compact-card' : 'hidden'}`}>
+          <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-1 pt-2 px-3' : 'pb-2'}`}>
+            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-xs' : 'text-sm'}`}>Em Atraso</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-destructive">{stats.delayed}</div>
-            <p className="text-xs text-muted-foreground mt-2">Atividades atrasadas</p>
+          <CardContent className={printMode ? 'pb-2 px-3' : ''}>
+            <div className={`font-bold text-destructive ${printMode ? 'text-2xl' : 'text-3xl'}`}>{stats.delayed}</div>
           </CardContent>
         </Card>
 
-        <Card className="relative bg-card/50 backdrop-blur-sm border-success/20 hover:border-success/50 transition-all">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Finalizados</CardTitle>
-            <CheckCircle2 className="h-5 w-5 text-success" />
+        <Card className={`relative bg-card/50 backdrop-blur-sm border-success/20 transition-all ${printMode ? 'print-compact-card' : 'hidden'}`}>
+          <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-1 pt-2 px-3' : 'pb-2'}`}>
+            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-xs' : 'text-sm'}`}>Finalizados</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-success">{stats.completed}</div>
-            <p className="text-xs text-muted-foreground mt-2">Atividades completas</p>
+          <CardContent className={printMode ? 'pb-2 px-3' : ''}>
+            <div className={`font-bold text-success ${printMode ? 'text-2xl' : 'text-3xl'}`}>{stats.completed}</div>
           </CardContent>
         </Card>
 
-        <Card className="relative bg-card/50 backdrop-blur-sm border-info/20 hover:border-info/50 transition-all">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Em Aberto</CardTitle>
-            <Clock className="h-5 w-5 text-info" />
+        <Card className={`relative bg-card/50 backdrop-blur-sm border-info/20 transition-all ${printMode ? 'print-compact-card' : 'hidden'}`}>
+          <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-1 pt-2 px-3' : 'pb-2'}`}>
+            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-xs' : 'text-sm'}`}>Em Aberto</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-info">{stats.open}</div>
-            <p className="text-xs text-muted-foreground mt-2">Atividades ativas</p>
+          <CardContent className={printMode ? 'pb-2 px-3' : ''}>
+            <div className={`font-bold text-info ${printMode ? 'text-2xl' : 'text-3xl'}`}>{stats.open}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* NEW: Today's Deliveries - Full width */}
+      {/* Status Cards - Normal mode only */}
+      {!printMode && (
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card className="relative bg-card/50 backdrop-blur-sm border-destructive/20 hover:border-destructive/50 transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Em Atraso</CardTitle>
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-destructive">{stats.delayed}</div>
+              <p className="text-xs text-muted-foreground mt-2">Atividades atrasadas</p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative bg-card/50 backdrop-blur-sm border-success/20 hover:border-success/50 transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Finalizados</CardTitle>
+              <CheckCircle2 className="h-5 w-5 text-success" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-success">{stats.completed}</div>
+              <p className="text-xs text-muted-foreground mt-2">Atividades completas</p>
+            </CardContent>
+          </Card>
+
+          <Card className="relative bg-card/50 backdrop-blur-sm border-info/20 hover:border-info/50 transition-all">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Em Aberto</CardTitle>
+              <Clock className="h-5 w-5 text-info" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-info">{stats.open}</div>
+              <p className="text-xs text-muted-foreground mt-2">Atividades ativas</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Today's Deliveries - Full width */}
       <TodayDeliveries projects={todayProjects} printMode={printMode} />
 
-      {/* NEW: Today's Demands - Person and Client side by side */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Today's Demands + Activities by Person - Side by side in print mode */}
+      <div className={`grid ${printMode ? 'grid-cols-3 gap-2' : 'gap-6 md:grid-cols-2'}`}>
         <TodayDemandsByPerson demandsByPerson={todayDemandsByPerson} printMode={printMode} />
         <TodayDemandsByClient demandsByClient={todayDemandsByClient} printMode={printMode} />
+        
+        {/* Activities by Person - Compact for print */}
+        {printMode && (
+          <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-sm">Atividades por responsável</CardTitle>
+            </CardHeader>
+            <CardContent className="py-1 px-3">
+              {projectsByPerson.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-2">Sem dados</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs py-1">Resp.</TableHead>
+                      <TableHead className="text-xs py-1 text-center">Total</TableHead>
+                      <TableHead className="text-xs py-1 text-center">Atraso</TableHead>
+                      <TableHead className="text-xs py-1 text-center">Dias</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {projectsByPerson.slice(0, 5).map((person) => (
+                      <TableRow key={person.responsible}>
+                        <TableCell className="py-1 text-xs truncate max-w-[80px]">{person.responsible}</TableCell>
+                        <TableCell className="py-1 text-xs text-center">{person.total}</TableCell>
+                        <TableCell className="py-1 text-xs text-center text-destructive">{person.delayed}</TableCell>
+                        <TableCell className="py-1 text-xs text-center text-destructive font-semibold">
+                          {person.delayedDays > 0 ? person.delayedDays : "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* NEW: Yesterday Summary - Full width */}
-      <YesterdaySummary stats={yesterdayStats} printMode={printMode} />
+      {/* Yesterday Summary - Hide in print mode */}
+      {!printMode && <YesterdaySummary stats={yesterdayStats} printMode={printMode} />}
 
-      {/* Activities by Person */}
-      <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-        <CardHeader>
-          <CardTitle>Atividades por responsável</CardTitle>
-          <CardDescription>Distribuição e status de entregas</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {projectsByPerson.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground">
-              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Sem atividades atribuídas</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead className="text-center">Total</TableHead>
-                  <TableHead className="text-center">Em Tempo</TableHead>
-                  <TableHead className="text-center">Atrasados</TableHead>
-                  <TableHead className="text-center">Dias Atrasados</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(printMode ? projectsByPerson.slice(0, 8) : projectsByPerson).map((person) => (
-                  <TableRow 
-                    key={person.responsible}
-                    className="cursor-pointer hover:bg-muted/70"
-                    onClick={() => setSelectedPersonProjects({ 
-                      responsible: person.responsible, 
-                      projects: person.projects 
-                    })}
-                  >
-                    <TableCell className="font-medium">{person.responsible}</TableCell>
-                    <TableCell className="text-center">{person.total}</TableCell>
-                    <TableCell className="text-center text-success">{person.onTime}</TableCell>
-                    <TableCell className="text-center text-destructive">{person.delayed}</TableCell>
-                    <TableCell className="text-center text-destructive font-semibold">
-                      {person.delayedDays > 0 ? person.delayedDays : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <Progress 
-                        value={person.total > 0 ? (person.onTime / person.total) * 100 : 0} 
-                        className="h-2"
-                      />
-                    </TableCell>
+      {/* Activities by Person - Normal mode only (print mode is inline above) */}
+      {!printMode && (
+        <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
+          <CardHeader>
+            <CardTitle>Atividades por responsável</CardTitle>
+            <CardDescription>Distribuição e status de entregas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {projectsByPerson.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground">
+                <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Sem atividades atribuídas</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Responsável</TableHead>
+                    <TableHead className="text-center">Total</TableHead>
+                    <TableHead className="text-center">Em Tempo</TableHead>
+                    <TableHead className="text-center">Atrasados</TableHead>
+                    <TableHead className="text-center">Dias Atrasados</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {projectsByPerson.map((person) => (
+                    <TableRow 
+                      key={person.responsible}
+                      className="cursor-pointer hover:bg-muted/70"
+                      onClick={() => setSelectedPersonProjects({ 
+                        responsible: person.responsible, 
+                        projects: person.projects 
+                      })}
+                    >
+                      <TableCell className="font-medium">{person.responsible}</TableCell>
+                      <TableCell className="text-center">{person.total}</TableCell>
+                      <TableCell className="text-center text-success">{person.onTime}</TableCell>
+                      <TableCell className="text-center text-destructive">{person.delayed}</TableCell>
+                      <TableCell className="text-center text-destructive font-semibold">
+                        {person.delayedDays > 0 ? person.delayedDays : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Progress 
+                          value={person.total > 0 ? (person.onTime / person.total) * 100 : 0} 
+                          className="h-2"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Modal for Activities by Person details */}
       <Dialog 
@@ -836,102 +920,107 @@ const AdminDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Activities by Client and Priority */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-          <CardHeader>
-            <CardTitle>Atividades por cliente</CardTitle>
-            <CardDescription>Distribuição de atividades</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(printMode ? projectsByClient.slice(0, 6) : projectsByClient).map((client) => (
-                  <TableRow key={client.clientName}>
-                    <TableCell className="font-medium">{client.clientName}</TableCell>
-                    <TableCell className="text-right">{client.total}</TableCell>
+      {/* Activities by Client and Priority - Hide in print mode */}
+      {!printMode && (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
+            <CardHeader>
+              <CardTitle>Atividades por cliente</CardTitle>
+              <CardDescription>Distribuição de atividades</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {projectsByClient.map((client) => (
+                    <TableRow key={client.clientName}>
+                      <TableCell className="font-medium">{client.clientName}</TableCell>
+                      <TableCell className="text-right">{client.total}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
+            <CardHeader>
+              <CardTitle>Atividades por prioridade</CardTitle>
+              <CardDescription>Classificação de urgência</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Prioridade</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {projectsByPriority.map((priority) => (
+                    <TableRow key={priority.priority}>
+                      <TableCell className="font-medium flex items-center gap-2">
+                        <Flag className={`h-4 w-4 ${
+                          priority.priority === 'high' ? 'text-destructive' :
+                          priority.priority === 'medium' ? 'text-warning' :
+                          'text-success'
+                        }`} />
+                        {priority.priority === 'high' ? 'Alta' :
+                         priority.priority === 'medium' ? 'Média' : 'Baixa'}
+                      </TableCell>
+                      <TableCell className="text-right">{priority.total}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Welcome card - Hide in print mode */}
+      {!printMode && (
+        <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-secondary opacity-30" />
+          <CardHeader className="relative z-10">
+            <CardTitle className="text-2xl">Bem-vindo ao <span className="bg-gradient-primary bg-clip-text text-transparent">Z3US</span></CardTitle>
+            <CardDescription className="text-base">
+              Use o menu lateral para gerenciar equipes, clientes e projetos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="relative z-10">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="p-6 bg-primary/10 border border-primary/30 rounded-xl neon-border hover:shadow-lg hover:shadow-primary/20 transition-all">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <span className="text-2xl">🤖</span>
+                  </div>
+                  <h3 className="font-bold text-lg">Integração com IA</h3>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  O sistema utiliza inteligência artificial para otimizar a gestão de projetos e sugerir alocação de recursos.
+                </p>
+              </div>
+              <div className="p-6 bg-secondary/10 border border-secondary/30 rounded-xl neon-border hover:shadow-lg hover:shadow-secondary/20 transition-all">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-secondary/20 rounded-lg">
+                    <span className="text-2xl">💡</span>
+                  </div>
+                  <h3 className="font-bold text-lg">Dica Inicial</h3>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Comece cadastrando sua equipe e clientes para então criar os primeiros projetos!
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
-
-        <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-          <CardHeader>
-            <CardTitle>Atividades por prioridade</CardTitle>
-            <CardDescription>Classificação de urgência</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Prioridade</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {projectsByPriority.map((priority) => (
-                  <TableRow key={priority.priority}>
-                    <TableCell className="font-medium flex items-center gap-2">
-                      <Flag className={`h-4 w-4 ${
-                        priority.priority === 'high' ? 'text-destructive' :
-                        priority.priority === 'medium' ? 'text-warning' :
-                        'text-success'
-                      }`} />
-                      {priority.priority === 'high' ? 'Alta' :
-                       priority.priority === 'medium' ? 'Média' : 'Baixa'}
-                    </TableCell>
-                    <TableCell className="text-right">{priority.total}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-secondary opacity-30" />
-        <CardHeader className="relative z-10">
-          <CardTitle className="text-2xl">Bem-vindo ao <span className="bg-gradient-primary bg-clip-text text-transparent">Z3US</span></CardTitle>
-          <CardDescription className="text-base">
-            Use o menu lateral para gerenciar equipes, clientes e projetos
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="relative z-10">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-6 bg-primary/10 border border-primary/30 rounded-xl neon-border hover:shadow-lg hover:shadow-primary/20 transition-all">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-primary/20 rounded-lg">
-                  <span className="text-2xl">🤖</span>
-                </div>
-                <h3 className="font-bold text-lg">Integração com IA</h3>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                O sistema utiliza inteligência artificial para otimizar a gestão de projetos e sugerir alocação de recursos.
-              </p>
-            </div>
-            <div className="p-6 bg-secondary/10 border border-secondary/30 rounded-xl neon-border hover:shadow-lg hover:shadow-secondary/20 transition-all">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-secondary/20 rounded-lg">
-                  <span className="text-2xl">💡</span>
-                </div>
-                <h3 className="font-bold text-lg">Dica Inicial</h3>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Comece cadastrando sua equipe e clientes para então criar os primeiros projetos!
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      )}
     </div>
   );
 };

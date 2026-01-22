@@ -32,23 +32,23 @@ interface TodayDemandsByPersonProps {
 const TodayDemandsByPerson = ({ demandsByPerson, printMode }: TodayDemandsByPersonProps) => {
   const [selectedPerson, setSelectedPerson] = useState<PersonDemands | null>(null);
 
-  const displayData = printMode ? demandsByPerson.slice(0, 5) : demandsByPerson.slice(0, 8);
+  const displayData = printMode ? demandsByPerson.slice(0, 4) : demandsByPerson.slice(0, 8);
   const hasMore = demandsByPerson.length > displayData.length;
 
   if (demandsByPerson.length === 0) {
     return (
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
+        <CardHeader className={printMode ? 'py-2 px-3' : ''}>
+          <CardTitle className={`flex items-center gap-2 ${printMode ? 'text-sm' : ''}`}>
+            <User className={`text-primary ${printMode ? 'h-4 w-4' : 'h-5 w-5'}`} />
             Demandas de Hoje — por Pessoa
           </CardTitle>
-          <CardDescription>Projetos com prazo ou criação para hoje</CardDescription>
+          {!printMode && <CardDescription>Projetos com prazo ou criação para hoje</CardDescription>}
         </CardHeader>
-        <CardContent>
-          <div className="py-8 text-center text-muted-foreground">
-            <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Sem demandas registradas para hoje</p>
+        <CardContent className={printMode ? 'py-2 px-3' : ''}>
+          <div className={`text-center text-muted-foreground ${printMode ? 'py-2' : 'py-8'}`}>
+            <Clock className={`mx-auto mb-2 opacity-50 ${printMode ? 'h-6 w-6' : 'h-12 w-12 mb-4'}`} />
+            <p className={printMode ? 'text-xs' : ''}>Sem demandas registradas para hoje</p>
           </div>
         </CardContent>
       </Card>
@@ -58,49 +58,51 @@ const TodayDemandsByPerson = ({ demandsByPerson, printMode }: TodayDemandsByPers
   return (
     <>
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
+        <CardHeader className={printMode ? 'py-2 px-3' : ''}>
+          <CardTitle className={`flex items-center gap-2 ${printMode ? 'text-sm' : ''}`}>
+            <User className={`text-primary ${printMode ? 'h-4 w-4' : 'h-5 w-5'}`} />
             Demandas de Hoje — por Pessoa
           </CardTitle>
-          <CardDescription>Projetos com prazo ou criação para hoje</CardDescription>
+          {!printMode && <CardDescription>Projetos com prazo ou criação para hoje</CardDescription>}
         </CardHeader>
-        <CardContent>
+        <CardContent className={printMode ? 'py-1 px-3' : ''}>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Responsável</TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead className="text-center">Em Aberto</TableHead>
-                <TableHead className="text-center">Concluídas</TableHead>
-                <TableHead className="text-center">Atrasadas</TableHead>
+                <TableHead className={printMode ? 'text-xs py-1' : ''}>Responsável</TableHead>
+                <TableHead className={`text-center ${printMode ? 'text-xs py-1' : ''}`}>Total</TableHead>
+                {!printMode && <TableHead className="text-center">Em Aberto</TableHead>}
+                <TableHead className={`text-center ${printMode ? 'text-xs py-1' : ''}`}>Concluídas</TableHead>
+                <TableHead className={`text-center ${printMode ? 'text-xs py-1' : ''}`}>Atrasadas</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {displayData.map((person) => (
                 <TableRow
                   key={person.responsible}
-                  className="cursor-pointer hover:bg-muted/70"
-                  onClick={() => setSelectedPerson(person)}
+                  className={`${!printMode ? 'cursor-pointer hover:bg-muted/70' : ''}`}
+                  onClick={() => !printMode && setSelectedPerson(person)}
                 >
-                  <TableCell className="font-medium">{person.responsible}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline">{person.total}</Badge>
+                  <TableCell className={`font-medium ${printMode ? 'py-1 text-xs truncate max-w-[100px]' : ''}`}>{person.responsible}</TableCell>
+                  <TableCell className={`text-center ${printMode ? 'py-1' : ''}`}>
+                    <Badge variant="outline" className={printMode ? 'text-xs px-1' : ''}>{person.total}</Badge>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <span className="text-info font-semibold">{person.inProgress}</span>
+                  {!printMode && (
+                    <TableCell className="text-center">
+                      <span className="text-info font-semibold">{person.inProgress}</span>
+                    </TableCell>
+                  )}
+                  <TableCell className={`text-center ${printMode ? 'py-1' : ''}`}>
+                    <span className={`text-success font-semibold ${printMode ? 'text-xs' : ''}`}>{person.completed}</span>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <span className="text-success font-semibold">{person.completed}</span>
-                  </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className={`text-center ${printMode ? 'py-1' : ''}`}>
                     {person.delayed > 0 ? (
-                      <div className="flex items-center justify-center gap-1 text-destructive">
-                        <AlertTriangle className="h-4 w-4" />
+                      <div className={`flex items-center justify-center gap-1 text-destructive ${printMode ? 'text-xs' : ''}`}>
+                        <AlertTriangle className={printMode ? 'h-3 w-3' : 'h-4 w-4'} />
                         <span className="font-semibold">{person.delayed}</span>
                       </div>
                     ) : (
-                      <CheckCircle2 className="h-4 w-4 text-success mx-auto" />
+                      <CheckCircle2 className={`text-success mx-auto ${printMode ? 'h-3 w-3' : 'h-4 w-4'}`} />
                     )}
                   </TableCell>
                 </TableRow>

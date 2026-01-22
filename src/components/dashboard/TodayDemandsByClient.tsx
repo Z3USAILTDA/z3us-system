@@ -31,23 +31,23 @@ interface TodayDemandsByClientProps {
 const TodayDemandsByClient = ({ demandsByClient, printMode }: TodayDemandsByClientProps) => {
   const [selectedClient, setSelectedClient] = useState<ClientDemands | null>(null);
 
-  const displayData = printMode ? demandsByClient.slice(0, 5) : demandsByClient.slice(0, 8);
+  const displayData = printMode ? demandsByClient.slice(0, 4) : demandsByClient.slice(0, 8);
   const hasMore = demandsByClient.length > displayData.length;
 
   if (demandsByClient.length === 0) {
     return (
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-accent" />
+        <CardHeader className={printMode ? 'py-2 px-3' : ''}>
+          <CardTitle className={`flex items-center gap-2 ${printMode ? 'text-sm' : ''}`}>
+            <Building2 className={`text-accent ${printMode ? 'h-4 w-4' : 'h-5 w-5'}`} />
             Demandas de Hoje — por Cliente
           </CardTitle>
-          <CardDescription>Distribuição por cliente</CardDescription>
+          {!printMode && <CardDescription>Distribuição por cliente</CardDescription>}
         </CardHeader>
-        <CardContent>
-          <div className="py-8 text-center text-muted-foreground">
-            <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Sem demandas registradas para hoje</p>
+        <CardContent className={printMode ? 'py-2 px-3' : ''}>
+          <div className={`text-center text-muted-foreground ${printMode ? 'py-2' : 'py-8'}`}>
+            <Clock className={`mx-auto mb-2 opacity-50 ${printMode ? 'h-6 w-6' : 'h-12 w-12 mb-4'}`} />
+            <p className={printMode ? 'text-xs' : ''}>Sem demandas registradas para hoje</p>
           </div>
         </CardContent>
       </Card>
@@ -57,39 +57,41 @@ const TodayDemandsByClient = ({ demandsByClient, printMode }: TodayDemandsByClie
   return (
     <>
       <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-accent" />
+        <CardHeader className={printMode ? 'py-2 px-3' : ''}>
+          <CardTitle className={`flex items-center gap-2 ${printMode ? 'text-sm' : ''}`}>
+            <Building2 className={`text-accent ${printMode ? 'h-4 w-4' : 'h-5 w-5'}`} />
             Demandas de Hoje — por Cliente
           </CardTitle>
-          <CardDescription>Distribuição por cliente</CardDescription>
+          {!printMode && <CardDescription>Distribuição por cliente</CardDescription>}
         </CardHeader>
-        <CardContent>
+        <CardContent className={printMode ? 'py-1 px-3' : ''}>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Cliente</TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead className="text-center">Em Aberto</TableHead>
-                <TableHead className="text-center">Concluídas</TableHead>
+                <TableHead className={printMode ? 'text-xs py-1' : ''}>Cliente</TableHead>
+                <TableHead className={`text-center ${printMode ? 'text-xs py-1' : ''}`}>Total</TableHead>
+                {!printMode && <TableHead className="text-center">Em Aberto</TableHead>}
+                <TableHead className={`text-center ${printMode ? 'text-xs py-1' : ''}`}>Concluídas</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {displayData.map((client) => (
                 <TableRow
                   key={client.clientName}
-                  className="cursor-pointer hover:bg-muted/70"
-                  onClick={() => setSelectedClient(client)}
+                  className={`${!printMode ? 'cursor-pointer hover:bg-muted/70' : ''}`}
+                  onClick={() => !printMode && setSelectedClient(client)}
                 >
-                  <TableCell className="font-medium">{client.clientName}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline">{client.total}</Badge>
+                  <TableCell className={`font-medium ${printMode ? 'py-1 text-xs truncate max-w-[100px]' : ''}`}>{client.clientName}</TableCell>
+                  <TableCell className={`text-center ${printMode ? 'py-1' : ''}`}>
+                    <Badge variant="outline" className={printMode ? 'text-xs px-1' : ''}>{client.total}</Badge>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <span className="text-info font-semibold">{client.inProgress}</span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="text-success font-semibold">{client.completed}</span>
+                  {!printMode && (
+                    <TableCell className="text-center">
+                      <span className="text-info font-semibold">{client.inProgress}</span>
+                    </TableCell>
+                  )}
+                  <TableCell className={`text-center ${printMode ? 'py-1' : ''}`}>
+                    <span className={`text-success font-semibold ${printMode ? 'text-xs' : ''}`}>{client.completed}</span>
                   </TableCell>
                 </TableRow>
               ))}
