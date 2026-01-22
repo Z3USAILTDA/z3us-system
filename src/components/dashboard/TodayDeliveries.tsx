@@ -61,64 +61,81 @@ const TodayDeliveries = ({ projects, printMode = false }: TodayDeliveriesProps) 
     }
   };
 
-  const displayItems = printMode ? pendingDeliveries.slice(0, 8) : (expanded ? pendingDeliveries : pendingDeliveries.slice(0, 5));
+  const displayItems = printMode ? pendingDeliveries.slice(0, 5) : (expanded ? pendingDeliveries : pendingDeliveries.slice(0, 5));
 
   return (
     <Card className="relative bg-card/50 backdrop-blur-sm border-warning/20 hover:border-warning/40 transition-all">
-      <CardHeader className="pb-3">
+      <CardHeader className={printMode ? 'py-2 px-3' : 'pb-3'}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-warning/10 rounded-lg">
-              <Package className="h-5 w-5 text-warning" />
+            <div className={`bg-warning/10 rounded-lg ${printMode ? 'p-1' : 'p-2'}`}>
+              <Package className={`text-warning ${printMode ? 'h-4 w-4' : 'h-5 w-5'}`} />
             </div>
             <div>
-              <CardTitle className="text-lg">Entregas do Dia</CardTitle>
-              <CardDescription>Pendências com prazo para hoje</CardDescription>
+              <CardTitle className={printMode ? 'text-sm' : 'text-lg'}>Entregas do Dia</CardTitle>
+              {!printMode && <CardDescription>Pendências com prazo para hoje</CardDescription>}
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-lg px-3 py-1 border-warning/30 text-warning">
+            <Badge variant="outline" className={`border-warning/30 text-warning ${printMode ? 'text-sm px-2' : 'text-lg px-3 py-1'}`}>
               {pendingDeliveries.length}
             </Badge>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className={printMode ? 'py-1 px-3' : ''}>
         {pendingDeliveries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <CheckCircle2 className="h-12 w-12 text-success/50 mb-3" />
-            <p className="text-muted-foreground">Nenhuma entrega pendente para hoje!</p>
-            <p className="text-sm text-muted-foreground/70 mt-1">Todas as demandas do dia estão em dia.</p>
+          <div className={`flex flex-col items-center justify-center text-center ${printMode ? 'py-2' : 'py-8'}`}>
+            <CheckCircle2 className={`text-success/50 ${printMode ? 'h-6 w-6 mb-1' : 'h-12 w-12 mb-3'}`} />
+            <p className={`text-muted-foreground ${printMode ? 'text-xs' : ''}`}>Nenhuma entrega pendente para hoje!</p>
           </div>
         ) : (
           <>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Demanda</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Prioridade</TableHead>
+                  <TableHead className={printMode ? 'text-xs py-1' : ''}>Demanda</TableHead>
+                  <TableHead className={printMode ? 'text-xs py-1' : ''}>Responsável</TableHead>
+                  {!printMode && <TableHead>Cliente</TableHead>}
+                  <TableHead className={`text-center ${printMode ? 'text-xs py-1' : ''}`}>Status</TableHead>
+                  <TableHead className={`text-center ${printMode ? 'text-xs py-1' : ''}`}>Prioridade</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {displayItems.map((project) => (
                   <TableRow key={project.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium max-w-[200px] truncate">
+                    <TableCell className={`font-medium ${printMode ? 'py-1 text-xs max-w-[120px]' : 'max-w-[200px]'} truncate`}>
                       {project.title}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className={`text-muted-foreground ${printMode ? 'py-1 text-xs truncate max-w-[80px]' : ''}`}>
                       {project.responsible || "Não atribuído"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {project.client_name || "—"}
+                    {!printMode && (
+                      <TableCell className="text-muted-foreground">
+                        {project.client_name || "—"}
+                      </TableCell>
+                    )}
+                    <TableCell className={`text-center ${printMode ? 'py-1' : ''}`}>
+                      {printMode ? (
+                        <Badge className="text-xs px-1 py-0" variant={project.status === "in_progress" ? "default" : "outline"}>
+                          {project.status === "in_progress" ? "And." : project.status === "planning" ? "Plan." : project.status}
+                        </Badge>
+                      ) : (
+                        getStatusBadge(project.status)
+                      )}
                     </TableCell>
-                    <TableCell className="text-center">
-                      {getStatusBadge(project.status)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {getPriorityBadge(project.priority)}
+                    <TableCell className={`text-center ${printMode ? 'py-1' : ''}`}>
+                      {printMode ? (
+                        <Badge className={`text-xs px-1 py-0 ${
+                          project.priority === 'high' ? 'bg-destructive/20 text-destructive' :
+                          project.priority === 'medium' ? 'bg-warning/20 text-warning' :
+                          'bg-success/20 text-success'
+                        }`}>
+                          {project.priority === 'high' ? 'A' : project.priority === 'medium' ? 'M' : 'B'}
+                        </Badge>
+                      ) : (
+                        getPriorityBadge(project.priority)
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
