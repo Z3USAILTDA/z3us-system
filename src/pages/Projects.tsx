@@ -171,18 +171,22 @@ const ProjectsContent = () => {
     const actualStartDate = formData.get("actual_start_date") as string;
     const actualEndDate = formData.get("actual_end_date") as string;
 
+      const status = formData.get("status") as string;
+      // Se o status for "waiting_client", define o responsável como "Cliente" automaticamente
+      const responsible = status === "waiting_client" ? "Cliente" : (formData.get("responsible") as string);
+      
       const projectData = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
       client_id: formData.get("client_id") as string,
-      status: formData.get("status") as string,
+      status: status,
       priority: formData.get("priority") as string,
       start_date: startDate || null,
       end_date: endDate || null,
       progress: parseInt(formData.get("progress") as string) || 0,
       observation: formData.get("observation") as string,
       client_observation: formData.get("client_observation") as string,
-      responsible: formData.get("responsible") as string,
+      responsible: responsible,
       sprint: formData.get("sprint") as string,
       actual_start_date: actualStartDate || null,
       actual_end_date: actualEndDate || null,
@@ -372,9 +376,13 @@ const ProjectsContent = () => {
     if (!editingCell) return;
 
     // Se o campo for status e o valor for "completed", atualiza também o progresso para 100%
+    // Se o campo for status e o valor for "waiting_client", atualiza o responsável para "Cliente"
     const updateData: Record<string, any> = { [field]: editValue || null };
     if (field === "status" && editValue === "completed") {
       updateData.progress = 100;
+    }
+    if (field === "status" && editValue === "waiting_client") {
+      updateData.responsible = "Cliente";
     }
 
     // Atualização otimista - atualiza o estado local imediatamente
