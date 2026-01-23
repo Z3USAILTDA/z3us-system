@@ -544,25 +544,31 @@ const DocumentationContent = () => {
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="project_id">Projeto *</Label>
+                        <Label htmlFor="project_id">Produto *</Label>
                         <Select
                           name="project_id"
                           defaultValue={editingDocument?.project_id || ""}
                           required
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione o projeto" />
+                            <SelectValue placeholder="Selecione o produto" />
                           </SelectTrigger>
                           <SelectContent>
-                            {projects
-                              .filter((p) => PRODUCT_OPTIONS.some((prod) => 
-                                p.title.toLowerCase().includes(prod.toLowerCase())
-                              ))
-                              .map((project) => (
-                                <SelectItem key={project.id} value={project.id}>
-                                  {project.title}
+                            {PRODUCT_OPTIONS.map((product) => {
+                              // Find the project that matches this product
+                              const matchingProject = projects.find((p) => 
+                                p.title.toLowerCase().includes(product.toLowerCase())
+                              );
+                              return matchingProject ? (
+                                <SelectItem key={matchingProject.id} value={matchingProject.id}>
+                                  {product}
                                 </SelectItem>
-                              ))}
+                              ) : (
+                                <SelectItem key={product} value={product} disabled>
+                                  {product} (não cadastrado)
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </div>
