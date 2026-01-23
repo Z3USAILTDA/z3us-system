@@ -559,13 +559,9 @@ const DocumentationContent = () => {
                               const matchingProject = projects.find((p) => 
                                 p.title.toLowerCase().includes(product.toLowerCase())
                               );
-                              return matchingProject ? (
-                                <SelectItem key={matchingProject.id} value={matchingProject.id}>
+                              return (
+                                <SelectItem key={matchingProject?.id || product} value={matchingProject?.id || product}>
                                   {product}
-                                </SelectItem>
-                              ) : (
-                                <SelectItem key={product} value={product} disabled>
-                                  {product} (não cadastrado)
                                 </SelectItem>
                               );
                             })}
