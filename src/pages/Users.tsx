@@ -19,6 +19,7 @@ import {
   UserCircle,
   KeyRound,
   UserCog,
+  FileText,
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -172,11 +173,13 @@ const UsersContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: UsersIcon },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 
   const clientMenuItems = [
     { title: "Dashboard", url: "/dashboard", icon: Home },
     { title: "Meus Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;

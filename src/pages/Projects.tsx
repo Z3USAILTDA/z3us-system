@@ -36,6 +36,7 @@ import {
   LogOut,
   Menu,
   UserCog,
+  FileText,
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -156,9 +157,13 @@ const ProjectsContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 
-  const clientMenuItems = [{ title: "Meus Projetos", url: "/dashboard", icon: FolderKanban }];
+  const clientMenuItems = [
+    { title: "Meus Projetos", url: "/dashboard", icon: FolderKanban },
+    { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
+  ];
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
 

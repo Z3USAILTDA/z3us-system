@@ -10,6 +10,7 @@ import Teams from "./pages/Teams";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
 import Users from "./pages/Users";
+import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/dashboard/clients" element={<Clients />} />
           <Route path="/dashboard/projects" element={<Projects />} />
           <Route path="/dashboard/users" element={<Users />} />
+          <Route path="/dashboard/documentation" element={<Documentation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
