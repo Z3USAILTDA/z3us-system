@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle, X, Mail } from "lucide-react";
+import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle, X, Mail, FileText } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -265,11 +265,13 @@ const ClientsContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 
   const clientMenuItems = [
     { title: "Dashboard", url: "/dashboard", icon: Home },
     { title: "Meus Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
