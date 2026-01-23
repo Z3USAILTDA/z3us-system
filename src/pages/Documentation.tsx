@@ -73,6 +73,17 @@ interface ProjectDocument {
   };
 }
 
+// Lista fixa de produtos Z3US
+const PRODUCT_OPTIONS = [
+  "Zeus",
+  "Olimpo",
+  "Hermes",
+  "Artemis",
+  "Cronos",
+  "Apolo",
+  "Prometeu",
+];
+
 const DocumentationContent = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -543,11 +554,15 @@ const DocumentationContent = () => {
                             <SelectValue placeholder="Selecione o projeto" />
                           </SelectTrigger>
                           <SelectContent>
-                            {projects.map((project) => (
-                              <SelectItem key={project.id} value={project.id}>
-                                {project.title}
-                              </SelectItem>
-                            ))}
+                            {projects
+                              .filter((p) => PRODUCT_OPTIONS.some((prod) => 
+                                p.title.toLowerCase().includes(prod.toLowerCase())
+                              ))
+                              .map((project) => (
+                                <SelectItem key={project.id} value={project.id}>
+                                  {project.title}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -576,8 +591,6 @@ const DocumentationContent = () => {
                             <SelectContent>
                               <SelectItem value="resumo">Resumo</SelectItem>
                               <SelectItem value="tecnica">Técnica</SelectItem>
-                              <SelectItem value="manual">Manual</SelectItem>
-                              <SelectItem value="outros">Outros</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -665,11 +678,15 @@ const DocumentationContent = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os projetos</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.title}
-                    </SelectItem>
-                  ))}
+                  {projects
+                    .filter((p) => PRODUCT_OPTIONS.some((prod) => 
+                      p.title.toLowerCase().includes(prod.toLowerCase())
+                    ))
+                    .map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.title}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
 
@@ -681,8 +698,6 @@ const DocumentationContent = () => {
                   <SelectItem value="all">Todos os tipos</SelectItem>
                   <SelectItem value="resumo">Resumo</SelectItem>
                   <SelectItem value="tecnica">Técnica</SelectItem>
-                  <SelectItem value="manual">Manual</SelectItem>
-                  <SelectItem value="outros">Outros</SelectItem>
                 </SelectContent>
               </Select>
 
