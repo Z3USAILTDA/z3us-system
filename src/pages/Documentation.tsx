@@ -379,7 +379,7 @@ const DocumentationContent = () => {
         doc.version?.toLowerCase().includes(searchLower) ||
         doc.tags?.some((t) => t.toLowerCase().includes(searchLower));
 
-      const matchesProject = !filterProject || filterProject === "all" || doc.project_id === filterProject;
+      const matchesProject = !filterProject || filterProject === "all" || doc.projects?.title.toLowerCase().includes(filterProject.toLowerCase());
       const matchesType = !filterType || filterType === "all" || doc.type === filterType;
 
       return matchesSearch && matchesProject && matchesType;
@@ -674,19 +674,15 @@ const DocumentationContent = () => {
 
               <Select value={filterProject} onValueChange={setFilterProject}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Projeto" />
+                  <SelectValue placeholder="Produto" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os projetos</SelectItem>
-                  {projects
-                    .filter((p) => PRODUCT_OPTIONS.some((prod) => 
-                      p.title.toLowerCase().includes(prod.toLowerCase())
-                    ))
-                    .map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.title}
-                      </SelectItem>
-                    ))}
+                  <SelectItem value="all">Todos os produtos</SelectItem>
+                  {PRODUCT_OPTIONS.map((product) => (
+                    <SelectItem key={product} value={product}>
+                      {product}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
