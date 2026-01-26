@@ -71,7 +71,7 @@ const TodayDemandsByPerson = ({ demandsByPerson, printMode }: TodayDemandsByPers
               <TableRow>
                 <TableHead className={printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}>Responsável</TableHead>
                 <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Total</TableHead>
-                {!printMode && <TableHead className="text-center">Em Aberto</TableHead>}
+                {!printMode && <TableHead className="text-center">Total em aberto</TableHead>}
                 <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Concl.</TableHead>
                 <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Atras.</TableHead>
               </TableRow>
@@ -97,12 +97,12 @@ const TodayDemandsByPerson = ({ demandsByPerson, printMode }: TodayDemandsByPers
                   </TableCell>
                   <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
                     {person.delayed > 0 ? (
-                      <div className={`flex items-center justify-center gap-0.5 sm:gap-1 text-destructive ${printMode ? 'text-[10px] sm:text-xs' : ''}`}>
+                      <div className={`flex items-center justify-center gap-0.5 sm:gap-1 text-warning ${printMode ? 'text-[10px] sm:text-xs' : ''}`}>
                         <X className={printMode ? 'h-2.5 w-2.5 sm:h-3 sm:w-3' : 'h-4 w-4'} />
                         <span className="font-semibold">{person.delayed}</span>
                       </div>
                     ) : (
-                      <CheckCircle2 className={`text-destructive mx-auto ${printMode ? 'h-2.5 w-2.5 sm:h-3 sm:w-3' : 'h-4 w-4'}`} />
+                      <CheckCircle2 className={`text-success mx-auto ${printMode ? 'h-2.5 w-2.5 sm:h-3 sm:w-3' : 'h-4 w-4'}`} />
                     )}
                   </TableCell>
                 </TableRow>
