@@ -43,6 +43,18 @@ interface ClientDemands {
   projects: Project[];
 }
 
+interface YesterdayProject {
+  id: string;
+  title: string;
+  status: string;
+  end_date: string | null;
+  priority: string;
+  responsible: string | null;
+  client_name?: string;
+  created_at: string;
+  actual_end_date?: string | null;
+}
+
 interface YesterdayStats {
   created: number;
   completed: number;
@@ -50,6 +62,9 @@ interface YesterdayStats {
   topResponsibles: Array<{ name: string; count: number }>;
   topClients: Array<{ name: string; count: number }>;
   highlights: Array<{ type: "blocked" | "delayed" | "completed"; text: string; priority?: string }>;
+  createdProjects: YesterdayProject[];
+  completedProjects: YesterdayProject[];
+  delayedProjects: YesterdayProject[];
 }
 
 // Helper to translate status labels
@@ -114,6 +129,9 @@ const AdminDashboard = () => {
     topResponsibles: [],
     topClients: [],
     highlights: [],
+    createdProjects: [],
+    completedProjects: [],
+    delayedProjects: [],
   });
 
   useEffect(() => {
@@ -335,7 +353,7 @@ const AdminDashboard = () => {
     // Projects created yesterday
     const { data: createdYesterday } = await supabase
       .from("projects")
-      .select(`id, title, priority, responsible, client_id, clients(company_name)`)
+      .select(`id, title, status, priority, responsible, end_date, created_at, client_id, clients(company_name)`)
       .gte("created_at", `${yesterday}T00:00:00`)
       .lt("created_at", `${yesterday}T23:59:59`);
 
@@ -343,15 +361,15 @@ const AdminDashboard = () => {
     // (we use actual_end_date if available, otherwise end_date)
     const { data: completedProjects } = await supabase
       .from("projects")
-      .select(`id, title, priority, responsible, actual_end_date, client_id, clients(company_name)`)
+      .select(`id, title, status, priority, responsible, end_date, actual_end_date, created_at, client_id, clients(company_name)`)
       .eq("status", "completed")
       .eq("actual_end_date", yesterday);
 
-    // Delayed projects (end_date <= yesterday and not completed and not waiting_client)
+    // Delayed projects (end_date < today, not <= yesterday - fix for correct delay logic)
     const { data: delayedProjects } = await supabase
       .from("projects")
-      .select(`id, title, priority, responsible, end_date, client_id, clients(company_name)`)
-      .lte("end_date", yesterday)
+      .select(`id, title, status, priority, responsible, end_date, created_at, client_id, clients(company_name)`)
+      .lt("end_date", today)
       .neq("status", "completed")
       .neq("status", "waiting_client");
 
@@ -418,6 +436,19 @@ const AdminDashboard = () => {
         });
       });
 
+    // Map projects to YesterdayProject format
+    const mapToYesterdayProject = (p: any): YesterdayProject => ({
+      id: p.id,
+      title: p.title,
+      status: p.status || "planning",
+      end_date: p.end_date || null,
+      priority: p.priority || "medium",
+      responsible: p.responsible || null,
+      client_name: (p.clients as any)?.company_name || "Sem cliente",
+      created_at: p.created_at || "",
+      actual_end_date: p.actual_end_date || null,
+    });
+
     setYesterdayStats({
       created: filteredCreated.length,
       completed: filteredCompleted.length,
@@ -431,6 +462,9 @@ const AdminDashboard = () => {
         .sort((a, b) => b.count - a.count)
         .slice(0, 3),
       highlights: highlights.slice(0, 5),
+      createdProjects: filteredCreated.map(mapToYesterdayProject),
+      completedProjects: filteredCompleted.map(mapToYesterdayProject),
+      delayedProjects: filteredDelayed.map(mapToYesterdayProject),
     });
   };
 
@@ -721,12 +755,14 @@ const AdminDashboard = () => {
         ))}
         
         {/* Status Cards inline for print mode */}
-        <Card className={`relative bg-card/50 backdrop-blur-sm border-destructive/20 transition-all ${printMode ? 'print-compact-card' : 'hidden'}`}>
+        <Card className={`relative bg-card/50 backdrop-blur-sm border-warning/20 transition-all ${printMode ? 'print-compact-card' : 'hidden'}`}>
           <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-0 pt-1 px-2 sm:pb-1 sm:pt-2 sm:px-3' : 'pb-2'}`}>
             <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-[10px] sm:text-xs' : 'text-sm'}`}>Em Atraso</CardTitle>
           </CardHeader>
           <CardContent className={printMode ? 'pb-1 px-2 sm:pb-2 sm:px-3' : ''}>
-            <div className={`font-bold text-destructive ${printMode ? 'text-lg sm:text-2xl' : 'text-3xl'}`}>{stats.delayed}</div>
+            <div className={`font-bold text-warning ${printMode ? 'text-lg sm:text-2xl' : 'text-3xl'}`}>
+              {stats.projects > 0 ? ((stats.delayed / stats.projects) * 100).toFixed(1) : '0.0'}% ({stats.delayed})
+            </div>
           </CardContent>
         </Card>
 
@@ -735,16 +771,20 @@ const AdminDashboard = () => {
             <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-[10px] sm:text-xs' : 'text-sm'}`}>Finalizados</CardTitle>
           </CardHeader>
           <CardContent className={printMode ? 'pb-1 px-2 sm:pb-2 sm:px-3' : ''}>
-            <div className={`font-bold text-success ${printMode ? 'text-lg sm:text-2xl' : 'text-3xl'}`}>{stats.completed}</div>
+            <div className={`font-bold text-success ${printMode ? 'text-lg sm:text-2xl' : 'text-3xl'}`}>
+              {stats.projects > 0 ? ((stats.completed / stats.projects) * 100).toFixed(1) : '0.0'}% ({stats.completed})
+            </div>
           </CardContent>
         </Card>
 
         <Card className={`relative bg-card/50 backdrop-blur-sm border-info/20 transition-all ${printMode ? 'print-compact-card' : 'hidden'}`}>
           <CardHeader className={`flex flex-row items-center justify-between ${printMode ? 'pb-0 pt-1 px-2 sm:pb-1 sm:pt-2 sm:px-3' : 'pb-2'}`}>
-            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-[10px] sm:text-xs' : 'text-sm'}`}>Em Aberto</CardTitle>
+            <CardTitle className={`font-medium text-muted-foreground ${printMode ? 'text-[10px] sm:text-xs' : 'text-sm'}`}>Total em aberto</CardTitle>
           </CardHeader>
           <CardContent className={printMode ? 'pb-1 px-2 sm:pb-2 sm:px-3' : ''}>
-            <div className={`font-bold text-info ${printMode ? 'text-lg sm:text-2xl' : 'text-3xl'}`}>{stats.open}</div>
+            <div className={`font-bold text-info ${printMode ? 'text-lg sm:text-2xl' : 'text-3xl'}`}>
+              {stats.projects > 0 ? ((stats.open / stats.projects) * 100).toFixed(1) : '0.0'}% ({stats.open})
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -752,13 +792,15 @@ const AdminDashboard = () => {
       {/* Status Cards - Normal mode only */}
       {!printMode && (
         <div className="grid gap-6 md:grid-cols-3">
-          <Card className="relative bg-card/50 backdrop-blur-sm border-destructive/20 hover:border-destructive/50 transition-all">
+          <Card className="relative bg-card/50 backdrop-blur-sm border-warning/20 hover:border-warning/50 transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Em Atraso</CardTitle>
-              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <AlertTriangle className="h-5 w-5 text-warning" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-destructive">{stats.delayed}</div>
+              <div className="text-3xl font-bold text-warning">
+                {stats.projects > 0 ? ((stats.delayed / stats.projects) * 100).toFixed(1) : '0.0'}% ({stats.delayed})
+              </div>
               <p className="text-xs text-muted-foreground mt-2">Atividades atrasadas</p>
             </CardContent>
           </Card>
@@ -769,18 +811,22 @@ const AdminDashboard = () => {
               <CheckCircle2 className="h-5 w-5 text-success" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-success">{stats.completed}</div>
+              <div className="text-3xl font-bold text-success">
+                {stats.projects > 0 ? ((stats.completed / stats.projects) * 100).toFixed(1) : '0.0'}% ({stats.completed})
+              </div>
               <p className="text-xs text-muted-foreground mt-2">Atividades completas</p>
             </CardContent>
           </Card>
 
           <Card className="relative bg-card/50 backdrop-blur-sm border-info/20 hover:border-info/50 transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Em Aberto</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total em aberto</CardTitle>
               <Clock className="h-5 w-5 text-info" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-info">{stats.open}</div>
+              <div className="text-3xl font-bold text-info">
+                {stats.projects > 0 ? ((stats.open / stats.projects) * 100).toFixed(1) : '0.0'}% ({stats.open})
+              </div>
               <p className="text-xs text-muted-foreground mt-2">Atividades ativas</p>
             </CardContent>
           </Card>
@@ -819,8 +865,8 @@ const AdminDashboard = () => {
                       <TableRow key={person.responsible}>
                         <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs truncate max-w-[60px] sm:max-w-[80px]">{person.responsible}</TableCell>
                         <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs text-center">{person.total}</TableCell>
-                        <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs text-center text-destructive">{person.delayed}</TableCell>
-                        <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs text-center text-destructive font-semibold">
+                        <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs text-center text-warning">{person.delayed}</TableCell>
+                        <TableCell className="py-0.5 sm:py-1 text-[10px] sm:text-xs text-center text-warning font-semibold">
                           {person.delayedDays > 0 ? person.delayedDays : "-"}
                         </TableCell>
                       </TableRow>
@@ -874,8 +920,8 @@ const AdminDashboard = () => {
                       <TableCell className="font-medium">{person.responsible}</TableCell>
                       <TableCell className="text-center">{person.total}</TableCell>
                       <TableCell className="text-center text-success">{person.onTime}</TableCell>
-                      <TableCell className="text-center text-destructive">{person.delayed}</TableCell>
-                      <TableCell className="text-center text-destructive font-semibold">
+                      <TableCell className="text-center text-warning">{person.delayed}</TableCell>
+                      <TableCell className="text-center text-warning font-semibold">
                         {person.delayedDays > 0 ? person.delayedDays : "-"}
                       </TableCell>
                       <TableCell>
