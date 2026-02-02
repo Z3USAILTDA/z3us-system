@@ -75,6 +75,7 @@ const getStatusLabel = (status: string): string => {
     completed: "Concluído",
     on_hold: "Pausado",
     waiting_client: "Aguardando cliente",
+    test: "Teste",
   };
   return statusMap[status] || status;
 };
@@ -261,8 +262,8 @@ const AdminDashboard = () => {
         stats.completed++;
       } else {
         stats.inProgress++;
-        // Don't count as delayed if status is waiting_client
-        if (project.end_date && project.end_date < today && project.status !== "waiting_client") {
+        // Don't count as delayed if status is waiting_client or test
+        if (project.end_date && project.end_date < today && project.status !== "waiting_client" && project.status !== "test") {
           stats.delayed++;
         }
       }
@@ -366,12 +367,14 @@ const AdminDashboard = () => {
       .eq("actual_end_date", yesterday);
 
     // Delayed projects (end_date < today, not <= yesterday - fix for correct delay logic)
+    // Exclude completed, waiting_client and test statuses
     const { data: delayedProjects } = await supabase
       .from("projects")
       .select(`id, title, status, priority, responsible, end_date, created_at, client_id, clients(company_name)`)
       .lt("end_date", today)
       .neq("status", "completed")
-      .neq("status", "waiting_client");
+      .neq("status", "waiting_client")
+      .neq("status", "test");
 
     // Filter by client if needed
     const filterByClient = (projects: any[] | null) => {
@@ -484,7 +487,7 @@ const AdminDashboard = () => {
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true })),
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "completed")),
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).in("status", ["planning", "in_progress"])),
-      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).lt("end_date", today).neq("status", "completed").neq("status", "waiting_client")),
+      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).lt("end_date", today).neq("status", "completed").neq("status", "waiting_client").neq("status", "test")),
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).is("end_date", null)),
     ]);
 

@@ -61,13 +61,14 @@ const handler = async (req: Request): Promise<Response> => {
       .select("*", { count: "exact", head: true })
       .in("status", ["planning", "in_progress"]);
 
-    // Delayed (end_date < today, not completed, not waiting_client)
+    // Delayed (end_date < today, not completed, not waiting_client, not test)
     const { count: delayedCount, data: delayedData } = await supabase
       .from("projects")
       .select("id, title, priority, responsible, end_date")
       .lt("end_date", today)
       .neq("status", "completed")
-      .neq("status", "waiting_client");
+      .neq("status", "waiting_client")
+      .neq("status", "test");
 
     // Get top 10 critical tasks (high priority delayed or upcoming deadline today)
     const criticalTasks = [

@@ -28,6 +28,7 @@ const getStatusLabel = (status: string): string => {
     completed: "Concluído",
     on_hold: "Pausado",
     waiting_client: "Aguardando cliente",
+    test: "Teste",
   };
   return statusMap[status] || status;
 };
@@ -39,6 +40,7 @@ const getStatusBadge = (status: string) => {
     completed: { label: "Concluído", variant: "secondary" },
     on_hold: { label: "Pausado", variant: "destructive" },
     waiting_client: { label: "Aguardando cliente", variant: "outline", className: "bg-warning text-warning-foreground border-warning" },
+    test: { label: "Teste", variant: "outline", className: "bg-purple-500 text-white border-purple-500" },
   };
 
   const config = statusConfig[status] || { label: getStatusLabel(status), variant: "outline" as const };
@@ -84,11 +86,12 @@ const TodayDemandsModal = ({ open, onOpenChange, title, projects }: TodayDemands
             </TableHeader>
             <TableBody>
               {projects.map((project) => {
-                // Don't mark as overdue if status is waiting_client
+                // Don't mark as overdue if status is waiting_client or test
                 const isOverdue = project.end_date && 
                   project.end_date < today && 
                   project.status !== "completed" &&
-                  project.status !== "waiting_client";
+                  project.status !== "waiting_client" &&
+                  project.status !== "test";
                 return (
                   <TableRow key={project.id} className={isOverdue ? "bg-destructive/10" : ""}>
                     <TableCell className="font-medium">
