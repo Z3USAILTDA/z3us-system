@@ -293,8 +293,10 @@ const ProjectsContent = () => {
     // Special filter for overdue projects
     if (filterStatus === "overdue") {
       const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const endDate = project.end_date ? new Date(project.end_date) : null;
-      const isOverdue = endDate && endDate < now && project.status !== "completed" && project.status !== "cancelled" && project.status !== "waiting_client";
+      // Only consider overdue if end_date < today (not equal), and not completed, cancelled, waiting_client, or test
+      const isOverdue = endDate && endDate < today && project.status !== "completed" && project.status !== "cancelled" && project.status !== "waiting_client" && project.status !== "test";
       if (!isOverdue) return false;
     } else if (filterStatus && filterStatus !== "all" && project.status !== filterStatus) {
       return false;
@@ -380,11 +382,17 @@ const ProjectsContent = () => {
   const saveEdit = async (projectId: string, field: string) => {
     if (!editingCell) return;
 
-    // Se o campo for status e o valor for "completed", atualiza também o progresso para 100%
+    // Se o campo for status e o valor for "completed", atualiza também o progresso para 100% e a data real de término
     // Se o campo for status e o valor for "waiting_client", atualiza o responsável para "Cliente"
     const updateData: Record<string, any> = { [field]: editValue || null };
     if (field === "status" && editValue === "completed") {
       updateData.progress = 100;
+      // Auto-set actual_end_date to today when marking as completed
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      updateData.actual_end_date = `${year}-${month}-${day}`;
     }
     if (field === "status" && editValue === "waiting_client") {
       updateData.responsible = "Cliente";
