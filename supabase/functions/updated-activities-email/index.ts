@@ -209,7 +209,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send the email
     const emailResponse = await resendClient.emails.send({
-      from: "Z3US System <noreply@z3us.ai>",
+      from: "Z3US System <noreply@hermes.z3us.ai>",
       to: ["devs@z3us.ai"],
       cc: ["herbert@z3us.ai", "rodrigo@z3us.ai"],
       subject: `📝 Atividades Atualizadas - ${formatDateBR(today)} (${projectCount} ${projectCount === 1 ? 'atividade' : 'atividades'})`,
