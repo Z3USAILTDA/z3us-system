@@ -1,40 +1,57 @@
 
 
-# Plano: Corrigir Domínio de Envio de E-mail
+# Plano: Ajustar Horário do Resumo Diário para 18h
 
-## Problema Identificado
-O domínio verificado no Resend é **`hermes.z3us.ai`**, porém as Edge Functions estão tentando enviar e-mails usando **`noreply@z3us.ai`** (domínio raiz não verificado).
+## Situação Atual
 
-## Solução
-Atualizar o campo `from` em ambas as Edge Functions para usar o domínio verificado.
+| Rotina | Função | Horário Atual | Schedule (UTC) |
+|--------|--------|---------------|----------------|
+| Resumo Diário | `daily-summary-email` | 08:30 BRT | `30 11 * * *` |
+| Atividades Atualizadas | `updated-activities-email` | 18:00 BRT | `0 21 * * *` |
 
-## Arquivos a Modificar
+## Opção Proposta
 
-### 1. `supabase/functions/daily-summary-email/index.ts`
-**Linha 170** - Alterar:
-```typescript
-// De:
-from: "Z3US System <noreply@z3us.ai>"
+Alterar o agendamento do **Resumo Diário** de 08:30 para **18:00 BRT**.
 
-// Para:
-from: "Z3US System <noreply@hermes.z3us.ai>"
+Isso resultará em dois e-mails sendo enviados às 18:00:
+1. **Resumo Diário** - Criadas, Concluídas e Em Atraso (com PDF)
+2. **Atividades Atualizadas** - Todas as atividades que tiveram alterações no dia
+
+## Alterações Necessárias
+
+### 1. Atualizar o cron job no banco de dados
+
+Executar SQL para atualizar o schedule do job existente:
+
+```text
+-- Atualizar horário do resumo diário para 18:00 BRT (21:00 UTC)
+SELECT cron.unschedule('daily-summary-email-08h30');
+
+SELECT cron.schedule(
+  'daily-summary-email-18h',
+  '0 21 * * *',  -- 21:00 UTC = 18:00 BRT
+  $$
+  SELECT net.http_post(
+    url := 'https://ssljlgmcoilghdyxqihu.supabase.co/functions/v1/daily-summary-email',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer ..."}'::jsonb,
+    body := '{"source": "cron"}'::jsonb
+  ) AS request_id;
+  $$
+);
 ```
 
-### 2. `supabase/functions/updated-activities-email/index.ts`
-**Linha 212** - Alterar:
-```typescript
-// De:
-from: "Z3US System <noreply@z3us.ai>"
+### 2. Atualizar texto no rodapé do e-mail
 
-// Para:
-from: "Z3US System <noreply@hermes.z3us.ai>"
+No arquivo `supabase/functions/daily-summary-email/index.ts`, linha ~301, alterar:
+
+```text
+De: "Este é um e-mail automático gerado pelo sistema Z3US às 08:30."
+Para: "Este é um e-mail automático gerado pelo sistema Z3US às 18:00."
 ```
 
----
+## Resultado Final
 
-## Detalhes Técnicos
-
-O Resend valida que a chave de API corresponda ao domínio do remetente. Como a chave foi criada para `hermes.z3us.ai`, qualquer tentativa de enviar de outro domínio (mesmo que seja o domínio pai) resultará no erro 403.
-
-Após esta alteração, os e-mails serão enviados com sucesso de `noreply@hermes.z3us.ai`.
+Ambos os e-mails serão enviados às **18:00 BRT** diariamente:
+- Resumo Diário (Criadas/Concluídas/Em atraso + PDF)
+- Atividades Atualizadas (alterações do dia)
 
