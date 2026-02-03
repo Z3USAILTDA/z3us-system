@@ -298,7 +298,7 @@ function buildEmailHtml(
         <!-- Rodapé -->
         <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #1e3a5f; text-align: center;">
           <p style="color: #64748b; font-size: 12px; margin: 0;">
-            Este é um e-mail automático gerado pelo sistema Z3US às 08:30.
+            Este é um e-mail automático gerado pelo sistema Z3US às 18:00.
           </p>
         </div>
       </div>
