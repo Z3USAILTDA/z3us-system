@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Building2, FolderKanban, AlertTriangle, CheckCircle2, Clock, Flag, ArrowUpDown, ArrowUp, ArrowDown, Printer, CalendarX } from "lucide-react";
+import { Building2, FolderKanban, AlertTriangle, CheckCircle2, Clock, Flag, ArrowUpDown, ArrowUp, ArrowDown, Printer, CalendarX, BarChart3 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import TodayDemandsByPerson from "./TodayDemandsByPerson";
 import TodayDemandsByClient from "./TodayDemandsByClient";
 import YesterdaySummary from "./YesterdaySummary";
@@ -81,6 +82,7 @@ const getStatusLabel = (status: string): string => {
 };
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [printMode, setPrintMode] = useState(false);
   const [stats, setStats] = useState({
     clients: 0,
@@ -703,6 +705,15 @@ const AdminDashboard = () => {
             {!printMode && <p className="text-muted-foreground text-lg mt-2">Visão geral do sistema de gestão Z3US</p>}
           </div>
           <div className="flex items-center gap-3 no-print">
+            <Button
+              size="sm"
+              onClick={() => navigate("/dashboard/weekly-summary")}
+              className="bg-gradient-primary text-primary-foreground hover:opacity-90"
+              title="Ver desempenho semanal"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Resumo da Semana
+            </Button>
             <Button
               variant={printMode ? "default" : "outline"}
               size="sm"
