@@ -39,6 +39,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   SidebarProvider,
   Sidebar,
@@ -96,6 +98,7 @@ const DocumentationContent = () => {
   const [selectedDocument, setSelectedDocument] = useState<ProjectDocument | null>(null);
   const [editingDocument, setEditingDocument] = useState<ProjectDocument | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { state } = useSidebar();
 
@@ -215,6 +218,21 @@ const DocumentationContent = () => {
       return;
     }
 
+    // Validate product selection
+    const productIds = editingDocument
+      ? [editingDocument.project_id]
+      : selectedProducts.map((product) => {
+          const matchingProject = projects.find((p) =>
+            p.title.toLowerCase().includes(product.toLowerCase())
+          );
+          return matchingProject?.id || product;
+        });
+
+    if (productIds.length === 0) {
+      toast.error("Selecione pelo menos um produto");
+      return;
+    }
+
     setUploading(true);
 
     try {
@@ -259,8 +277,7 @@ const DocumentationContent = () => {
         ? tagsString.split(",").map((t) => t.trim()).filter(Boolean)
         : null;
 
-      const documentData = {
-        project_id: formData.get("project_id") as string,
+      const baseData = {
         title: formData.get("title") as string,
         type: formData.get("type") as string,
         version: (formData.get("version") as string) || null,
@@ -274,7 +291,7 @@ const DocumentationContent = () => {
       if (editingDocument) {
         const { error } = await supabase
           .from("project_documents")
-          .update(documentData)
+          .update({ ...baseData, project_id: productIds[0] })
           .eq("id", editingDocument.id);
 
         if (error) {
@@ -287,15 +304,22 @@ const DocumentationContent = () => {
           setEditingDocument(null);
         }
       } else {
-        const { error } = await supabase.from("project_documents").insert([documentData]);
+        // Create one document per selected product
+        const documentsToInsert = productIds.map((projectId) => ({
+          ...baseData,
+          project_id: projectId,
+        }));
+
+        const { error } = await supabase.from("project_documents").insert(documentsToInsert);
 
         if (error) {
           console.error("Erro ao inserir documento:", error);
           toast.error(`Erro ao adicionar documento: ${error.message}`);
         } else {
-          toast.success("Documento adicionado com sucesso!");
+          toast.success(`Documento adicionado para ${productIds.length} produto(s)!`);
           fetchData();
           setDialogOpen(false);
+          setSelectedProducts([]);
         }
       }
     } catch (error) {
@@ -333,6 +357,7 @@ const DocumentationContent = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingDocument(null);
+      setSelectedProducts([]);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -544,29 +569,69 @@ const DocumentationContent = () => {
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="project_id">Produto *</Label>
-                        <Select
-                          name="project_id"
-                          defaultValue={editingDocument?.project_id || ""}
-                          required
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o produto" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PRODUCT_OPTIONS.map((product) => {
-                              // Find the project that matches this product
-                              const matchingProject = projects.find((p) => 
-                                p.title.toLowerCase().includes(product.toLowerCase())
-                              );
-                              return (
-                                <SelectItem key={matchingProject?.id || product} value={matchingProject?.id || product}>
-                                  {product}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
+                        <Label>Produto{editingDocument ? "" : "(s)"} *</Label>
+                        {editingDocument ? (
+                          <Select
+                            name="project_id"
+                            defaultValue={editingDocument.project_id}
+                            required
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o produto" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PRODUCT_OPTIONS.map((product) => {
+                                const matchingProject = projects.find((p) =>
+                                  p.title.toLowerCase().includes(product.toLowerCase())
+                                );
+                                return (
+                                  <SelectItem key={matchingProject?.id || product} value={matchingProject?.id || product}>
+                                    {product}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className="w-full justify-between font-normal"
+                              >
+                                {selectedProducts.length === 0
+                                  ? "Selecione o(s) produto(s)"
+                                  : selectedProducts.length === 1
+                                    ? selectedProducts[0]
+                                    : `${selectedProducts.length} produtos selecionados`}
+                                <ChevronRight className="ml-2 h-4 w-4 shrink-0 opacity-50 rotate-90" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-2" align="start">
+                              <div className="space-y-1">
+                                {PRODUCT_OPTIONS.map((product) => (
+                                  <label
+                                    key={product}
+                                    className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm cursor-pointer hover:bg-accent"
+                                  >
+                                    <Checkbox
+                                      checked={selectedProducts.includes(product)}
+                                      onCheckedChange={(checked) => {
+                                        setSelectedProducts((prev) =>
+                                          checked
+                                            ? [...prev, product]
+                                            : prev.filter((p) => p !== product)
+                                        );
+                                      }}
+                                    />
+                                    {product}
+                                  </label>
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        )}
                       </div>
 
                       <div className="space-y-2">
