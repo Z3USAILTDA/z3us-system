@@ -68,6 +68,7 @@ interface ProjectDocument {
   file_name: string;
   file_size: number | null;
   tags: string[] | null;
+  products: string[] | null;
   created_at: string;
   updated_at: string;
   projects?: {
@@ -218,17 +219,20 @@ const DocumentationContent = () => {
       return;
     }
 
-    // Validate product selection
-    const productIds = editingDocument
-      ? [editingDocument.project_id]
-      : selectedProducts.map((product) => {
-          const matchingProject = projects.find((p) =>
-            p.title.toLowerCase().includes(product.toLowerCase())
-          );
-          return matchingProject?.id || product;
-        });
+    // Validate product selection - always use selectedProducts (pre-filled on edit)
+    const productsArray = [...selectedProducts];
 
-    if (productIds.length === 0) {
+    // Resolve the first product to a project_id for the FK
+    const firstProduct = (() => {
+      const product = selectedProducts[0];
+      if (!product) return editingDocument?.project_id || null;
+      const matchingProject = projects.find((p) =>
+        p.title.toLowerCase().includes(product.toLowerCase())
+      );
+      return matchingProject?.id || editingDocument?.project_id || null;
+    })();
+
+    if (selectedProducts.length === 0 || !firstProduct) {
       toast.error("Selecione pelo menos um produto");
       return;
     }
@@ -291,7 +295,7 @@ const DocumentationContent = () => {
       if (editingDocument) {
         const { error } = await supabase
           .from("project_documents")
-          .update({ ...baseData, project_id: productIds[0] })
+          .update({ ...baseData, project_id: firstProduct!, products: productsArray } as any)
           .eq("id", editingDocument.id);
 
         if (error) {
@@ -304,19 +308,18 @@ const DocumentationContent = () => {
           setEditingDocument(null);
         }
       } else {
-        // Create one document per selected product
-        const documentsToInsert = productIds.map((projectId) => ({
+        // Create a single document with all selected products
+        const { error } = await supabase.from("project_documents").insert({
           ...baseData,
-          project_id: projectId,
-        }));
-
-        const { error } = await supabase.from("project_documents").insert(documentsToInsert);
+          project_id: firstProduct!,
+          products: productsArray,
+        } as any);
 
         if (error) {
           console.error("Erro ao inserir documento:", error);
           toast.error(`Erro ao adicionar documento: ${error.message}`);
         } else {
-          toast.success(`Documento adicionado para ${productIds.length} produto(s)!`);
+          toast.success(`Documento adicionado com ${productsArray.length} produto(s)!`);
           fetchData();
           setDialogOpen(false);
           setSelectedProducts([]);
@@ -350,6 +353,7 @@ const DocumentationContent = () => {
 
   const handleEdit = (doc: ProjectDocument) => {
     setEditingDocument(doc);
+    setSelectedProducts(doc.products || [doc.projects?.title || ""].filter(Boolean));
     setDialogOpen(true);
   };
 
@@ -569,69 +573,45 @@ const DocumentationContent = () => {
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="space-y-2">
-                        <Label>Produto{editingDocument ? "" : "(s)"} *</Label>
-                        {editingDocument ? (
-                          <Select
-                            name="project_id"
-                            defaultValue={editingDocument.project_id}
-                            required
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione o produto" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PRODUCT_OPTIONS.map((product) => {
-                                const matchingProject = projects.find((p) =>
-                                  p.title.toLowerCase().includes(product.toLowerCase())
-                                );
-                                return (
-                                  <SelectItem key={matchingProject?.id || product} value={matchingProject?.id || product}>
-                                    {product}
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className="w-full justify-between font-normal"
-                              >
-                                {selectedProducts.length === 0
-                                  ? "Selecione o(s) produto(s)"
-                                  : selectedProducts.length === 1
-                                    ? selectedProducts[0]
-                                    : `${selectedProducts.length} produtos selecionados`}
-                                <ChevronRight className="ml-2 h-4 w-4 shrink-0 opacity-50 rotate-90" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[--radix-popover-trigger-width] p-2" align="start">
-                              <div className="space-y-1">
-                                {PRODUCT_OPTIONS.map((product) => (
-                                  <label
-                                    key={product}
-                                    className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm cursor-pointer hover:bg-accent"
-                                  >
-                                    <Checkbox
-                                      checked={selectedProducts.includes(product)}
-                                      onCheckedChange={(checked) => {
-                                        setSelectedProducts((prev) =>
-                                          checked
-                                            ? [...prev, product]
-                                            : prev.filter((p) => p !== product)
-                                        );
-                                      }}
-                                    />
-                                    {product}
-                                  </label>
-                                ))}
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        )}
+                        <Label>Produto(s) *</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between font-normal"
+                            >
+                              {selectedProducts.length === 0
+                                ? "Selecione o(s) produto(s)"
+                                : selectedProducts.length === 1
+                                  ? selectedProducts[0]
+                                  : `${selectedProducts.length} produtos selecionados`}
+                              <ChevronRight className="ml-2 h-4 w-4 shrink-0 opacity-50 rotate-90" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-2" align="start">
+                            <div className="space-y-1">
+                              {PRODUCT_OPTIONS.map((product) => (
+                                <label
+                                  key={product}
+                                  className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm cursor-pointer hover:bg-accent"
+                                >
+                                  <Checkbox
+                                    checked={selectedProducts.includes(product)}
+                                    onCheckedChange={(checked) => {
+                                      setSelectedProducts((prev) =>
+                                        checked
+                                          ? [...prev, product]
+                                          : prev.filter((p) => p !== product)
+                                      );
+                                    }}
+                                  />
+                                  {product}
+                                </label>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
                       <div className="space-y-2">
@@ -814,7 +794,9 @@ const DocumentationContent = () => {
                     </div>
                     <CardTitle className="text-base line-clamp-2 mt-2">{doc.title}</CardTitle>
                     <p className="text-sm text-muted-foreground line-clamp-1">
-                      {doc.projects?.title || "Projeto não encontrado"}
+                      {(doc as any).products && (doc as any).products.length > 0
+                        ? (doc as any).products.join(", ")
+                        : doc.projects?.title || "Produto não encontrado"}
                     </p>
                   </CardHeader>
                   <CardContent className="pt-0">

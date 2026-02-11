@@ -1,0 +1,1 @@
+ALTER TABLE public.project_documents ADD COLUMN products text[] DEFAULT NULL;

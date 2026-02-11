@@ -150,6 +150,7 @@ export type Database = {
           file_size: number | null
           file_url: string
           id: string
+          products: string[] | null
           project_id: string
           tags: string[] | null
           title: string
@@ -165,6 +166,7 @@ export type Database = {
           file_size?: number | null
           file_url: string
           id?: string
+          products?: string[] | null
           project_id: string
           tags?: string[] | null
           title: string
@@ -180,6 +182,7 @@ export type Database = {
           file_size?: number | null
           file_url?: string
           id?: string
+          products?: string[] | null
           project_id?: string
           tags?: string[] | null
           title?: string
