@@ -202,7 +202,7 @@ export function useWeeklySummary() {
       // Build team map: project_id -> team names
       const projectTeamMap = new Map<string, string[]>();
       teamAssignments?.forEach(ta => {
-        const teamName = (ta.teams as any)?.name || "Sem equipe";
+        const teamName = (ta.teams as any)?.name || "Z3US";
         if (!projectTeamMap.has(ta.project_id)) {
           projectTeamMap.set(ta.project_id, []);
         }
@@ -414,7 +414,7 @@ export function useWeeklySummary() {
       const totalTeamCompleted = { count: 0 };
 
       filtered.forEach(p => {
-        const teams = p.teamNames.length > 0 ? p.teamNames : ["Sem equipe"];
+        const teams = p.teamNames.length > 0 ? p.teamNames : ["Z3US"];
         teams.forEach(teamName => {
           if (!teamMap.has(teamName)) {
             teamMap.set(teamName, { name: teamName, created: 0, completed: 0, overdue: 0, sla: 0, avgLeadTimeDays: 0, sharePercent: 0 });
@@ -440,7 +440,7 @@ export function useWeeklySummary() {
       });
 
       setTeamRankings(
-        Array.from(teamMap.values()).filter(t => t.name !== "Sem equipe" || t.completed > 0 || t.created > 0).sort((a, b) => b.completed - a.completed)
+        Array.from(teamMap.values()).filter(t => t.name !== "Z3US" || t.completed > 0 || t.created > 0).sort((a, b) => b.completed - a.completed)
       );
 
       // Client breakdown (top 10)
