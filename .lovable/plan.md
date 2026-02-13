@@ -1,57 +1,70 @@
 
+## Plano: Implementar Memória de Responsável para Status "Aguardando Cliente"
 
-# Plano: Ajustar Horário do Resumo Diário para 18h
+### Situação Atual
+- Quando o status muda para `waiting_client`, o responsável é **automaticamente definido como "Cliente"**
+- Quando muda para outro status (completed, cancelled, etc), o responsável **permanece como "Cliente"**
+- Você quer que ao sair do status `waiting_client`, o responsável **retorne ao valor anterior**
 
-## Situação Atual
+### Estratégia de Implementação
 
-| Rotina | Função | Horário Atual | Schedule (UTC) |
-|--------|--------|---------------|----------------|
-| Resumo Diário | `daily-summary-email` | 08:30 BRT | `30 11 * * *` |
-| Atividades Atualizadas | `updated-activities-email` | 18:00 BRT | `0 21 * * *` |
+Existem duas opções técnicas:
 
-## Opção Proposta
+**Opção A (Recomendada)**: Usar um novo campo na tabela `projects`
+- Adicionar coluna `responsible_before_client` (texto, nullable)
+- Quando status muda para `waiting_client`: salva o responsável atual em `responsible_before_client` e muda `responsible` para "Cliente"
+- Quando status sai de `waiting_client`: restaura o valor de `responsible_before_client` para `responsible`
+- **Vantagem**: Solução robusta, permite auditoria, persiste corretamente
+- **Desvantagem**: Requer migração no banco
 
-Alterar o agendamento do **Resumo Diário** de 08:30 para **18:00 BRT**.
+**Opção B**: Usar estado local (sem banco)
+- Manter apenas em memória (React state) o valor anterior
+- Ao sair de `waiting_client`, restaura do state
+- **Vantagem**: Implementação rápida, sem mudanças no banco
+- **Desvantagem**: Se a página for recarregada, perde a memória
 
-Isso resultará em dois e-mails sendo enviados às 18:00:
-1. **Resumo Diário** - Criadas, Concluídas e Em Atraso (com PDF)
-2. **Atividades Atualizadas** - Todas as atividades que tiveram alterações no dia
+### Solução Proposta: **Opção A** (com banco de dados)
 
-## Alterações Necessárias
-
-### 1. Atualizar o cron job no banco de dados
-
-Executar SQL para atualizar o schedule do job existente:
-
-```text
--- Atualizar horário do resumo diário para 18:00 BRT (21:00 UTC)
-SELECT cron.unschedule('daily-summary-email-08h30');
-
-SELECT cron.schedule(
-  'daily-summary-email-18h',
-  '0 21 * * *',  -- 21:00 UTC = 18:00 BRT
-  $$
-  SELECT net.http_post(
-    url := 'https://ssljlgmcoilghdyxqihu.supabase.co/functions/v1/daily-summary-email',
-    headers := '{"Content-Type": "application/json", "Authorization": "Bearer ..."}'::jsonb,
-    body := '{"source": "cron"}'::jsonb
-  ) AS request_id;
-  $$
-);
+#### 1. Migração no Banco
+Executar SQL para adicionar a coluna:
+```sql
+ALTER TABLE public.projects ADD COLUMN responsible_before_client TEXT DEFAULT NULL;
 ```
 
-### 2. Atualizar texto no rodapé do e-mail
+#### 2. Lógica no Frontend (`src/pages/Projects.tsx`)
 
-No arquivo `supabase/functions/daily-summary-email/index.ts`, linha ~301, alterar:
-
-```text
-De: "Este é um e-mail automático gerado pelo sistema Z3US às 08:30."
-Para: "Este é um e-mail automático gerado pelo sistema Z3US às 18:00."
+Na função `saveEdit`, adicionar:
+```typescript
+if (field === "status" && editValue === "waiting_client") {
+  // Salva o responsável atual ANTES de mudar para "Cliente"
+  const project = projects.find(p => p.id === projectId);
+  updateData.responsible = "Cliente";
+  updateData.responsible_before_client = project?.responsible || null;
+} else if (field === "status" && projects.find(p => p.id === projectId)?.status === "waiting_client" && editValue !== "waiting_client") {
+  // Se SAI de "waiting_client", restaura o responsável anterior
+  const project = projects.find(p => p.id === projectId);
+  if (project?.responsible_before_client) {
+    updateData.responsible = project.responsible_before_client;
+    updateData.responsible_before_client = null; // Limpa a memória
+  }
+}
 ```
 
-## Resultado Final
+#### 3. Também aplicar no formulário completo
+Na função `handleSubmit`, aplicar a mesma lógica de salvamento/restauração do responsável.
 
-Ambos os e-mails serão enviados às **18:00 BRT** diariamente:
-- Resumo Diário (Criadas/Concluídas/Em atraso + PDF)
-- Atividades Atualizadas (alterações do dia)
+#### 4. Casos de Teste
+- ✅ Status → `waiting_client`: responsável vira "Cliente", campo `responsible_before_client` salva o anterior
+- ✅ Status sai de `waiting_client` para `completed`: responsável restaura ao anterior
+- ✅ Status sai de `waiting_client` para `cancelled`: responsável restaura ao anterior
+- ✅ Status muda entre outros estados (não `waiting_client`): funciona normalmente
+- ✅ Se responsável estava vazio, retorna para vazio ao sair de `waiting_client`
 
+### Arquivos que Serão Alterados
+1. **Migração**: Criar arquivo com SQL para adicionar coluna
+2. **src/pages/Projects.tsx**: Atualizar `saveEdit` e `handleSubmit` com lógica de memória
+3. **src/integrations/supabase/types.ts**: Será auto-gerado após migração
+
+### Dependências
+- Nenhuma nova dependência necessária
+- Usa o padrão existente de otimistic updates
