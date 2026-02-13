@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,7 @@ import {
 import { useWeeklySummary } from "@/hooks/useWeeklySummary";
 import { formatDateBR } from "@/lib/utils";
 import logoWhite from "@/assets/logo-branco.png";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { generateWeeklyPdf } from "@/lib/weeklyPdfExport";
 
 const CHART_COLORS = [
   "hsl(175, 70%, 50%)", "hsl(217, 91%, 60%)", "hsl(280, 85%, 65%)",
@@ -40,7 +39,7 @@ const WeeklySummaryContent = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const contentRef = useRef<HTMLDivElement>(null);
+  
 
   const ws = useWeeklySummary();
 
@@ -62,33 +61,22 @@ const WeeklySummaryContent = () => {
     navigate("/auth");
   };
 
-  const handleExportPDF = async () => {
-    if (!contentRef.current) return;
+  const handleExportPDF = () => {
     toast.info("Gerando PDF...");
     try {
-      const canvas = await html2canvas(contentRef.current, {
-        backgroundColor: "#0a0f1a",
-        scale: 2,
-        useCORS: true,
-        logging: false,
+      generateWeeklyPdf({
+        startStr: ws.startStr,
+        endStr: ws.endStr,
+        kpis: ws.kpis,
+        personRankings: ws.personRankings,
+        teamRankings: ws.teamRankings,
+        dailyTrend: ws.dailyTrend,
+        insights: ws.insights,
+        clientBreakdown: ws.clientBreakdown,
+        priorityBreakdown: ws.priorityBreakdown,
+        statusBreakdown: ws.statusBreakdown,
+        detailProjects: ws.detailProjects,
       });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const scaledWidth = imgWidth * ratio;
-      const totalPages = Math.ceil((imgHeight * ratio) / pdfHeight);
-
-      for (let page = 0; page < totalPages; page++) {
-        if (page > 0) pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, -(page * pdfHeight), scaledWidth, imgHeight * ratio);
-      }
-
-      const weekLabel = `${formatDateBR(ws.startStr)}-${formatDateBR(ws.endStr)}`;
-      pdf.save(`Resumo_Semana_${weekLabel}.pdf`);
       toast.success("PDF gerado com sucesso!");
     } catch (e) {
       console.error(e);
@@ -195,7 +183,7 @@ const WeeklySummaryContent = () => {
           </div>
         </div>
 
-        <div className="p-6 space-y-8" ref={contentRef}>
+        <div className="p-6 space-y-8">
           {/* Header with week selector and actions */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
