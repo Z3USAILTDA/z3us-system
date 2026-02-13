@@ -285,6 +285,7 @@ export type Database = {
           progress: number | null
           project_manager_id: string | null
           responsible: string | null
+          responsible_before_client: string | null
           sprint: string | null
           start_date: string | null
           status: string
@@ -307,6 +308,7 @@ export type Database = {
           progress?: number | null
           project_manager_id?: string | null
           responsible?: string | null
+          responsible_before_client?: string | null
           sprint?: string | null
           start_date?: string | null
           status?: string
@@ -329,6 +331,7 @@ export type Database = {
           progress?: number | null
           project_manager_id?: string | null
           responsible?: string | null
+          responsible_before_client?: string | null
           sprint?: string | null
           start_date?: string | null
           status?: string

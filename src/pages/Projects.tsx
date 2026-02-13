@@ -177,8 +177,22 @@ const ProjectsContent = () => {
     const actualEndDate = formData.get("actual_end_date") as string;
 
       const status = formData.get("status") as string;
-      // Se o status for "waiting_client", define o responsável como "Cliente" automaticamente
-      const responsible = status === "waiting_client" ? "Cliente" : (formData.get("responsible") as string);
+      let responsible = formData.get("responsible") as string;
+      let responsibleBeforeClient: string | null = editingProject?.responsible_before_client || null;
+
+      if (status === "waiting_client") {
+        // Salva o responsável atual antes de mudar para "Cliente"
+        if (editingProject && editingProject.status !== "waiting_client") {
+          responsibleBeforeClient = editingProject.responsible || null;
+        }
+        responsible = "Cliente";
+      } else if (editingProject?.status === "waiting_client" && status !== "waiting_client") {
+        // Restaura o responsável anterior ao sair de "waiting_client"
+        if (editingProject.responsible_before_client) {
+          responsible = editingProject.responsible_before_client;
+          responsibleBeforeClient = null;
+        }
+      }
       
       const projectData = {
       title: formData.get("title") as string,
@@ -192,6 +206,7 @@ const ProjectsContent = () => {
       observation: formData.get("observation") as string,
       client_observation: formData.get("client_observation") as string,
       responsible: responsible,
+      responsible_before_client: responsibleBeforeClient,
       sprint: formData.get("sprint") as string,
       actual_start_date: actualStartDate || null,
       actual_end_date: actualEndDate || null,
@@ -395,7 +410,15 @@ const ProjectsContent = () => {
       updateData.actual_end_date = `${year}-${month}-${day}`;
     }
     if (field === "status" && editValue === "waiting_client") {
+      const project = projects.find(p => p.id === projectId);
+      updateData.responsible_before_client = project?.responsible || null;
       updateData.responsible = "Cliente";
+    } else if (field === "status" && editValue !== "waiting_client") {
+      const project = projects.find(p => p.id === projectId);
+      if (project?.status === "waiting_client" && project?.responsible_before_client) {
+        updateData.responsible = project.responsible_before_client;
+        updateData.responsible_before_client = null;
+      }
     }
 
     // Atualização otimista - atualiza o estado local imediatamente

@@ -1,0 +1,1 @@
+ALTER TABLE public.projects ADD COLUMN responsible_before_client TEXT DEFAULT NULL;
