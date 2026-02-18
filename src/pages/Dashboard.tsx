@@ -153,7 +153,7 @@ const DashboardContent = () => {
       </Sidebar>
 
       <div className="flex-1 flex flex-col">
-        <header className="h-16 border-b border-border bg-card flex items-center px-6">
+        <header className="h-16 border-b border-border bg-card flex items-center px-3 sm:px-6">
           <SidebarTrigger>
             <Button variant="ghost" size="icon">
               <Menu className="h-5 w-5" />
@@ -161,14 +161,14 @@ const DashboardContent = () => {
           </SidebarTrigger>
 
           <div className="ml-auto flex items-center gap-4">
-            <div className="text-right">
+            <div className="text-right hidden sm:block">
               <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
               <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-3 sm:p-6 overflow-auto">
           {profile?.role === "admin" ? <AdminDashboard /> : <ClientDashboard />}
         </main>
       </div>

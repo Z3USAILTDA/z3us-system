@@ -697,33 +697,35 @@ const AdminDashboard = () => {
 
       <div className="relative">
         <div className={`absolute -left-4 top-0 w-1 h-full bg-gradient-primary rounded-full ${printMode ? 'hidden' : ''}`} />
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className={`font-bold tracking-tight ${printMode ? 'text-2xl' : 'text-4xl'}`}>
+            <h1 className={`font-bold tracking-tight ${printMode ? 'text-2xl' : 'text-2xl sm:text-4xl'}`}>
               Dashboard <span className="bg-gradient-primary bg-clip-text text-transparent">Administrativo</span>
             </h1>
-            {!printMode && <p className="text-muted-foreground text-lg mt-2">Visão geral do sistema de gestão Z3US</p>}
+            {!printMode && <p className="text-muted-foreground text-sm sm:text-lg mt-1 sm:mt-2">Visão geral do sistema de gestão Z3US</p>}
           </div>
-          <div className="flex items-center gap-3 no-print">
-            <Button
-              size="sm"
-              onClick={() => navigate("/dashboard/weekly-summary")}
-              className="bg-gradient-primary text-primary-foreground hover:opacity-90"
-              title="Ver desempenho semanal"
-            >
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Resumo da Semana
-            </Button>
-            <Button
-              variant={printMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => setPrintMode(!printMode)}
-              className="no-print"
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              {printMode ? "Modo Normal" : "Modo Print"}
-            </Button>
-            <div className="w-[280px]">
+          <div className="flex flex-col gap-2 no-print w-full sm:w-auto">
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => navigate("/dashboard/weekly-summary")}
+                className="bg-gradient-primary text-primary-foreground hover:opacity-90 flex-1 sm:flex-none"
+                title="Ver desempenho semanal"
+              >
+                <BarChart3 className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">Resumo da Semana</span>
+              </Button>
+              <Button
+                variant={printMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPrintMode(!printMode)}
+                className="no-print flex-1 sm:flex-none"
+              >
+                <Printer className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">{printMode ? "Modo Normal" : "Modo Print"}</span>
+              </Button>
+            </div>
+            <div className="w-full sm:w-[280px]">
               <Select value={selectedClient} onValueChange={setSelectedClient}>
                 <SelectTrigger className="bg-card">
                   <SelectValue placeholder="Filtrar por cliente" />
@@ -805,7 +807,7 @@ const AdminDashboard = () => {
 
       {/* Status Cards - Normal mode only */}
       {!printMode && (
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-3 sm:gap-6 grid-cols-1 sm:grid-cols-3">
           <Card className="relative bg-card/50 backdrop-blur-sm border-warning/20 hover:border-warning/50 transition-all">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Em Atraso</CardTitle>
@@ -903,51 +905,53 @@ const AdminDashboard = () => {
             <CardTitle>Atividades por responsável</CardTitle>
             <CardDescription>Distribuição e status de entregas</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6 pt-0">
             {projectsByPerson.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
                 <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Sem atividades atribuídas</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Responsável</TableHead>
-                    <TableHead className="text-center">Total</TableHead>
-                    <TableHead className="text-center">Em Tempo</TableHead>
-                    <TableHead className="text-center">Atrasados</TableHead>
-                    <TableHead className="text-center">Dias Atrasados</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {projectsByPerson.map((person) => (
-                    <TableRow 
-                      key={person.responsible}
-                      className="cursor-pointer hover:bg-muted/70"
-                      onClick={() => setSelectedPersonProjects({ 
-                        responsible: person.responsible, 
-                        projects: person.projects 
-                      })}
-                    >
-                      <TableCell className="font-medium">{person.responsible}</TableCell>
-                      <TableCell className="text-center">{person.total}</TableCell>
-                      <TableCell className="text-center text-success">{person.onTime}</TableCell>
-                      <TableCell className="text-center text-warning">{person.delayed}</TableCell>
-                      <TableCell className="text-center text-warning font-semibold">
-                        {person.delayedDays > 0 ? person.delayedDays : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Progress 
-                          value={person.total > 0 ? (person.onTime / person.total) * 100 : 0} 
-                          className="h-2"
-                        />
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table className="min-w-[500px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Responsável</TableHead>
+                      <TableHead className="text-center">Total</TableHead>
+                      <TableHead className="text-center">Em Tempo</TableHead>
+                      <TableHead className="text-center">Atrasados</TableHead>
+                      <TableHead className="text-center">Dias Atrasados</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {projectsByPerson.map((person) => (
+                      <TableRow 
+                        key={person.responsible}
+                        className="cursor-pointer hover:bg-muted/70"
+                        onClick={() => setSelectedPersonProjects({ 
+                          responsible: person.responsible, 
+                          projects: person.projects 
+                        })}
+                      >
+                        <TableCell className="font-medium">{person.responsible}</TableCell>
+                        <TableCell className="text-center">{person.total}</TableCell>
+                        <TableCell className="text-center text-success">{person.onTime}</TableCell>
+                        <TableCell className="text-center text-warning">{person.delayed}</TableCell>
+                        <TableCell className="text-center text-warning font-semibold">
+                          {person.delayedDays > 0 ? person.delayedDays : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Progress 
+                            value={person.total > 0 ? (person.onTime / person.total) * 100 : 0} 
+                            className="h-2"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -958,7 +962,7 @@ const AdminDashboard = () => {
         open={!!selectedPersonProjects} 
         onOpenChange={(open) => !open && setSelectedPersonProjects(null)}
       >
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+        <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[80vh] overflow-auto">
           <DialogHeader>
             <DialogTitle>Atividades — {selectedPersonProjects?.responsible}</DialogTitle>
           </DialogHeader>
@@ -1002,7 +1006,7 @@ const AdminDashboard = () => {
 
       {/* Activities by Client and Priority - Hide in print mode */}
       {!printMode && (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-3 sm:gap-6 grid-cols-1 md:grid-cols-2">
           <Card className="relative bg-card/50 backdrop-blur-sm border-primary/20">
             <CardHeader>
               <CardTitle>Atividades por cliente</CardTitle>
@@ -1074,7 +1078,7 @@ const AdminDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="relative z-10">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-6 bg-primary/10 border border-primary/30 rounded-xl neon-border hover:shadow-lg hover:shadow-primary/20 transition-all">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="p-2 bg-primary/20 rounded-lg">
