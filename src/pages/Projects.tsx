@@ -585,7 +585,7 @@ const ProjectsContent = () => {
       </Sidebar>
 
       <div className="flex-1 flex flex-col">
-        <header className="h-16 border-b border-border bg-card flex items-center px-6">
+        <header className="h-16 border-b border-border bg-card flex items-center px-3 sm:px-6">
           <SidebarTrigger>
             <Button variant="ghost" size="icon">
               <Menu className="h-5 w-5" />
@@ -600,18 +600,18 @@ const ProjectsContent = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-3 sm:p-6 overflow-auto">
           <div className="space-y-6">
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold">Gerenciar Projetos</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Gerenciar Projetos</h1>
                 <p className="text-muted-foreground">Cadastre e gerencie projetos</p>
               </div>
-              <div className="flex gap-2 items-center flex-wrap">
+              <div className="flex gap-2 items-center flex-wrap w-full sm:w-auto">
                 {viewMode === "cards" && (
                   <>
                     <Select value={filterClient || "all"} onValueChange={setFilterClient}>
-                      <SelectTrigger className="h-9 w-[180px]">
+                      <SelectTrigger className="h-9 w-full sm:w-[180px]">
                         <SelectValue placeholder="Todos os clientes" />
                       </SelectTrigger>
                       <SelectContent>
@@ -625,7 +625,7 @@ const ProjectsContent = () => {
                     </Select>
 
                     <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
-                      <SelectTrigger className="h-9 w-[140px]">
+                      <SelectTrigger className="h-9 w-full sm:w-[140px]">
                         <SelectValue placeholder="Todas as sprints" />
                       </SelectTrigger>
                       <SelectContent>
@@ -668,7 +668,7 @@ const ProjectsContent = () => {
                       Adicionar Projeto
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>{editingProject ? "Editar Projeto" : "Adicionar Novo Projeto"}</DialogTitle>
                       <DialogDescription>Preencha os dados do projeto</DialogDescription>
@@ -689,7 +689,7 @@ const ProjectsContent = () => {
                       </div>
 
                       {/* Linha 1: Cliente + Gerente + Status (mantém o grid 2 col; o 3º campo quebra para a próxima linha automaticamente) */}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="client_id">Cliente</Label>
                           <select
@@ -746,7 +746,7 @@ const ProjectsContent = () => {
                       </div>
 
                       {/* Linha 2: Prioridade + Datas */}
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="priority">Prioridade</Label>
                           <select
@@ -776,7 +776,7 @@ const ProjectsContent = () => {
                       </div>
 
                       {/* Linha 3: Área + Responsável + Sprint */}
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="area">Área</Label>
                           <select
@@ -819,7 +819,7 @@ const ProjectsContent = () => {
                       </div>
 
                       {/* Linha 4: Datas reais + Progresso */}
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="actual_start_date">Data Real Início</Label>
                           <Input
@@ -901,7 +901,7 @@ const ProjectsContent = () => {
                 </CardContent>
               </Card>
             ) : viewMode === "cards" ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedProjects.map((project) => (
                   <Card key={project.id} className="hover:shadow-lg transition-all">
                     <CardHeader>
@@ -981,7 +981,7 @@ const ProjectsContent = () => {
               </div>
             ) : (
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-3 sm:p-6">
                   {/* Filters */}
                   <div className="mb-6 space-y-4">
                     <div className="flex items-center justify-between">
@@ -993,7 +993,7 @@ const ProjectsContent = () => {
                         </Button>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                       <div className="space-y-2">
                         <Label className="text-xs">Sprint</Label>
                         <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
@@ -1084,7 +1084,8 @@ const ProjectsContent = () => {
                     </div>
                   </div>
 
-                  <Table>
+                  <div className="overflow-x-auto -mx-3 sm:mx-0">
+                  <Table className="min-w-[900px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead
@@ -1365,6 +1366,7 @@ const ProjectsContent = () => {
                       ))}
                     </TableBody>
                   </Table>
+                  </div>
                 </CardContent>
               </Card>
             )}
