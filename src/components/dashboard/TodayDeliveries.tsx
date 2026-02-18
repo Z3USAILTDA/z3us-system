@@ -91,56 +91,58 @@ const TodayDeliveries = ({ projects, printMode = false }: TodayDeliveriesProps) 
           </div>
         ) : (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className={printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}>Demanda</TableHead>
-                  <TableHead className={printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}>Responsável</TableHead>
-                  {!printMode && <TableHead>Cliente</TableHead>}
-                  <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Status</TableHead>
-                  <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Prior.</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {displayItems.map((project) => (
-                  <TableRow key={project.id} className="hover:bg-muted/30">
-                    <TableCell className={`font-medium ${printMode ? 'py-0.5 sm:py-1 text-[10px] sm:text-xs max-w-[80px] sm:max-w-[120px]' : 'max-w-[200px]'} truncate`}>
-                      {project.title}
-                    </TableCell>
-                    <TableCell className={`text-muted-foreground ${printMode ? 'py-0.5 sm:py-1 text-[10px] sm:text-xs truncate max-w-[50px] sm:max-w-[80px]' : ''}`}>
-                      {project.responsible || "N/A"}
-                    </TableCell>
-                    {!printMode && (
-                      <TableCell className="text-muted-foreground">
-                        {project.client_name || "—"}
-                      </TableCell>
-                    )}
-                    <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
-                      {printMode ? (
-                        <Badge className="text-[9px] sm:text-xs px-0.5 sm:px-1 py-0" variant={project.status === "in_progress" ? "default" : "outline"}>
-                          {project.status === "in_progress" ? "And." : project.status === "planning" ? "Plan." : project.status}
-                        </Badge>
-                      ) : (
-                        getStatusBadge(project.status)
-                      )}
-                    </TableCell>
-                    <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
-                      {printMode ? (
-                        <Badge className={`text-[9px] sm:text-xs px-0.5 sm:px-1 py-0 ${
-                          project.priority === 'high' ? 'bg-destructive/20 text-destructive' :
-                          project.priority === 'medium' ? 'bg-warning/20 text-warning' :
-                          'bg-success/20 text-success'
-                        }`}>
-                          {project.priority === 'high' ? 'A' : project.priority === 'medium' ? 'M' : 'B'}
-                        </Badge>
-                      ) : (
-                        getPriorityBadge(project.priority)
-                      )}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[480px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className={printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}>Demanda</TableHead>
+                    <TableHead className={printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}>Responsável</TableHead>
+                    {!printMode && <TableHead>Cliente</TableHead>}
+                    <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Status</TableHead>
+                    <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Prior.</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {displayItems.map((project) => (
+                    <TableRow key={project.id} className="hover:bg-muted/30">
+                      <TableCell className={`font-medium ${printMode ? 'py-0.5 sm:py-1 text-[10px] sm:text-xs max-w-[80px] sm:max-w-[120px]' : 'max-w-[200px]'} truncate`}>
+                        {project.title}
+                      </TableCell>
+                      <TableCell className={`text-muted-foreground ${printMode ? 'py-0.5 sm:py-1 text-[10px] sm:text-xs truncate max-w-[50px] sm:max-w-[80px]' : ''}`}>
+                        {project.responsible || "N/A"}
+                      </TableCell>
+                      {!printMode && (
+                        <TableCell className="text-muted-foreground">
+                          {project.client_name || "—"}
+                        </TableCell>
+                      )}
+                      <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
+                        {printMode ? (
+                          <Badge className="text-[9px] sm:text-xs px-0.5 sm:px-1 py-0" variant={project.status === "in_progress" ? "default" : "outline"}>
+                            {project.status === "in_progress" ? "And." : project.status === "planning" ? "Plan." : project.status}
+                          </Badge>
+                        ) : (
+                          getStatusBadge(project.status)
+                        )}
+                      </TableCell>
+                      <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
+                        {printMode ? (
+                          <Badge className={`text-[9px] sm:text-xs px-0.5 sm:px-1 py-0 ${
+                            project.priority === 'high' ? 'bg-destructive/20 text-destructive' :
+                            project.priority === 'medium' ? 'bg-warning/20 text-warning' :
+                            'bg-success/20 text-success'
+                          }`}>
+                            {project.priority === 'high' ? 'A' : project.priority === 'medium' ? 'M' : 'B'}
+                          </Badge>
+                        ) : (
+                          getPriorityBadge(project.priority)
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
             
             {pendingDeliveries.length > 5 && !printMode && (
               <div className="flex justify-center mt-4">

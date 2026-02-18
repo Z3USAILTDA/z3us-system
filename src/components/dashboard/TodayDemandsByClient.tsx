@@ -65,38 +65,40 @@ const TodayDemandsByClient = ({ demandsByClient, printMode }: TodayDemandsByClie
           {!printMode && <CardDescription>Distribuição por cliente</CardDescription>}
         </CardHeader>
         <CardContent className={printMode ? 'py-0.5 px-2 sm:py-1 sm:px-3' : ''}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className={printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}>Cliente</TableHead>
-                <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Total</TableHead>
-                {!printMode && <TableHead className="text-center">Em Aberto</TableHead>}
-                <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Concl.</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayData.map((client) => (
-                <TableRow
-                  key={client.clientName}
-                  className={`${!printMode ? 'cursor-pointer hover:bg-muted/70' : ''}`}
-                  onClick={() => !printMode && setSelectedClient(client)}
-                >
-                  <TableCell className={`font-medium ${printMode ? 'py-0.5 sm:py-1 text-[10px] sm:text-xs truncate max-w-[60px] sm:max-w-[100px]' : ''}`}>{client.clientName}</TableCell>
-                  <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
-                    <Badge variant="outline" className={printMode ? 'text-[10px] sm:text-xs px-0.5 sm:px-1' : ''}>{client.total}</Badge>
-                  </TableCell>
-                  {!printMode && (
-                    <TableCell className="text-center">
-                      <span className="text-info font-semibold">{client.inProgress}</span>
-                    </TableCell>
-                  )}
-                  <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
-                    <span className={`text-success font-semibold ${printMode ? 'text-[10px] sm:text-xs' : ''}`}>{client.completed}</span>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[280px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className={printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}>Cliente</TableHead>
+                  <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Total</TableHead>
+                  {!printMode && <TableHead className="text-center">Em Aberto</TableHead>}
+                  <TableHead className={`text-center ${printMode ? 'text-[10px] sm:text-xs py-0.5 sm:py-1' : ''}`}>Concl.</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {displayData.map((client) => (
+                  <TableRow
+                    key={client.clientName}
+                    className={`${!printMode ? 'cursor-pointer hover:bg-muted/70' : ''}`}
+                    onClick={() => !printMode && setSelectedClient(client)}
+                  >
+                    <TableCell className={`font-medium ${printMode ? 'py-0.5 sm:py-1 text-[10px] sm:text-xs truncate max-w-[60px] sm:max-w-[100px]' : ''}`}>{client.clientName}</TableCell>
+                    <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
+                      <Badge variant="outline" className={printMode ? 'text-[10px] sm:text-xs px-0.5 sm:px-1' : ''}>{client.total}</Badge>
+                    </TableCell>
+                    {!printMode && (
+                      <TableCell className="text-center">
+                        <span className="text-info font-semibold">{client.inProgress}</span>
+                      </TableCell>
+                    )}
+                    <TableCell className={`text-center ${printMode ? 'py-0.5 sm:py-1' : ''}`}>
+                      <span className={`text-success font-semibold ${printMode ? 'text-[10px] sm:text-xs' : ''}`}>{client.completed}</span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
           {hasMore && !printMode && (
             <p className="text-xs text-muted-foreground text-center mt-3">
               Clique em uma linha para ver detalhes • {demandsByClient.length - displayData.length} mais...

@@ -647,7 +647,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className={`animate-fade-in ${printMode ? 'print-mode space-y-2 sm:space-y-3' : 'space-y-8'}`}>
+    <div className={`animate-fade-in min-w-0 overflow-x-hidden ${printMode ? 'print-mode space-y-2 sm:space-y-3' : 'space-y-8'}`}>
       {/* Print mode styles - responsive */}
       <style>{`
         .print-mode {
