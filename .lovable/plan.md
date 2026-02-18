@@ -1,158 +1,157 @@
 
-## Tornar o Sistema de Gestão de Projetos Responsivo
+## Corrigir Responsividade do Dashboard para Mobile
 
-### Diagnóstico dos Problemas Atuais
+### Diagnóstico a partir da imagem enviada
 
-Após análise do arquivo `src/pages/Projects.tsx` (1.386 linhas), os principais problemas de responsividade identificados são:
+A imagem mostra o Dashboard no mobile com os seguintes problemas:
 
-**1. Header da página (linha 603-610)**
-- `flex justify-between items-center` com filtros e botões em linha — em telas pequenas, os elementos se amontoam ou transbordam.
+**1. Header do AdminDashboard — botões cortados (linha 700-741)**
+- `flex items-center gap-3` com 3 elementos (botão "Resumo da Semana", botão "Modo Print", Select de cliente com `w-[280px]`) transbordam para fora da tela no mobile.
+- O título "Dashboard Administrativo" também fica cortado horizontalmente.
 
-**2. Filtros no modo "cards" (linhas 611-646)**
-- Selects de largura fixa (`w-[180px]`, `w-[140px]`) dentro de um `flex gap-2 flex-wrap` — ficam espremidos em mobile.
+**2. Cards de estatísticas — empilhamento incorreto (linha 746)**
+- `grid gap-6 md:grid-cols-3` faz os cards ficarem em coluna no mobile, mas cada card ocupa a tela inteira e parece grande demais — parece que os cards estão ocupando muito espaço vertical.
 
-**3. Formulário de criação/edição (linhas 692-852)**
-- Grids de 2 e 3 colunas fixas (`grid-cols-2`, `grid-cols-3`) — em mobile, os campos ficam muito pequenos e ilegíveis.
+**3. Dashboard.tsx — sidebar e header principal (linha 88-175)**
+- `main className="flex-1 p-6 overflow-auto"` usa `p-6` fixo — em mobile precisa de `p-3 sm:p-6`.
+- `header className="h-16 border-b... px-6"` também usa `px-6` fixo — precisa de `px-3 sm:px-6`.
+- O nome do usuário e perfil podem ser ocultados ou resumidos em mobile.
 
-**4. Modo tabela — Filtros (linha 996)**
-- `grid grid-cols-2 md:grid-cols-5` — em mobile usa apenas 2 colunas mas ainda pode ser apertado.
+**4. Tabelas sem scroll horizontal — AdminDashboard (linhas 913-999)**
+- A tabela "Atividades por responsável" tem 6 colunas e nenhum `overflow-x-auto` — fica cortada em mobile.
 
-**5. Modo tabela — Tabela principal (linha 1087+)**
-- Tabela com 12 colunas sem nenhuma estratégia de scroll horizontal — em mobile fica ilegível/cortada.
+**5. Dialog de detalhes — sem largura responsiva (linha 961)**
+- `max-w-3xl` sem `w-[95vw]` faz o modal transbordar em telas pequenas.
 
-**6. Sidebar (linha 521)**
-- A sidebar já tem lógica de colapso (`w-14` vs `w-60`), mas em mobile ela não usa `Sheet` (modal), ela simplesmente fica colapsada — em mobile seria melhor um menu hamburguer com overlay.
-
----
-
-### Solução Proposta
-
-#### Estratégia Geral
-- **Mobile first**: ajustar os breakpoints com Tailwind (`sm:`, `md:`, `lg:`).
-- **Tabela**: envolver em `overflow-x-auto` para scroll horizontal em mobile.
-- **Formulário**: grids se tornam 1 coluna em mobile, 2 no tablet, 3 no desktop.
-- **Header de controles**: empilhar verticalmente em mobile.
-- **Sidebar**: habilitar o modo `Sheet` do Shadcn Sidebar para mobile (já suportado pelo componente, basta passar corretamente).
+**6. Grid "Atividades por cliente e prioridade" (linha 1005)**
+- `grid gap-6 md:grid-cols-2` — aceitável, mas padding interno pode ser melhorado.
 
 ---
 
-### Mudanças Técnicas por Seção
+### Arquivos a alterar
 
-#### 1. Header de controles (linha 603–895)
-
-**Antes:**
-```tsx
-<div className="flex justify-between items-center gap-4">
-  <div>...</div>
-  <div className="flex gap-2 items-center flex-wrap">...</div>
-</div>
-```
-
-**Depois:**
-```tsx
-<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-  <div>...</div>
-  <div className="flex gap-2 items-center flex-wrap w-full sm:w-auto">...</div>
-</div>
-```
-
-Os selects de filtro receberão `w-full sm:w-[180px]` para ocupar toda a largura em mobile.
+1. **`src/pages/Dashboard.tsx`** — ajustar padding do main/header, sidebar mobile
+2. **`src/components/dashboard/AdminDashboard.tsx`** — header de controles, grids, tabelas com overflow, dialog
 
 ---
 
-#### 2. Formulário do Dialog (linhas 692–876)
+### Mudanças Técnicas Detalhadas
 
-**Antes:**
+#### Dashboard.tsx
+
+**Header principal** (linha 156):
 ```tsx
-<div className="grid grid-cols-2 gap-4">  {/* linha 692 */}
-<div className="grid grid-cols-3 gap-4">  {/* linhas 749, 779, 822 */}
+// Antes
+<header className="h-16 border-b border-border bg-card flex items-center px-6">
+
+// Depois
+<header className="h-16 border-b border-border bg-card flex items-center px-3 sm:px-6">
 ```
 
-**Depois:**
+**Main content** (linha 171):
 ```tsx
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+// Antes
+<main className="flex-1 p-6 overflow-auto">
+
+// Depois
+<main className="flex-1 p-3 sm:p-6 overflow-auto">
 ```
 
-O `DialogContent` também ganha `w-[95vw] sm:max-w-3xl` para não transbordar em mobile.
+**Nome do usuário no header** (linhas 163-168):
+- Adicionar `hidden sm:block` para ocultar o bloco de texto em telas muito pequenas, mantendo apenas o ícone/avatar.
 
 ---
 
-#### 3. Filtros da tabela (linha 996)
+#### AdminDashboard.tsx
 
-**Antes:**
+**Título + botões de controle** (linhas 698-742):
 ```tsx
-<div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+// Antes
+<div className="flex items-center justify-between gap-4 flex-wrap">
+  ...
+  <div className="flex items-center gap-3 no-print">
+    {/* 3 itens inline sem responsividade */}
+    <div className="w-[280px]">
+      <Select ...>
 ```
 
-**Depois:**
+// Depois
 ```tsx
-<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-```
-
----
-
-#### 4. Tabela com scroll horizontal (linha 983–1369)
-
-**Antes:**
-```tsx
-<Card>
-  <CardContent className="p-6">
-    {/* filtros */}
-    <Table>...</Table>
-  </CardContent>
-</Card>
-```
-
-**Depois:**
-```tsx
-<Card>
-  <CardContent className="p-3 sm:p-6">
-    {/* filtros */}
-    <div className="overflow-x-auto">
-      <Table className="min-w-[900px]">...</Table>
+<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 flex-wrap">
+  ...
+  <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 sm:gap-3 no-print w-full sm:w-auto">
+    {/* Botões ficam em linha no mobile pequeno, e o Select ocupa toda a largura */}
+    <div className="flex gap-2">
+      <Button size="sm" ...>Resumo da Semana</Button>
+      <Button size="sm" ...>Modo Print</Button>
     </div>
-  </CardContent>
-</Card>
+    <div className="w-full sm:w-[280px]">
+      <Select ...>
 ```
 
-Isso garante scroll horizontal sem quebrar o layout.
-
----
-
-#### 5. Cards de projetos (linha 904)
-
-**Antes:**
+**Grid de status cards** (linha 808):
 ```tsx
-<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+// Antes
+<div className="grid gap-6 md:grid-cols-3">
+
+// Depois
+<div className="grid gap-3 sm:gap-6 grid-cols-1 sm:grid-cols-3">
 ```
 
-**Depois:**
+**Tabela "Atividades por responsável"** (linhas 906-952):
 ```tsx
-<div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+// Antes
+<CardContent>
+  <Table>...
+
+// Depois  
+<CardContent className="p-3 sm:p-6 pt-0">
+  <div className="overflow-x-auto">
+    <Table className="min-w-[500px]">...
+  </div>
 ```
 
-Em mobile, os cards ficam em 1 coluna.
+**Dialog de detalhes** (linha 961):
+```tsx
+// Antes
+<DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+
+// Depois
+<DialogContent className="w-[95vw] sm:max-w-3xl max-h-[80vh] overflow-auto">
+```
+
+**Grid de "Atividades por cliente e prioridade"** (linha 1005):
+```tsx
+// Antes
+<div className="grid gap-6 md:grid-cols-2">
+
+// Depois
+<div className="grid gap-3 sm:gap-6 grid-cols-1 md:grid-cols-2">
+```
+
+**Welcome card grid** (linha 1077):
+```tsx
+// Antes
+<div className="grid md:grid-cols-2 gap-4">
+
+// Depois
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+```
 
 ---
-
-#### 6. Sidebar + Header
-
-O `SidebarProvider` já oferece suporte a mobile com `Sheet`. A sidebar atual usa verificação do estado `state === "collapsed"` mas não tem tratamento mobile. Será ativada a lógica nativa do componente para mostrar a sidebar como um painel deslizante em mobile.
-
-O header (`h-16 px-6`) receberá `px-3 sm:px-6` para não ficar muito apertado.
-
----
-
-### Arquivo que Será Alterado
-- **`src/pages/Projects.tsx`**: ajustes de classes Tailwind em todo o JSX da página — sem mudanças de lógica, apenas responsividade.
-
-### Sem Mudanças em
-- Lógica de negócio (filtros, save, etc.)
-- Banco de dados
-- Outros arquivos
 
 ### Resultado Esperado
-- Mobile (< 640px): 1 coluna, tabela com scroll horizontal, botões empilhados
-- Tablet (640–1024px): 2 colunas, filtros reorganizados
-- Desktop (> 1024px): layout atual preservado integralmente
+
+| Breakpoint | Comportamento |
+|---|---|
+| Mobile (< 640px) | Botões em 2 linhas, Select largo, cards em 1 coluna, tabelas com scroll horizontal |
+| Tablet (640–768px) | Botões em linha, Select com largura fixa, 2–3 colunas |
+| Desktop (> 768px) | Layout atual preservado integralmente |
+
+---
+
+### Arquivos que serão alterados
+- `src/pages/Dashboard.tsx` — padding do header e main
+- `src/components/dashboard/AdminDashboard.tsx` — header de controles, grids, tabelas com scroll, dialog
+
+Nenhuma mudança de lógica, banco de dados ou outros componentes.
