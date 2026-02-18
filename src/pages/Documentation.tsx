@@ -232,10 +232,7 @@ const DocumentationContent = () => {
       return matchingProject?.id || editingDocument?.project_id || null;
     })();
 
-    if (selectedProducts.length === 0 || !firstProduct) {
-      toast.error("Selecione pelo menos um produto");
-      return;
-    }
+    // Products are optional - no validation needed
 
     setUploading(true);
 
@@ -573,7 +570,7 @@ const DocumentationContent = () => {
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="space-y-2">
-                        <Label>Produto(s) *</Label>
+                        <Label>Produto(s)</Label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
