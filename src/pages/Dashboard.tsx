@@ -85,7 +85,7 @@ const DashboardContent = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full bg-background overflow-x-hidden">
       <Sidebar className={state === "collapsed" ? "w-14" : "w-60"}>
         <div className="p-4 border-b border-sidebar-border">
           {state !== "collapsed" && (
@@ -152,7 +152,7 @@ const DashboardContent = () => {
         </SidebarContent>
       </Sidebar>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b border-border bg-card flex items-center px-3 sm:px-6">
           <SidebarTrigger>
             <Button variant="ghost" size="icon">
