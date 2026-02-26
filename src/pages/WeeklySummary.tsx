@@ -106,7 +106,7 @@ const WeeklySummaryContent = () => {
     const today = new Date().toLocaleDateString("en-CA");
     if (p.status === "completed") return <Badge className="bg-success/20 text-success border-success/30">Concluído</Badge>;
     if (!p.end_date) return <Badge className="bg-muted text-muted-foreground border-border">Sem prazo</Badge>;
-    if (p.end_date < today && p.status !== "waiting_client" && p.status !== "test")
+    if (p.end_date < today && p.status !== "waiting_client" && p.status !== "test" && p.status !== "on_hold" && p.status !== "cancelled")
       return <Badge className="bg-warning/20 text-warning border-warning/30">Atrasado</Badge>;
     return <Badge className="bg-info/20 text-info border-info/30">No prazo</Badge>;
   };

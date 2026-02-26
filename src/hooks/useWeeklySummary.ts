@@ -260,7 +260,7 @@ export function useWeeklySummary() {
       // Overdue (end_date < today, not completed/waiting_client/test)
       const overdue = filtered.filter(p => {
         if (!p.end_date) return false;
-        return p.end_date < today && p.status !== "completed" && p.status !== "waiting_client" && p.status !== "test";
+        return p.end_date < today && p.status !== "completed" && p.status !== "waiting_client" && p.status !== "test" && p.status !== "on_hold" && p.status !== "cancelled";
       });
 
       // In progress
@@ -430,7 +430,7 @@ export function useWeeklySummary() {
             totalTeamCompleted.count++;
           }
 
-          const isOverdue = p.end_date && p.end_date < today && p.status !== "completed" && p.status !== "waiting_client" && p.status !== "test";
+          const isOverdue = p.end_date && p.end_date < today && p.status !== "completed" && p.status !== "waiting_client" && p.status !== "test" && p.status !== "on_hold" && p.status !== "cancelled";
           if (isOverdue) tr.overdue++;
         });
       });
@@ -524,7 +524,7 @@ export function useWeeklySummary() {
         const createdInWeek = p.created_at.slice(0, 10) >= startStr && p.created_at.slice(0, 10) <= endStr;
         const completedInWeek = p.actual_end_date && p.actual_end_date >= startStr && p.actual_end_date <= endStr;
         const dueInWeek = p.end_date && p.end_date >= startStr && p.end_date <= endStr;
-        const isOverdue = p.end_date && p.end_date < today && p.status !== "completed" && p.status !== "waiting_client" && p.status !== "test";
+        const isOverdue = p.end_date && p.end_date < today && p.status !== "completed" && p.status !== "waiting_client" && p.status !== "test" && p.status !== "on_hold" && p.status !== "cancelled";
         return createdInWeek || completedInWeek || dueInWeek || isOverdue;
       });
       setDetailProjects(weekRelevant);

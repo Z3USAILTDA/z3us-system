@@ -264,8 +264,8 @@ const AdminDashboard = () => {
         stats.completed++;
       } else {
         stats.inProgress++;
-        // Don't count as delayed if status is waiting_client or test
-        if (project.end_date && project.end_date < today && project.status !== "waiting_client" && project.status !== "test") {
+        // Don't count as delayed if status is waiting_client, test, on_hold or cancelled
+        if (project.end_date && project.end_date < today && project.status !== "waiting_client" && project.status !== "test" && project.status !== "on_hold" && project.status !== "cancelled") {
           stats.delayed++;
         }
       }
@@ -376,7 +376,9 @@ const AdminDashboard = () => {
       .lt("end_date", today)
       .neq("status", "completed")
       .neq("status", "waiting_client")
-      .neq("status", "test");
+      .neq("status", "test")
+      .neq("status", "on_hold")
+      .neq("status", "cancelled");
 
     // Filter by client if needed
     const filterByClient = (projects: any[] | null) => {
@@ -489,7 +491,7 @@ const AdminDashboard = () => {
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true })),
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "completed")),
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).in("status", ["planning", "in_progress"])),
-      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).lt("end_date", today).neq("status", "completed").neq("status", "waiting_client").neq("status", "test")),
+      buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).lt("end_date", today).neq("status", "completed").neq("status", "waiting_client").neq("status", "test").neq("status", "on_hold").neq("status", "cancelled")),
       buildQuery(supabase.from("projects").select("*", { count: "exact", head: true }).is("end_date", null)),
     ]);
 
@@ -547,8 +549,8 @@ const AdminDashboard = () => {
       stats.projects.push(projectData);
       
       if (project.end_date && project.status !== "completed") {
-        // Don't count as delayed if status is waiting_client
-        if (project.end_date < today && project.status !== "waiting_client") {
+        // Don't count as delayed if status is waiting_client, test, on_hold or cancelled
+        if (project.end_date < today && project.status !== "waiting_client" && project.status !== "test" && project.status !== "on_hold" && project.status !== "cancelled") {
           stats.delayed++;
           // Calculate days overdue
           const endDate = new Date(project.end_date + "T12:00:00");
