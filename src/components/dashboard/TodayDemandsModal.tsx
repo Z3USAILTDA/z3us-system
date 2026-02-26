@@ -91,7 +91,9 @@ const TodayDemandsModal = ({ open, onOpenChange, title, projects }: TodayDemands
                   project.end_date < today && 
                   project.status !== "completed" &&
                   project.status !== "waiting_client" &&
-                  project.status !== "test";
+                  project.status !== "test" &&
+                  project.status !== "on_hold" &&
+                  project.status !== "cancelled";
                 return (
                   <TableRow key={project.id} className={isOverdue ? "bg-destructive/10" : ""}>
                     <TableCell className="font-medium">
