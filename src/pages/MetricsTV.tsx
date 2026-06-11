@@ -56,7 +56,7 @@ interface Profile {
 
 interface Client {
   id: string;
-  name: string;
+  company_name: string;
 }
 
 // ----- Constants -----
