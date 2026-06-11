@@ -469,6 +469,8 @@ const MetricsTV = () => {
     >();
     projects.forEach((p) => {
       const name = responsibleName(p);
+      if (isInactiveUser(name)) return;
+      if (name === "Sem responsável") return;
       const cur =
         map.get(name) || {
           name,
