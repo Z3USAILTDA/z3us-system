@@ -12,6 +12,7 @@ import Projects from "./pages/Projects";
 import Users from "./pages/Users";
 import Documentation from "./pages/Documentation";
 import WeeklySummary from "./pages/WeeklySummary";
+import MetricsTV from "./pages/MetricsTV";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
