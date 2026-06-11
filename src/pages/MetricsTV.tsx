@@ -109,33 +109,30 @@ const KpiCard = ({
   value,
   accent = "primary",
   hint,
+  className = "",
 }: {
   icon: any;
   label: string;
   value: string | number;
   accent?: string;
   hint?: string;
+  className?: string;
 }) => (
-  <Card className="flex items-center gap-4">
+  <Card className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 ${className}`}>
     <div
-      className="rounded-xl p-3 shrink-0"
+      className="rounded-lg p-1.5 sm:p-2 shrink-0"
       style={{ background: `hsl(var(--${accent}) / 0.15)` }}
     >
-      <Icon
-        className="w-7 h-7"
-        style={{ color: `hsl(var(--${accent}))` }}
-      />
+      <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: `hsl(var(--${accent}))` }} />
     </div>
     <div className="min-w-0">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+      <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-medium leading-tight">
         {label}
       </div>
-      <div className="text-3xl xl:text-4xl font-bold leading-tight">
+      <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold leading-tight tabular-nums">
         {value}
       </div>
-      {hint && (
-        <div className="text-xs text-muted-foreground mt-0.5">{hint}</div>
-      )}
+      {hint && <div className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight truncate">{hint}</div>}
     </div>
   </Card>
 );
