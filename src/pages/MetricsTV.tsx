@@ -82,6 +82,10 @@ const NON_OVERDUE_STATUSES = new Set([
 const isOverdue = (p: Project, today: string) =>
   !!p.end_date && p.end_date < today && !NON_OVERDUE_STATUSES.has(p.status);
 
+// Usuários inativos — não devem aparecer em métricas/rankings
+const INACTIVE_USERS = new Set(["Willian Renato", "Nicolas Freitas"]);
+const isInactiveUser = (name: string) => INACTIVE_USERS.has(name.trim());
+
 const daysBetween = (a: string, b: string) => {
   const d1 = new Date(a + "T00:00:00").getTime();
   const d2 = new Date(b + "T00:00:00").getTime();
