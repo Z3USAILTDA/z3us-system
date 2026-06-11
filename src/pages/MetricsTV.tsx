@@ -703,7 +703,7 @@ const MetricsTV = () => {
           {/* === Linha 1: Crítico · Status · Alertas === */}
           {/* Critical project */}
           {mostCritical && (
-            <Card className="col-span-2 lg:col-span-2 border-destructive/50 bg-destructive/10 p-3 flex flex-col min-h-0 overflow-hidden">
+            <Card className="col-span-1 border-destructive/50 bg-destructive/10 p-3 flex flex-col min-h-0 overflow-hidden">
               <div className="flex items-start gap-2 min-h-0 flex-1 overflow-hidden">
                 <div className="rounded-lg p-2 bg-destructive/20 shrink-0">
                   <Flame className="w-5 h-5 text-destructive" />
@@ -737,7 +737,7 @@ const MetricsTV = () => {
           )}
 
           {/* Status overview */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1 shrink-0">
               <h2 className="text-sm lg:text-base font-bold">Status dos projetos</h2>
               <span className="text-[10px] text-muted-foreground">{metrics.total} total</span>
@@ -781,7 +781,7 @@ const MetricsTV = () => {
           </Card>
 
           {/* Alerts */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center gap-1.5 mb-1.5 shrink-0">
               <AlertTriangle className="w-4 h-4 text-warning" />
               <h2 className="text-sm lg:text-base font-bold">Alertas operacionais</h2>
@@ -811,7 +811,7 @@ const MetricsTV = () => {
           {/* === Linha 2: Em atraso · Evolução · Ranking responsáveis === */}
 
           {/* Delayed projects */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 text-destructive" />
@@ -848,7 +848,7 @@ const MetricsTV = () => {
           </Card>
 
           {/* Monthly evolution */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center gap-1.5 mb-1 shrink-0">
               <TrendingUp className="w-4 h-4 text-primary" />
               <h2 className="text-sm lg:text-base font-bold">Evolução · 6 meses</h2>
@@ -883,7 +883,7 @@ const MetricsTV = () => {
 
 
           {/* User ranking */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
                 <Trophy className="w-4 h-4 text-yellow" />
