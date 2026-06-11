@@ -808,61 +808,7 @@ const MetricsTV = () => {
             )}
           </Card>
 
-          {/* Project ranking */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between mb-1.5 shrink-0">
-              <div className="flex items-center gap-1.5">
-                <Trophy className="w-4 h-4 text-yellow" />
-                <h2 className="text-sm lg:text-base font-bold">Ranking de projetos</h2>
-              </div>
-              <span className="text-[10px] text-muted-foreground">Top {Math.min(projectRanking.length, 6)}</span>
-            </div>
-            <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
-              {projectRanking.slice(0, 6).map((p, i) => {
-                const overdueFlag = isOverdue(p, today);
-                const sm = STATUS_META[overdueFlag ? "overdue" : p.status] || STATUS_META[p.status];
-                const daysLate = overdueFlag ? daysBetween(p.end_date!, today) : 0;
-                return (
-                  <div
-                    key={p.id}
-                    className="flex items-center gap-2 p-1.5 rounded-md bg-background/50 border border-border/40"
-                  >
-                    <div className="w-5 text-center text-xs font-bold text-muted-foreground tabular-nums shrink-0">
-                      {i + 1}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-semibold truncate">{p.title}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">{responsibleName(p)}</div>
-                    </div>
-                    <div className="w-16 lg:w-20 shrink-0">
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${p.progress ?? 0}%`,
-                            background:
-                              p.status === "completed"
-                                ? "hsl(var(--success))"
-                                : overdueFlag
-                                ? "hsl(var(--destructive))"
-                                : "var(--gradient-primary)",
-                          }}
-                        />
-                      </div>
-                      <div className="text-[9px] text-right text-muted-foreground tabular-nums leading-tight">
-                        {p.progress ?? 0}%
-                        {daysLate > 0 && <span className="text-destructive ml-1">+{daysLate}d</span>}
-                      </div>
-                    </div>
-                    <StatusDot color={sm?.color || "hsl(215 20% 65%)"} />
-                  </div>
-                );
-              })}
-              {projectRanking.length === 0 && (
-                <div className="text-xs text-muted-foreground text-center py-4">Sem projetos.</div>
-              )}
-            </div>
-          </Card>
+          {/* === Linha 2: Em atraso · Evolução · Ranking responsáveis === */}
 
           {/* Delayed projects */}
           <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
