@@ -879,37 +879,8 @@ const MetricsTV = () => {
           {/* Weekly deliveries removed for cleaner layout */}
 
 
-          {/* User distribution */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center gap-1.5 mb-1.5 shrink-0">
-              <UsersIcon className="w-4 h-4 text-secondary" />
-              <h2 className="text-sm lg:text-base font-bold">Distribuição por responsável</h2>
-            </div>
-            <div className="space-y-1.5 flex-1 min-h-0 overflow-hidden">
-              {topUsers.slice(0, 6).map((u) => {
-                const pct = Math.round((u.total / totalProjectsForPct) * 100);
-                return (
-                  <div key={u.name}>
-                    <div className="flex items-center justify-between text-[11px] lg:text-xs mb-0.5">
-                      <span className="font-medium truncate pr-2">{u.name}</span>
-                      <span className="text-muted-foreground tabular-nums shrink-0">
-                        <span className="text-foreground font-semibold">{u.total}</span> · {pct}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${pct}%`, background: "var(--gradient-primary)" }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-              {topUsers.length === 0 && (
-                <div className="text-xs text-muted-foreground text-center py-4">Sem dados.</div>
-              )}
-            </div>
-          </Card>
+          {/* User distribution removed — coberto pelo ranking */}
+
 
           {/* User ranking */}
           <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
