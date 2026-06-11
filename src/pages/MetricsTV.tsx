@@ -699,7 +699,8 @@ const MetricsTV = () => {
         </section>
 
         {/* Main grid — 3 rows fill remaining space */}
-        <section className="flex-1 min-h-0 grid gap-2 sm:gap-3 grid-cols-2 lg:grid-cols-6 grid-rows-[repeat(6,minmax(0,1fr))] lg:grid-rows-3">
+        <section className="flex-1 min-h-0 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 grid-rows-[repeat(6,minmax(0,1fr))] sm:grid-rows-[repeat(3,minmax(0,1fr))] lg:grid-rows-2">
+          {/* === Linha 1: Crítico · Status · Alertas === */}
           {/* Critical project */}
           {mostCritical && (
             <Card className="col-span-2 lg:col-span-2 border-destructive/50 bg-destructive/10 p-3 flex flex-col min-h-0 overflow-hidden">
