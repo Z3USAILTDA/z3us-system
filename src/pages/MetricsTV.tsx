@@ -614,7 +614,7 @@ const MetricsTV = () => {
                   </div>
                   <div className="text-sm text-muted-foreground mt-1 truncate">
                     {responsibleName(mostCritical.p)} ·{" "}
-                    {clientMap.get(mostCritical.p.client_id)?.name || "—"}
+                    {clientMap.get(mostCritical.p.client_id)?.company_name || "—"}
                   </div>
                   <div className="mt-3 flex items-center gap-4 flex-wrap">
                     <div>
