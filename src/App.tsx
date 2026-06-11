@@ -12,6 +12,7 @@ import Projects from "./pages/Projects";
 import Users from "./pages/Users";
 import Documentation from "./pages/Documentation";
 import WeeklySummary from "./pages/WeeklySummary";
+import MetricsTV from "./pages/MetricsTV";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/dashboard/users" element={<Users />} />
           <Route path="/dashboard/documentation" element={<Documentation />} />
           <Route path="/dashboard/weekly-summary" element={<WeeklySummary />} />
+          <Route path="/metricas-projetos-tv" element={<MetricsTV />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
