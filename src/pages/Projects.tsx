@@ -435,7 +435,7 @@ const ProjectsContent = () => {
     // Salva no banco em background
     const { error } = await supabase
       .from("projects")
-      .update(updateData)
+      .update(updateData as any)
       .eq("id", projectId);
 
     if (error) {
