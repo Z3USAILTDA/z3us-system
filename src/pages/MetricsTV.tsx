@@ -876,31 +876,8 @@ const MetricsTV = () => {
             </div>
           </Card>
 
-          {/* Weekly deliveries */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center gap-1.5 mb-1 shrink-0">
-              <CheckCircle2 className="w-4 h-4 text-success" />
-              <h2 className="text-sm lg:text-base font-bold">Entregas / semana</h2>
-            </div>
-            <div className="flex-1 min-h-0">
-              <ResponsiveContainer>
-                <BarChart data={weeklyDeliveries} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" allowDecimals={false} fontSize={10} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
-                      fontSize: 11,
-                    }}
-                  />
-                  <Bar dataKey="entregues" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="Entregues" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+          {/* Weekly deliveries removed for cleaner layout */}
+
 
           {/* User distribution */}
           <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
