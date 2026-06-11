@@ -109,33 +109,30 @@ const KpiCard = ({
   value,
   accent = "primary",
   hint,
+  className = "",
 }: {
   icon: any;
   label: string;
   value: string | number;
   accent?: string;
   hint?: string;
+  className?: string;
 }) => (
-  <Card className="flex items-center gap-4">
+  <Card className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 ${className}`}>
     <div
-      className="rounded-xl p-3 shrink-0"
+      className="rounded-lg p-1.5 sm:p-2 shrink-0"
       style={{ background: `hsl(var(--${accent}) / 0.15)` }}
     >
-      <Icon
-        className="w-7 h-7"
-        style={{ color: `hsl(var(--${accent}))` }}
-      />
+      <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: `hsl(var(--${accent}))` }} />
     </div>
     <div className="min-w-0">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+      <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-medium leading-tight">
         {label}
       </div>
-      <div className="text-3xl xl:text-4xl font-bold leading-tight">
+      <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold leading-tight tabular-nums">
         {value}
       </div>
-      {hint && (
-        <div className="text-xs text-muted-foreground mt-0.5">{hint}</div>
-      )}
+      {hint && <div className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight truncate">{hint}</div>}
     </div>
   </Card>
 );
@@ -632,122 +629,99 @@ const MetricsTV = () => {
   const monthDelta = metrics.completedThisMonth - metrics.completedLastMonth;
 
   return (
-    <div className="min-h-screen w-full bg-background text-foreground overflow-x-hidden tech-grid">
-      <div className="min-h-screen w-full p-4 lg:p-6 xl:p-8 flex flex-col gap-5">
+    <div className="h-screen w-screen bg-background text-foreground overflow-hidden tech-grid">
+      <div className="h-full w-full p-2 sm:p-3 lg:p-4 flex flex-col gap-2 sm:gap-3 min-h-0">
         {/* Header */}
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <header className="shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div
-              className="rounded-2xl p-3 glow-primary"
+              className="rounded-xl p-2 glow-primary shrink-0"
               style={{ background: "var(--gradient-primary)" }}
             >
-              <Activity className="w-8 h-8 text-primary-foreground" />
+              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold tracking-tight truncate">
                 Métricas de Projetos
               </h1>
-              <p className="text-sm lg:text-base text-muted-foreground">
+              <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
                 Painel executivo em tempo real
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 lg:gap-5">
-            <div className="text-right">
-              <div className="text-2xl lg:text-3xl xl:text-4xl font-bold tabular-nums">
-                {now.toLocaleTimeString("pt-BR")}
-              </div>
-              <div className="text-xs lg:text-sm text-muted-foreground">
-                {now.toLocaleDateString("pt-BR", {
-                  weekday: "long",
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </div>
+          <div className="text-right shrink-0">
+            <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold tabular-nums leading-none">
+              {now.toLocaleTimeString("pt-BR")}
+            </div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+              {now.toLocaleDateString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}
             </div>
           </div>
         </header>
 
         {/* KPI strip */}
-        <section className="grid gap-4 grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-          <KpiCard
-            icon={Target}
-            label="Projetos ativos"
-            value={metrics.active}
-            accent="primary"
-          />
+        <section className="shrink-0 grid gap-2 sm:gap-3 grid-cols-3 sm:grid-cols-5">
+          <KpiCard icon={Target} label="Ativos" value={metrics.active} accent="primary" />
           <KpiCard
             icon={CheckCircle2}
-            label="Concluídos no mês"
+            label="Mês"
             value={metrics.completedThisMonth}
             accent="success"
-            hint={
-              monthDelta === 0
-                ? "Igual ao mês anterior"
-                : monthDelta > 0
-                ? `+${monthDelta} vs mês anterior`
-                : `${monthDelta} vs mês anterior`
-            }
+            hint={monthDelta >= 0 ? `+${monthDelta} vs ant.` : `${monthDelta} vs ant.`}
           />
-          <KpiCard
-            icon={AlertTriangle}
-            label="Em atraso"
-            value={metrics.overdue}
-            accent="destructive"
-          />
+          <KpiCard icon={AlertTriangle} label="Atraso" value={metrics.overdue} accent="destructive" />
           <KpiCard
             icon={TrendingUp}
-            label="Taxa de conclusão"
+            label="Conclusão"
             value={`${metrics.completionRate}%`}
             accent="secondary"
-            hint={`${metrics.completed}/${metrics.total} total`}
+            hint={`${metrics.completed}/${metrics.total}`}
+            className="hidden sm:flex"
           />
           <KpiCard
             icon={Calendar}
-            label="Entrega no prazo"
+            label="No prazo"
             value={`${metrics.onTimeRate}%`}
             accent="info"
-            hint={`Média: ${metrics.avgDuration} dias`}
+            hint={`${metrics.avgDuration}d médio`}
+            className="hidden sm:flex"
           />
         </section>
 
-        {/* Main grid */}
-        <section className="grid gap-5 grid-cols-1 lg:grid-cols-3 xl:grid-cols-12">
+        {/* Main grid — 3 rows fill remaining space */}
+        <section className="flex-1 min-h-0 grid gap-2 sm:gap-3 grid-cols-2 lg:grid-cols-6 grid-rows-[repeat(6,minmax(0,1fr))] lg:grid-rows-3">
           {/* Critical project */}
           {mostCritical && (
-            <Card className="xl:col-span-4 lg:col-span-3 border-destructive/50 bg-destructive/10">
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl p-3 bg-destructive/20">
-                  <Flame className="w-7 h-7 text-destructive" />
+            <Card className="col-span-2 lg:col-span-2 border-destructive/50 bg-destructive/10 p-3 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex items-start gap-2 min-h-0 flex-1 overflow-hidden">
+                <div className="rounded-lg p-2 bg-destructive/20 shrink-0">
+                  <Flame className="w-5 h-5 text-destructive" />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs uppercase tracking-wider text-destructive font-bold">
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <div className="text-[10px] uppercase tracking-wider text-destructive font-bold">
                     Projeto mais crítico
                   </div>
-                  <div className="text-xl xl:text-2xl font-bold mt-1 truncate">
+                  <div className="text-sm sm:text-base lg:text-lg font-bold truncate mt-0.5">
                     {mostCritical.p.title}
                   </div>
-                  <div className="text-sm text-muted-foreground mt-1 truncate">
+                  <div className="text-[11px] text-muted-foreground truncate">
                     {responsibleName(mostCritical.p)} ·{" "}
                     {clientMap.get(mostCritical.p.client_id)?.company_name || "—"}
                   </div>
-                  <div className="mt-3 flex items-center gap-4 flex-wrap">
+                  <div className="mt-1.5 flex items-center gap-3">
                     <div>
-                      <div className="text-3xl xl:text-4xl font-bold text-destructive tabular-nums">
-                        {mostCritical.daysLate}
+                      <div className="text-xl lg:text-2xl font-bold text-destructive tabular-nums leading-none">
+                        {mostCritical.daysLate}d
                       </div>
-                      <div className="text-xs text-muted-foreground uppercase">
-                        dias em atraso
-                      </div>
+                      <div className="text-[9px] text-muted-foreground uppercase">atraso</div>
                     </div>
                     <div>
-                      <div className="text-base font-semibold">
-                        {formatDateBR(mostCritical.p.end_date)}
-                      </div>
-                      <div className="text-xs text-muted-foreground uppercase">
-                        prazo previsto
-                      </div>
+                      <div className="text-xs font-semibold">{formatDateBR(mostCritical.p.end_date)}</div>
+                      <div className="text-[9px] text-muted-foreground uppercase">prazo</div>
                     </div>
                   </div>
                 </div>
@@ -756,26 +730,16 @@ const MetricsTV = () => {
           )}
 
           {/* Status overview */}
-          <Card className={mostCritical ? "xl:col-span-4 lg:col-span-3" : "xl:col-span-6 lg:col-span-3"}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg xl:text-xl font-bold">
-                Status dos projetos
-              </h2>
-              <span className="text-xs text-muted-foreground">
-                {metrics.total} total
-              </span>
+          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between mb-1 shrink-0">
+              <h2 className="text-sm lg:text-base font-bold">Status dos projetos</h2>
+              <span className="text-[10px] text-muted-foreground">{metrics.total} total</span>
             </div>
-            <div className="grid grid-cols-5 gap-2 items-center">
-              <div className="col-span-2 h-44">
+            <div className="grid grid-cols-5 gap-2 items-center flex-1 min-h-0">
+              <div className="col-span-2 h-full min-h-0">
                 <ResponsiveContainer>
                   <PieChart>
-                    <Pie
-                      data={statusPieData}
-                      dataKey="value"
-                      innerRadius={40}
-                      outerRadius={70}
-                      paddingAngle={2}
-                    >
+                    <Pie data={statusPieData} dataKey="value" innerRadius="55%" outerRadius="95%" paddingAngle={2}>
                       {statusPieData.map((e) => (
                         <Cell key={e.key} fill={e.color} />
                       ))}
@@ -790,25 +754,17 @@ const MetricsTV = () => {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="col-span-3 space-y-1.5">
-                {statusPieData.map((s) => {
-                  const pct = metrics.total
-                    ? Math.round((s.value / metrics.total) * 100)
-                    : 0;
+              <div className="col-span-3 space-y-0.5 overflow-hidden">
+                {statusPieData.slice(0, 6).map((s) => {
+                  const pct = metrics.total ? Math.round((s.value / metrics.total) * 100) : 0;
                   return (
-                    <div
-                      key={s.key}
-                      className="flex items-center justify-between gap-2 text-sm"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
+                    <div key={s.key} className="flex items-center justify-between gap-2 text-[11px] lg:text-xs">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         <StatusDot color={s.color} />
                         <span className="truncate">{s.name}</span>
                       </div>
-                      <div className="tabular-nums text-muted-foreground">
-                        <span className="font-semibold text-foreground">
-                          {s.value}
-                        </span>{" "}
-                        · {pct}%
+                      <div className="tabular-nums text-muted-foreground shrink-0">
+                        <span className="font-semibold text-foreground">{s.value}</span> · {pct}%
                       </div>
                     </div>
                   );
@@ -818,29 +774,27 @@ const MetricsTV = () => {
           </Card>
 
           {/* Alerts */}
-          <Card className="xl:col-span-4 lg:col-span-3">
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="w-5 h-5 text-warning" />
-              <h2 className="text-lg xl:text-xl font-bold">
-                Alertas operacionais
-              </h2>
+          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center gap-1.5 mb-1.5 shrink-0">
+              <AlertTriangle className="w-4 h-4 text-warning" />
+              <h2 className="text-sm lg:text-base font-bold">Alertas operacionais</h2>
             </div>
             {alerts.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-4 text-center">
-                Tudo sob controle. Nenhum alerta no momento.
+              <div className="text-xs text-muted-foreground flex-1 flex items-center justify-center text-center">
+                Tudo sob controle.
               </div>
             ) : (
-              <ul className="space-y-2">
-                {alerts.map((a, i) => (
+              <ul className="space-y-1 flex-1 min-h-0 overflow-hidden">
+                {alerts.slice(0, 4).map((a, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-3 p-2.5 rounded-lg bg-background/60 border border-border/40"
+                    className="flex items-start gap-2 p-1.5 rounded-md bg-background/60 border border-border/40"
                   >
                     <a.icon
-                      className="w-5 h-5 mt-0.5 shrink-0"
+                      className="w-3.5 h-3.5 mt-0.5 shrink-0"
                       style={{ color: `hsl(var(--${a.tone}))` }}
                     />
-                    <span className="text-sm lg:text-base">{a.text}</span>
+                    <span className="text-[11px] lg:text-xs leading-snug">{a.text}</span>
                   </li>
                 ))}
               </ul>
@@ -848,49 +802,33 @@ const MetricsTV = () => {
           </Card>
 
           {/* Project ranking */}
-          <Card className="xl:col-span-7 lg:col-span-2">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow" />
-                <h2 className="text-lg xl:text-xl font-bold">
-                  Ranking de projetos
-                </h2>
+          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <Trophy className="w-4 h-4 text-yellow" />
+                <h2 className="text-sm lg:text-base font-bold">Ranking de projetos</h2>
               </div>
-              <span className="text-xs text-muted-foreground">
-                Top {projectRanking.length}
-              </span>
+              <span className="text-[10px] text-muted-foreground">Top {Math.min(projectRanking.length, 6)}</span>
             </div>
-            <div className="space-y-2">
-              {projectRanking.map((p, i) => {
+            <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
+              {projectRanking.slice(0, 6).map((p, i) => {
                 const overdueFlag = isOverdue(p, today);
-                const sm =
-                  STATUS_META[overdueFlag ? "overdue" : p.status] ||
-                  STATUS_META[p.status];
-                const daysLate = overdueFlag
-                  ? daysBetween(p.end_date!, today)
-                  : 0;
+                const sm = STATUS_META[overdueFlag ? "overdue" : p.status] || STATUS_META[p.status];
+                const daysLate = overdueFlag ? daysBetween(p.end_date!, today) : 0;
                 return (
                   <div
                     key={p.id}
-                    className="flex items-center gap-3 p-2 rounded-lg bg-background/50 border border-border/40"
+                    className="flex items-center gap-2 p-1.5 rounded-md bg-background/50 border border-border/40"
                   >
-                    <div className="w-7 text-center text-lg font-bold text-muted-foreground tabular-nums">
+                    <div className="w-5 text-center text-xs font-bold text-muted-foreground tabular-nums shrink-0">
                       {i + 1}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold truncate">{p.title}</div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {responsibleName(p)}
-                      </div>
+                      <div className="text-xs font-semibold truncate">{p.title}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">{responsibleName(p)}</div>
                     </div>
-                    <div className="hidden sm:flex items-center gap-2 shrink-0">
-                      <StatusDot color={sm?.color || "hsl(215 20% 65%)"} />
-                      <span className="text-xs">
-                        {sm?.label || p.status}
-                      </span>
-                    </div>
-                    <div className="w-24 shrink-0">
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div className="w-16 lg:w-20 shrink-0">
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                         <div
                           className="h-full rounded-full"
                           style={{
@@ -904,63 +842,52 @@ const MetricsTV = () => {
                           }}
                         />
                       </div>
-                      <div className="text-xs text-right text-muted-foreground mt-0.5 tabular-nums">
+                      <div className="text-[9px] text-right text-muted-foreground tabular-nums leading-tight">
                         {p.progress ?? 0}%
-                        {daysLate > 0 && (
-                          <span className="text-destructive ml-1">
-                            · +{daysLate}d
-                          </span>
-                        )}
+                        {daysLate > 0 && <span className="text-destructive ml-1">+{daysLate}d</span>}
                       </div>
                     </div>
+                    <StatusDot color={sm?.color || "hsl(215 20% 65%)"} />
                   </div>
                 );
               })}
               {projectRanking.length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-4">
-                  Sem projetos para ranquear.
-                </div>
+                <div className="text-xs text-muted-foreground text-center py-4">Sem projetos.</div>
               )}
             </div>
           </Card>
 
           {/* Delayed projects */}
-          <Card className="xl:col-span-5 lg:col-span-1">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-destructive" />
-                <h2 className="text-lg xl:text-xl font-bold">
-                  Projetos em atraso
-                </h2>
+          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-destructive" />
+                <h2 className="text-sm lg:text-base font-bold">Em atraso</h2>
               </div>
-              <span className="text-2xl font-bold text-destructive tabular-nums">
+              <span className="text-lg font-bold text-destructive tabular-nums leading-none">
                 {delayedProjects.length}
               </span>
             </div>
-            <div className="space-y-2 max-h-[420px] overflow-hidden">
-              {delayedProjects.slice(0, 8).map(({ p, daysLate }) => (
+            <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
+              {delayedProjects.slice(0, 6).map(({ p, daysLate }) => (
                 <div
                   key={p.id}
-                  className="flex items-center gap-3 p-2 rounded-lg bg-destructive/5 border border-destructive/20"
+                  className="flex items-center gap-2 p-1.5 rounded-md bg-destructive/5 border border-destructive/20"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold truncate">{p.title}</div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      {responsibleName(p)} · prazo {formatDateBR(p.end_date)}
+                    <div className="text-xs font-semibold truncate">{p.title}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">
+                      {responsibleName(p)} · {formatDateBR(p.end_date)}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-xl font-bold text-destructive tabular-nums">
-                      +{daysLate}d
-                    </div>
-                    <div className="text-[10px] text-muted-foreground uppercase">
-                      {p.priority || "média"}
-                    </div>
+                    <div className="text-sm font-bold text-destructive tabular-nums leading-none">+{daysLate}d</div>
+                    <div className="text-[9px] text-muted-foreground uppercase">{p.priority || "média"}</div>
                   </div>
                 </div>
               ))}
               {delayedProjects.length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-8">
+                <div className="text-xs text-muted-foreground text-center flex-1 flex items-center justify-center">
                   Nenhum projeto em atraso.
                 </div>
               )}
@@ -968,223 +895,128 @@ const MetricsTV = () => {
           </Card>
 
           {/* Monthly evolution */}
-          <Card className="xl:col-span-7 lg:col-span-2">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              <h2 className="text-lg xl:text-xl font-bold">
-                Evolução dos últimos 6 meses
-              </h2>
+          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center gap-1.5 mb-1 shrink-0">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <h2 className="text-sm lg:text-base font-bold">Evolução · 6 meses</h2>
             </div>
-            <div className="h-64">
+            <div className="flex-1 min-h-0">
               <ResponsiveContainer>
-                <LineChart data={monthlyEvolution}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    stroke="hsl(var(--muted-foreground))"
-                  />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                <LineChart data={monthlyEvolution} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
                   <Tooltip
                     contentStyle={{
                       background: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: 8,
+                      fontSize: 11,
                     }}
                   />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="criados"
-                    stroke="hsl(var(--info))"
-                    strokeWidth={2}
-                    name="Criados"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="concluidos"
-                    stroke="hsl(var(--success))"
-                    strokeWidth={2}
-                    name="Concluídos"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="atrasados"
-                    stroke="hsl(var(--destructive))"
-                    strokeWidth={2}
-                    name="Atrasados"
-                  />
+                  <Legend wrapperStyle={{ fontSize: 10 }} iconSize={8} />
+                  <Line type="monotone" dataKey="criados" stroke="hsl(var(--info))" strokeWidth={2} name="Criados" dot={false} />
+                  <Line type="monotone" dataKey="concluidos" stroke="hsl(var(--success))" strokeWidth={2} name="Concluídos" dot={false} />
+                  <Line type="monotone" dataKey="atrasados" stroke="hsl(var(--destructive))" strokeWidth={2} name="Atrasados" dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </Card>
 
           {/* Weekly deliveries */}
-          <Card className="xl:col-span-5 lg:col-span-1">
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 className="w-5 h-5 text-success" />
-              <h2 className="text-lg xl:text-xl font-bold">
-                Entregas do mês por semana
-              </h2>
+          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center gap-1.5 mb-1 shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-success" />
+              <h2 className="text-sm lg:text-base font-bold">Entregas / semana</h2>
             </div>
-            <div className="h-48">
+            <div className="flex-1 min-h-0">
               <ResponsiveContainer>
-                <BarChart data={weeklyDeliveries}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    stroke="hsl(var(--muted-foreground))"
-                  />
-                  <YAxis stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                <BarChart data={weeklyDeliveries} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" allowDecimals={false} fontSize={10} />
                   <Tooltip
                     contentStyle={{
                       background: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: 8,
+                      fontSize: 11,
                     }}
                   />
-                  <Bar
-                    dataKey="entregues"
-                    fill="hsl(var(--success))"
-                    radius={[6, 6, 0, 0]}
-                    name="Entregues"
-                  />
+                  <Bar dataKey="entregues" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="Entregues" />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-            <div className="mt-3 pt-3 border-t border-border/40 space-y-1.5 max-h-40 overflow-hidden">
-              {recentCompletions.slice(0, 4).map((p) => (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between gap-2 text-sm"
-                >
-                  <span className="truncate">{p.title}</span>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {formatDateBR(p.actual_end_date || p.end_date)}
-                  </span>
-                </div>
-              ))}
             </div>
           </Card>
 
           {/* User distribution */}
-          <Card className="xl:col-span-6 lg:col-span-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <UsersIcon className="w-5 h-5 text-secondary" />
-                <h2 className="text-lg xl:text-xl font-bold">
-                  Distribuição por responsável
-                </h2>
-              </div>
+          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center gap-1.5 mb-1.5 shrink-0">
+              <UsersIcon className="w-4 h-4 text-secondary" />
+              <h2 className="text-sm lg:text-base font-bold">Distribuição por responsável</h2>
             </div>
-            <div className="space-y-2.5">
-              {topUsers.map((u) => {
+            <div className="space-y-1.5 flex-1 min-h-0 overflow-hidden">
+              {topUsers.slice(0, 6).map((u) => {
                 const pct = Math.round((u.total / totalProjectsForPct) * 100);
                 return (
                   <div key={u.name}>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="font-medium truncate pr-2">
-                        {u.name}
-                      </span>
+                    <div className="flex items-center justify-between text-[11px] lg:text-xs mb-0.5">
+                      <span className="font-medium truncate pr-2">{u.name}</span>
                       <span className="text-muted-foreground tabular-nums shrink-0">
-                        <span className="text-foreground font-semibold">
-                          {u.total}
-                        </span>{" "}
-                        · {pct}%
+                        <span className="text-foreground font-semibold">{u.total}</span> · {pct}%
                       </span>
                     </div>
-                    <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                       <div
                         className="h-full rounded-full"
-                        style={{
-                          width: `${pct}%`,
-                          background: "var(--gradient-primary)",
-                        }}
+                        style={{ width: `${pct}%`, background: "var(--gradient-primary)" }}
                       />
                     </div>
                   </div>
                 );
               })}
               {topUsers.length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-4">
-                  Sem dados de usuários.
-                </div>
+                <div className="text-xs text-muted-foreground text-center py-4">Sem dados.</div>
               )}
             </div>
           </Card>
 
           {/* User ranking */}
-          <Card className="xl:col-span-6 lg:col-span-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow" />
-                <h2 className="text-lg xl:text-xl font-bold">
-                  Ranking de responsáveis
-                </h2>
+          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <Trophy className="w-4 h-4 text-yellow" />
+                <h2 className="text-sm lg:text-base font-bold">Ranking de responsáveis</h2>
               </div>
-              <span className="text-xs text-muted-foreground">
-                por taxa de conclusão
-              </span>
+              <span className="text-[10px] text-muted-foreground">por taxa</span>
             </div>
-            <div className="overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <table className="w-full text-[11px] lg:text-xs">
                 <thead>
-                  <tr className="text-left text-xs uppercase text-muted-foreground">
-                    <th className="py-2 pr-2">#</th>
-                    <th className="py-2 pr-2">Responsável</th>
-                    <th className="py-2 px-2 text-center">Total</th>
-                    <th className="py-2 px-2 text-center hidden sm:table-cell">
-                      Concl.
-                    </th>
-                    <th className="py-2 px-2 text-center hidden sm:table-cell">
-                      Atras.
-                    </th>
-                    <th className="py-2 pl-2 text-right">Taxa</th>
+                  <tr className="text-left text-[9px] uppercase text-muted-foreground">
+                    <th className="py-1 pr-1">#</th>
+                    <th className="py-1 pr-1">Responsável</th>
+                    <th className="py-1 px-1 text-center">Tot</th>
+                    <th className="py-1 px-1 text-center hidden sm:table-cell">OK</th>
+                    <th className="py-1 px-1 text-center hidden sm:table-cell">At.</th>
+                    <th className="py-1 pl-1 text-right">Taxa</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[...userStats]
-                    .map((u) => ({
-                      ...u,
-                      rate: u.total
-                        ? Math.round((u.completed / u.total) * 100)
-                        : 0,
-                    }))
-                    .sort(
-                      (a, b) =>
-                        b.rate - a.rate ||
-                        b.completed - a.completed ||
-                        a.overdue - b.overdue
-                    )
-                    .slice(0, 8)
+                    .map((u) => ({ ...u, rate: u.total ? Math.round((u.completed / u.total) * 100) : 0 }))
+                    .sort((a, b) => b.rate - a.rate || b.completed - a.completed || a.overdue - b.overdue)
+                    .slice(0, 6)
                     .map((u, i) => (
-                      <tr
-                        key={u.name}
-                        className="border-t border-border/40"
-                      >
-                        <td className="py-2 pr-2 text-muted-foreground tabular-nums">
-                          {i + 1}
-                        </td>
-                        <td className="py-2 pr-2 font-medium truncate max-w-[180px]">
-                          {u.name}
-                        </td>
-                        <td className="py-2 px-2 text-center tabular-nums">
-                          {u.total}
-                        </td>
-                        <td className="py-2 px-2 text-center tabular-nums text-success hidden sm:table-cell">
-                          {u.completed}
-                        </td>
-                        <td className="py-2 px-2 text-center tabular-nums text-destructive hidden sm:table-cell">
-                          {u.overdue}
-                        </td>
-                        <td className="py-2 pl-2 text-right">
+                      <tr key={u.name} className="border-t border-border/40">
+                        <td className="py-1 pr-1 text-muted-foreground tabular-nums">{i + 1}</td>
+                        <td className="py-1 pr-1 font-medium truncate max-w-[120px]">{u.name}</td>
+                        <td className="py-1 px-1 text-center tabular-nums">{u.total}</td>
+                        <td className="py-1 px-1 text-center tabular-nums text-success hidden sm:table-cell">{u.completed}</td>
+                        <td className="py-1 px-1 text-center tabular-nums text-destructive hidden sm:table-cell">{u.overdue}</td>
+                        <td className="py-1 pl-1 text-right">
                           <span
-                            className="inline-block px-2 py-0.5 rounded-md text-xs font-semibold"
+                            className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
                             style={{
                               background:
                                 u.rate >= 70
@@ -1208,21 +1040,16 @@ const MetricsTV = () => {
                 </tbody>
               </table>
               {userStats.length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-4">
-                  Sem dados.
-                </div>
+                <div className="text-xs text-muted-foreground text-center py-4">Sem dados.</div>
               )}
             </div>
           </Card>
         </section>
 
         {/* Footer */}
-        <footer className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground pt-2 border-t border-border/40">
-          <span>
-            Última atualização:{" "}
-            {lastUpdate.toLocaleString("pt-BR")}
-          </span>
-          <span>Atualização automática a cada 60 segundos</span>
+        <footer className="shrink-0 flex items-center justify-between gap-2 text-[10px] sm:text-xs text-muted-foreground">
+          <span className="truncate">Última atualização: {lastUpdate.toLocaleString("pt-BR")}</span>
+          <span className="hidden sm:inline">Atualização automática a cada 60s</span>
         </footer>
       </div>
     </div>
