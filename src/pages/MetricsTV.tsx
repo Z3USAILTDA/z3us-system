@@ -704,34 +704,36 @@ const MetricsTV = () => {
           {/* Critical project */}
           {mostCritical && (
             <Card className="col-span-1 border-destructive/50 bg-destructive/10 p-3 flex flex-col min-h-0 overflow-hidden">
-              <div className="flex items-start gap-2 min-h-0 flex-1 overflow-hidden">
-                <div className="rounded-lg p-2 bg-destructive/20 shrink-0">
-                  <Flame className="w-5 h-5 text-destructive" />
-                </div>
-                <div className="min-w-0 flex-1 overflow-hidden">
-                  <div className="text-[10px] uppercase tracking-wider text-destructive font-bold">
-                    Projeto mais crítico
-                  </div>
-                  <div className="text-sm sm:text-base lg:text-lg font-bold truncate mt-0.5">
+              <div className="flex items-center gap-1.5 mb-2 shrink-0">
+                <Flame className="w-4 h-4 text-destructive" />
+                <h2 className="text-sm lg:text-base font-bold text-destructive">Projeto mais crítico</h2>
+              </div>
+              <div className="flex-1 min-h-0 flex flex-col justify-center gap-2 overflow-hidden">
+                <div className="min-w-0">
+                  <div className="text-base lg:text-lg xl:text-xl font-bold truncate leading-tight">
                     {mostCritical.p.title}
                   </div>
-                  <div className="text-[11px] text-muted-foreground truncate">
-                    {responsibleName(mostCritical.p)} ·{" "}
-                    {clientMap.get(mostCritical.p.client_id)?.company_name || "—"}
-                  </div>
-                  <div className="mt-1.5 flex items-center gap-3">
-                    <div>
-                      <div className="text-xl lg:text-2xl font-bold text-destructive tabular-nums leading-none">
-                        {mostCritical.daysLate}d
-                      </div>
-                      <div className="text-[9px] text-muted-foreground uppercase">atraso</div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold">{formatDateBR(mostCritical.p.end_date)}</div>
-                      <div className="text-[9px] text-muted-foreground uppercase">prazo</div>
-                    </div>
+                  <div className="text-[11px] lg:text-xs text-muted-foreground truncate mt-0.5">
+                    {responsibleName(mostCritical.p)} · {clientMap.get(mostCritical.p.client_id)?.company_name || "—"}
                   </div>
                 </div>
+                <div className="flex items-end gap-4 lg:gap-6">
+                  <div>
+                    <div className="text-3xl lg:text-4xl xl:text-5xl font-bold text-destructive tabular-nums leading-none">
+                      {mostCritical.daysLate}<span className="text-xl lg:text-2xl">d</span>
+                    </div>
+                    <div className="text-[9px] lg:text-[10px] text-muted-foreground uppercase tracking-wider mt-1">de atraso</div>
+                  </div>
+                  <div className="pb-1">
+                    <div className="text-sm lg:text-base font-semibold tabular-nums">{formatDateBR(mostCritical.p.end_date)}</div>
+                    <div className="text-[9px] lg:text-[10px] text-muted-foreground uppercase tracking-wider">prazo original</div>
+                  </div>
+                </div>
+                {delayedProjects.length > 1 && (
+                  <div className="text-[10px] lg:text-[11px] text-muted-foreground border-t border-destructive/20 pt-1.5 mt-1">
+                    + {delayedProjects.length - 1} outro(s) projeto(s) atrasados
+                  </div>
+                )}
               </div>
             </Card>
           )}
