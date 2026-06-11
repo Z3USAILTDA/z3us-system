@@ -172,7 +172,7 @@ const MetricsTV = () => {
           "id,title,status,priority,start_date,end_date,actual_end_date,progress,responsible,project_manager_id,created_at,updated_at,client_id"
         ),
       supabase.from("profiles").select("id,full_name,email"),
-      supabase.from("clients").select("id,name"),
+      supabase.from("clients").select("id,company_name"),
     ]);
     if (pj.data) setProjects(pj.data as Project[]);
     if (pf.data) setProfiles(pf.data as Profile[]);
