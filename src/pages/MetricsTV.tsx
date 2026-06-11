@@ -82,6 +82,10 @@ const NON_OVERDUE_STATUSES = new Set([
 const isOverdue = (p: Project, today: string) =>
   !!p.end_date && p.end_date < today && !NON_OVERDUE_STATUSES.has(p.status);
 
+// Usuários inativos — não devem aparecer em métricas/rankings
+const INACTIVE_USERS = new Set(["Willian Renato", "Nicolas Freitas"]);
+const isInactiveUser = (name: string) => INACTIVE_USERS.has(name.trim());
+
 const daysBetween = (a: string, b: string) => {
   const d1 = new Date(a + "T00:00:00").getTime();
   const d2 = new Date(b + "T00:00:00").getTime();
@@ -465,6 +469,8 @@ const MetricsTV = () => {
     >();
     projects.forEach((p) => {
       const name = responsibleName(p);
+      if (isInactiveUser(name)) return;
+      if (name === "Sem responsável") return;
       const cur =
         map.get(name) || {
           name,
@@ -693,10 +699,11 @@ const MetricsTV = () => {
         </section>
 
         {/* Main grid — 3 rows fill remaining space */}
-        <section className="flex-1 min-h-0 grid gap-2 sm:gap-3 grid-cols-2 lg:grid-cols-6 grid-rows-[repeat(6,minmax(0,1fr))] lg:grid-rows-3">
+        <section className="flex-1 min-h-0 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 grid-rows-[repeat(6,minmax(0,1fr))] sm:grid-rows-[repeat(3,minmax(0,1fr))] lg:grid-rows-2">
+          {/* === Linha 1: Crítico · Status · Alertas === */}
           {/* Critical project */}
           {mostCritical && (
-            <Card className="col-span-2 lg:col-span-2 border-destructive/50 bg-destructive/10 p-3 flex flex-col min-h-0 overflow-hidden">
+            <Card className="col-span-1 border-destructive/50 bg-destructive/10 p-3 flex flex-col min-h-0 overflow-hidden">
               <div className="flex items-start gap-2 min-h-0 flex-1 overflow-hidden">
                 <div className="rounded-lg p-2 bg-destructive/20 shrink-0">
                   <Flame className="w-5 h-5 text-destructive" />
@@ -730,7 +737,7 @@ const MetricsTV = () => {
           )}
 
           {/* Status overview */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1 shrink-0">
               <h2 className="text-sm lg:text-base font-bold">Status dos projetos</h2>
               <span className="text-[10px] text-muted-foreground">{metrics.total} total</span>
@@ -774,7 +781,7 @@ const MetricsTV = () => {
           </Card>
 
           {/* Alerts */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center gap-1.5 mb-1.5 shrink-0">
               <AlertTriangle className="w-4 h-4 text-warning" />
               <h2 className="text-sm lg:text-base font-bold">Alertas operacionais</h2>
@@ -801,64 +808,10 @@ const MetricsTV = () => {
             )}
           </Card>
 
-          {/* Project ranking */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between mb-1.5 shrink-0">
-              <div className="flex items-center gap-1.5">
-                <Trophy className="w-4 h-4 text-yellow" />
-                <h2 className="text-sm lg:text-base font-bold">Ranking de projetos</h2>
-              </div>
-              <span className="text-[10px] text-muted-foreground">Top {Math.min(projectRanking.length, 6)}</span>
-            </div>
-            <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
-              {projectRanking.slice(0, 6).map((p, i) => {
-                const overdueFlag = isOverdue(p, today);
-                const sm = STATUS_META[overdueFlag ? "overdue" : p.status] || STATUS_META[p.status];
-                const daysLate = overdueFlag ? daysBetween(p.end_date!, today) : 0;
-                return (
-                  <div
-                    key={p.id}
-                    className="flex items-center gap-2 p-1.5 rounded-md bg-background/50 border border-border/40"
-                  >
-                    <div className="w-5 text-center text-xs font-bold text-muted-foreground tabular-nums shrink-0">
-                      {i + 1}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-semibold truncate">{p.title}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">{responsibleName(p)}</div>
-                    </div>
-                    <div className="w-16 lg:w-20 shrink-0">
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${p.progress ?? 0}%`,
-                            background:
-                              p.status === "completed"
-                                ? "hsl(var(--success))"
-                                : overdueFlag
-                                ? "hsl(var(--destructive))"
-                                : "var(--gradient-primary)",
-                          }}
-                        />
-                      </div>
-                      <div className="text-[9px] text-right text-muted-foreground tabular-nums leading-tight">
-                        {p.progress ?? 0}%
-                        {daysLate > 0 && <span className="text-destructive ml-1">+{daysLate}d</span>}
-                      </div>
-                    </div>
-                    <StatusDot color={sm?.color || "hsl(215 20% 65%)"} />
-                  </div>
-                );
-              })}
-              {projectRanking.length === 0 && (
-                <div className="text-xs text-muted-foreground text-center py-4">Sem projetos.</div>
-              )}
-            </div>
-          </Card>
+          {/* === Linha 2: Em atraso · Evolução · Ranking responsáveis === */}
 
           {/* Delayed projects */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 text-destructive" />
@@ -895,7 +848,7 @@ const MetricsTV = () => {
           </Card>
 
           {/* Monthly evolution */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center gap-1.5 mb-1 shrink-0">
               <TrendingUp className="w-4 h-4 text-primary" />
               <h2 className="text-sm lg:text-base font-bold">Evolução · 6 meses</h2>
@@ -923,66 +876,14 @@ const MetricsTV = () => {
             </div>
           </Card>
 
-          {/* Weekly deliveries */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center gap-1.5 mb-1 shrink-0">
-              <CheckCircle2 className="w-4 h-4 text-success" />
-              <h2 className="text-sm lg:text-base font-bold">Entregas / semana</h2>
-            </div>
-            <div className="flex-1 min-h-0">
-              <ResponsiveContainer>
-                <BarChart data={weeklyDeliveries} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" allowDecimals={false} fontSize={10} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
-                      fontSize: 11,
-                    }}
-                  />
-                  <Bar dataKey="entregues" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="Entregues" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+          {/* Weekly deliveries removed for cleaner layout */}
 
-          {/* User distribution */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center gap-1.5 mb-1.5 shrink-0">
-              <UsersIcon className="w-4 h-4 text-secondary" />
-              <h2 className="text-sm lg:text-base font-bold">Distribuição por responsável</h2>
-            </div>
-            <div className="space-y-1.5 flex-1 min-h-0 overflow-hidden">
-              {topUsers.slice(0, 6).map((u) => {
-                const pct = Math.round((u.total / totalProjectsForPct) * 100);
-                return (
-                  <div key={u.name}>
-                    <div className="flex items-center justify-between text-[11px] lg:text-xs mb-0.5">
-                      <span className="font-medium truncate pr-2">{u.name}</span>
-                      <span className="text-muted-foreground tabular-nums shrink-0">
-                        <span className="text-foreground font-semibold">{u.total}</span> · {pct}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${pct}%`, background: "var(--gradient-primary)" }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-              {topUsers.length === 0 && (
-                <div className="text-xs text-muted-foreground text-center py-4">Sem dados.</div>
-              )}
-            </div>
-          </Card>
+
+          {/* User distribution removed — coberto pelo ranking */}
+
 
           {/* User ranking */}
-          <Card className="col-span-2 lg:col-span-2 p-3 flex flex-col min-h-0 overflow-hidden">
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
                 <Trophy className="w-4 h-4 text-yellow" />
