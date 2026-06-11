@@ -147,6 +147,14 @@ const StatusDot = ({ color }: { color: string }) => (
   />
 );
 
+// Credenciais especiais do painel (login simplificado, sessão 24h)
+const TV_USERNAME = "metricas";
+const TV_PASSWORD = "z3us";
+const TV_REAL_EMAIL = "metricas@z3us.ai";
+const TV_REAL_PASSWORD = "z3us-metrics-tv-2026!";
+const TV_SESSION_KEY = "metricsTvLoginAt";
+const TV_SESSION_MS = 24 * 60 * 60 * 1000;
+
 // ----- Main page -----
 const MetricsTV = () => {
   const navigate = useNavigate();
@@ -156,13 +164,55 @@ const MetricsTV = () => {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [authed, setAuthed] = useState(false);
+  const [loginUser, setLoginUser] = useState("");
+  const [loginPass, setLoginPass] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
 
-  // Auth gate (mantém padrão do sistema; redireciona se não logado)
+  // Auth gate: aceita sessão existente (válida há <24h) OU exige login local
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/auth");
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const loginAtStr = localStorage.getItem(TV_SESSION_KEY);
+      const loginAt = loginAtStr ? parseInt(loginAtStr, 10) : 0;
+      const expired = !loginAt || Date.now() - loginAt > TV_SESSION_MS;
+
+      if (session && !expired) {
+        setAuthed(true);
+        return;
+      }
+      // Expirou ou sem sessão -> exige login na própria tela
+      if (session && expired) {
+        await supabase.auth.signOut();
+      }
+      localStorage.removeItem(TV_SESSION_KEY);
+      setAuthed(false);
+      setLoading(false);
+    })();
+  }, []);
+
+  const handleTvLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    if (loginUser.trim().toLowerCase() !== TV_USERNAME || loginPass !== TV_PASSWORD) {
+      setLoginError("Usuário ou senha inválidos.");
+      return;
+    }
+    setLoggingIn(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: TV_REAL_EMAIL,
+      password: TV_REAL_PASSWORD,
     });
-  }, [navigate]);
+    setLoggingIn(false);
+    if (error) {
+      setLoginError("Falha ao acessar o painel. Tente novamente.");
+      return;
+    }
+    localStorage.setItem(TV_SESSION_KEY, Date.now().toString());
+    setAuthed(true);
+    setLoading(true);
+  };
 
   const fetchData = async () => {
     const [pj, pf, cl] = await Promise.all([
@@ -182,14 +232,25 @@ const MetricsTV = () => {
   };
 
   useEffect(() => {
+    if (!authed) return;
     fetchData();
     const dataInterval = setInterval(fetchData, 60_000);
     const clockInterval = setInterval(() => setNow(new Date()), 1_000);
+    // Verifica expiração 24h a cada minuto
+    const expiryInterval = setInterval(() => {
+      const loginAt = parseInt(localStorage.getItem(TV_SESSION_KEY) || "0", 10);
+      if (!loginAt || Date.now() - loginAt > TV_SESSION_MS) {
+        localStorage.removeItem(TV_SESSION_KEY);
+        supabase.auth.signOut();
+        setAuthed(false);
+      }
+    }, 60_000);
     return () => {
       clearInterval(dataInterval);
       clearInterval(clockInterval);
+      clearInterval(expiryInterval);
     };
-  }, []);
+  }, [authed]);
 
   const profileMap = useMemo(() => {
     const m = new Map<string, Profile>();
@@ -499,6 +560,61 @@ const MetricsTV = () => {
 
     return list;
   }, [projects, metrics, now, today]);
+
+  if (!authed) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-background tech-grid p-4">
+        <form
+          onSubmit={handleTvLogin}
+          className="w-full max-w-sm rounded-2xl border border-border/60 bg-card/80 backdrop-blur-md shadow-xl p-6 space-y-4"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div
+              className="rounded-xl p-2 glow-primary"
+              style={{ background: "var(--gradient-primary)" }}
+            >
+              <Activity className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">Painel de Métricas</h1>
+              <p className="text-xs text-muted-foreground">Acesso para telão · sessão de 24h</p>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">Usuário</label>
+            <input
+              autoFocus
+              value={loginUser}
+              onChange={(e) => setLoginUser(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="metricas"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">Senha</label>
+            <input
+              type="password"
+              value={loginPass}
+              onChange={(e) => setLoginPass(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="••••"
+            />
+          </div>
+          {loginError && (
+            <div className="text-sm text-destructive">{loginError}</div>
+          )}
+          <button
+            type="submit"
+            disabled={loggingIn}
+            className="w-full rounded-lg py-2.5 font-semibold text-primary-foreground disabled:opacity-60"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            {loggingIn ? "Entrando..." : "Entrar no painel"}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
