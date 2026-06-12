@@ -477,7 +477,7 @@ const MetricsTV = () => {
     return months;
   }, [projects, now]);
 
-  // Per-user stats
+  // Per-user stats (apenas responsáveis — ignora project_manager)
   const userStats = useMemo(() => {
     const map = new Map<
       string,
@@ -490,9 +490,9 @@ const MetricsTV = () => {
       }
     >();
     projects.forEach((p) => {
-      const name = responsibleName(p);
+      const name = (p.responsible || "").trim();
+      if (!name) return;
       if (isInactiveUser(name)) return;
-      if (name === "Sem responsável") return;
       const cur =
         map.get(name) || {
           name,
@@ -508,7 +508,7 @@ const MetricsTV = () => {
       map.set(name, cur);
     });
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [projects, profileMap, today]);
+  }, [projects, today]);
 
   const topUsers = userStats.slice(0, 8);
   const totalProjectsForPct = userStats.reduce((s, u) => s + u.total, 0) || 1;
