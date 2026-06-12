@@ -477,7 +477,7 @@ const MetricsTV = () => {
     return months;
   }, [projects, now]);
 
-  // Per-user stats
+  // Per-user stats (apenas responsáveis — ignora project_manager)
   const userStats = useMemo(() => {
     const map = new Map<
       string,
@@ -490,9 +490,9 @@ const MetricsTV = () => {
       }
     >();
     projects.forEach((p) => {
-      const name = responsibleName(p);
+      const name = (p.responsible || "").trim();
+      if (!name) return;
       if (isInactiveUser(name)) return;
-      if (name === "Sem responsável") return;
       const cur =
         map.get(name) || {
           name,
@@ -508,7 +508,7 @@ const MetricsTV = () => {
       map.set(name, cur);
     });
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [projects, profileMap, today]);
+  }, [projects, today]);
 
   const topUsers = userStats.slice(0, 8);
   const totalProjectsForPct = userStats.reduce((s, u) => s + u.total, 0) || 1;
@@ -754,8 +754,9 @@ const MetricsTV = () => {
           />
         </section>
 
-        {/* Main grid — 3 rows fill remaining space */}
-        <section className="flex-1 min-h-0 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 grid-rows-[repeat(6,minmax(0,1fr))] sm:grid-rows-[repeat(3,minmax(0,1fr))] lg:grid-rows-2">
+        {/* Main grid — linha 1: 4 cards · linha 2: clientes ocupa largura total */}
+        <section className="flex-1 min-h-0 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 grid-rows-[repeat(5,minmax(0,1fr))] sm:grid-rows-[repeat(3,minmax(0,1fr))] lg:grid-rows-2">
+
           {/* === Linha 1: Crítico · Status · Alertas === */}
           {/* Critical project */}
           {mostCritical && (
@@ -794,13 +795,14 @@ const MetricsTV = () => {
             </Card>
           )}
 
-          {/* Status overview */}
+          {/* Status + Evolução 6 meses (mesclados) */}
           <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1 shrink-0">
-              <h2 className="text-sm lg:text-base font-bold">Status dos projetos</h2>
+              <h2 className="text-sm lg:text-base font-bold">Status & Evolução · 6m</h2>
               <span className="text-[10px] text-muted-foreground">{metrics.total} total</span>
             </div>
-            <div className="grid grid-cols-5 gap-2 items-center flex-1 min-h-0">
+            {/* Topo: pie + legenda compacta */}
+            <div className="grid grid-cols-5 gap-2 items-center shrink-0" style={{ height: "45%" }}>
               <div className="col-span-2 h-full min-h-0">
                 <ResponsiveContainer>
                   <PieChart>
@@ -814,16 +816,17 @@ const MetricsTV = () => {
                         background: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
                         borderRadius: 8,
+                        fontSize: 11,
                       }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="col-span-3 space-y-0.5 overflow-hidden">
-                {statusPieData.slice(0, 6).map((s) => {
+                {statusPieData.slice(0, 5).map((s) => {
                   const pct = metrics.total ? Math.round((s.value / metrics.total) * 100) : 0;
                   return (
-                    <div key={s.key} className="flex items-center justify-between gap-2 text-[11px] lg:text-xs">
+                    <div key={s.key} className="flex items-center justify-between gap-2 text-[10px] lg:text-[11px]">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <StatusDot color={s.color} />
                         <span className="truncate">{s.name}</span>
@@ -835,6 +838,36 @@ const MetricsTV = () => {
                   );
                 })}
               </div>
+            </div>
+            {/* Divisor */}
+            <div className="border-t border-border/40 my-1.5 shrink-0" />
+            {/* Linha: evolução 6 meses */}
+            <div className="flex items-center gap-1.5 mb-0.5 shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Evolução · 6 meses
+              </span>
+            </div>
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer>
+                <LineChart data={monthlyEvolution} margin={{ top: 2, right: 5, left: -25, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={9} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={9} width={28} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: 8,
+                      fontSize: 11,
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 9 }} iconSize={7} />
+                  <Line type="monotone" dataKey="criados" stroke="hsl(var(--info))" strokeWidth={2} name="Criados" dot={false} />
+                  <Line type="monotone" dataKey="concluidos" stroke="hsl(var(--success))" strokeWidth={2} name="Concluídos" dot={false} />
+                  <Line type="monotone" dataKey="atrasados" stroke="hsl(var(--destructive))" strokeWidth={2} name="Atrasados" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </Card>
 
@@ -909,101 +942,12 @@ const MetricsTV = () => {
             </div>
           </Card>
 
-          {/* === Linha 2: Projetos por cliente · Evolução · Ranking responsáveis === */}
-
-          {/* Distribuição de projetos por cliente */}
-          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between mb-1.5 shrink-0">
-              <div className="flex items-center gap-1.5">
-                <Target className="w-4 h-4 text-primary" />
-                <h2 className="text-sm lg:text-base font-bold">Projetos por cliente</h2>
-              </div>
-              <span className="text-[10px] text-muted-foreground">% por projeto</span>
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
-              {clientProjectStats.length === 0 ? (
-                <div className="text-xs text-muted-foreground text-center py-4">
-                  Sem dados.
-                </div>
-              ) : (
-                clientProjectStats.map((c) => (
-                  <div key={c.clientName} className="space-y-1">
-                    <div className="flex items-center justify-between text-[11px] lg:text-xs">
-                      <span className="font-semibold truncate">{c.clientName}</span>
-                      <span className="text-muted-foreground tabular-nums shrink-0">
-                        {c.total}
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      {c.projects.map((proj) => (
-                        <div
-                          key={proj.name}
-                          className="flex items-center gap-2 text-[10px] lg:text-[11px]"
-                        >
-                          <span className="truncate flex-1 text-muted-foreground">
-                            {proj.name}
-                          </span>
-                          <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden shrink-0">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${proj.pct}%` }}
-                            />
-                          </div>
-                          <span className="tabular-nums shrink-0 w-12 text-right">
-                            <span className="font-semibold">{proj.count}</span>
-                            <span className="text-muted-foreground"> · {proj.pct}%</span>
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-
-
-          {/* Monthly evolution */}
-          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center gap-1.5 mb-1 shrink-0">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <h2 className="text-sm lg:text-base font-bold">Evolução · 6 meses</h2>
-            </div>
-            <div className="flex-1 min-h-0">
-              <ResponsiveContainer>
-                <LineChart data={monthlyEvolution} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
-                      fontSize: 11,
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 10 }} iconSize={8} />
-                  <Line type="monotone" dataKey="criados" stroke="hsl(var(--info))" strokeWidth={2} name="Criados" dot={false} />
-                  <Line type="monotone" dataKey="concluidos" stroke="hsl(var(--success))" strokeWidth={2} name="Concluídos" dot={false} />
-                  <Line type="monotone" dataKey="atrasados" stroke="hsl(var(--destructive))" strokeWidth={2} name="Atrasados" dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-
-          {/* Weekly deliveries removed for cleaner layout */}
-
-
-          {/* User distribution removed — coberto pelo ranking */}
-
-
-          {/* User ranking */}
+          {/* === Linha 1 (4ª coluna): Ranking de responsáveis === */}
           <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
                 <Trophy className="w-4 h-4 text-yellow" />
-                <h2 className="text-sm lg:text-base font-bold">Ranking de responsáveis</h2>
+                <h2 className="text-sm lg:text-base font-bold">Ranking responsáveis</h2>
               </div>
               <span className="text-[10px] text-muted-foreground">por taxa</span>
             </div>
@@ -1058,6 +1002,68 @@ const MetricsTV = () => {
               </table>
               {userStats.length === 0 && (
                 <div className="text-xs text-muted-foreground text-center py-4">Sem dados.</div>
+              )}
+            </div>
+          </Card>
+
+          {/* === Linha 2: Projetos por cliente — largura total, sem scroll === */}
+          <Card className="sm:col-span-2 lg:col-span-4 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between mb-2 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <Target className="w-4 h-4 text-primary" />
+                <h2 className="text-sm lg:text-base font-bold">Projetos por cliente</h2>
+              </div>
+              <span className="text-[10px] text-muted-foreground">
+                {clientProjectStats.length} cliente(s) · % por projeto
+              </span>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {clientProjectStats.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-4">
+                  Sem dados.
+                </div>
+              ) : (
+                <div className="h-full grid gap-x-4 gap-y-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 auto-rows-min content-start overflow-hidden">
+                  {clientProjectStats.map((c) => (
+                    <div
+                      key={c.clientName}
+                      className="space-y-1 rounded-md border border-border/40 bg-background/40 p-2 min-w-0"
+                    >
+                      <div className="flex items-center justify-between text-[11px] lg:text-xs">
+                        <span className="font-semibold truncate">{c.clientName}</span>
+                        <span className="text-muted-foreground tabular-nums shrink-0 ml-1">
+                          {c.total}
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        {c.projects.slice(0, 4).map((proj) => (
+                          <div
+                            key={proj.name}
+                            className="flex items-center gap-1.5 text-[10px] lg:text-[11px]"
+                          >
+                            <span className="truncate flex-1 text-muted-foreground">
+                              {proj.name}
+                            </span>
+                            <div className="w-8 h-1 rounded-full bg-muted overflow-hidden shrink-0">
+                              <div
+                                className="h-full bg-primary"
+                                style={{ width: `${proj.pct}%` }}
+                              />
+                            </div>
+                            <span className="tabular-nums shrink-0 font-semibold w-5 text-right">
+                              {proj.count}
+                            </span>
+                          </div>
+                        ))}
+                        {c.projects.length > 4 && (
+                          <div className="text-[9px] text-muted-foreground">
+                            + {c.projects.length - 4} outro(s)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </Card>
