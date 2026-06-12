@@ -226,21 +226,24 @@ const MetricsTV = () => {
   };
 
   const fetchData = async () => {
-    const [pj, pf, cl] = await Promise.all([
+    const [pj, pf, cl, cp] = await Promise.all([
       supabase
         .from("projects")
         .select(
-          "id,title,status,priority,start_date,end_date,actual_end_date,progress,responsible,project_manager_id,created_at,updated_at,client_id"
+          "id,title,status,priority,start_date,end_date,actual_end_date,progress,responsible,project_manager_id,created_at,updated_at,client_id,client_project_id"
         ),
       supabase.from("profiles").select("id,full_name,email"),
       supabase.from("clients").select("id,company_name"),
+      (supabase as any).from("client_projects").select("id,client_id,name"),
     ]);
-    if (pj.data) setProjects(pj.data as Project[]);
+    if (pj.data) setProjects(pj.data as any);
     if (pf.data) setProfiles(pf.data as Profile[]);
     if (cl.data) setClients(cl.data as Client[]);
+    if (cp.data) setClientProjects(cp.data as ClientProject[]);
     setLastUpdate(new Date());
     setLoading(false);
   };
+
 
   useEffect(() => {
     if (!authed) return;
