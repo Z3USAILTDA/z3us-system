@@ -795,13 +795,14 @@ const MetricsTV = () => {
             </Card>
           )}
 
-          {/* Status overview */}
+          {/* Status + Evolução 6 meses (mesclados) */}
           <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1 shrink-0">
-              <h2 className="text-sm lg:text-base font-bold">Status dos projetos</h2>
+              <h2 className="text-sm lg:text-base font-bold">Status & Evolução · 6m</h2>
               <span className="text-[10px] text-muted-foreground">{metrics.total} total</span>
             </div>
-            <div className="grid grid-cols-5 gap-2 items-center flex-1 min-h-0">
+            {/* Topo: pie + legenda compacta */}
+            <div className="grid grid-cols-5 gap-2 items-center shrink-0" style={{ height: "45%" }}>
               <div className="col-span-2 h-full min-h-0">
                 <ResponsiveContainer>
                   <PieChart>
@@ -815,16 +816,17 @@ const MetricsTV = () => {
                         background: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
                         borderRadius: 8,
+                        fontSize: 11,
                       }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="col-span-3 space-y-0.5 overflow-hidden">
-                {statusPieData.slice(0, 6).map((s) => {
+                {statusPieData.slice(0, 5).map((s) => {
                   const pct = metrics.total ? Math.round((s.value / metrics.total) * 100) : 0;
                   return (
-                    <div key={s.key} className="flex items-center justify-between gap-2 text-[11px] lg:text-xs">
+                    <div key={s.key} className="flex items-center justify-between gap-2 text-[10px] lg:text-[11px]">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <StatusDot color={s.color} />
                         <span className="truncate">{s.name}</span>
@@ -836,6 +838,36 @@ const MetricsTV = () => {
                   );
                 })}
               </div>
+            </div>
+            {/* Divisor */}
+            <div className="border-t border-border/40 my-1.5 shrink-0" />
+            {/* Linha: evolução 6 meses */}
+            <div className="flex items-center gap-1.5 mb-0.5 shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Evolução · 6 meses
+              </span>
+            </div>
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer>
+                <LineChart data={monthlyEvolution} margin={{ top: 2, right: 5, left: -25, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={9} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={9} width={28} />
+                  <Tooltip
+                    contentStyle={{
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: 8,
+                      fontSize: 11,
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 9 }} iconSize={7} />
+                  <Line type="monotone" dataKey="criados" stroke="hsl(var(--info))" strokeWidth={2} name="Criados" dot={false} />
+                  <Line type="monotone" dataKey="concluidos" stroke="hsl(var(--success))" strokeWidth={2} name="Concluídos" dot={false} />
+                  <Line type="monotone" dataKey="atrasados" stroke="hsl(var(--destructive))" strokeWidth={2} name="Atrasados" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </Card>
 
