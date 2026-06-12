@@ -504,6 +504,154 @@ const ProjectsContent = () => {
     setEditValue("");
   };
 
+  const getExportRows = () => {
+    return sortedProjects.map((p) => ({
+      "Título": p.title || "",
+      "Demanda": p.demanda || "",
+      "Cliente": p.clients?.company_name || "",
+      "Projeto do Cliente": clientProjects.find((cp) => cp.id === p.client_project_id)?.name || "",
+      "Área": p.area || "",
+      "Sprint": p.sprint || "",
+      "Status": getStatusLabel(p.status),
+      "Prioridade": p.priority === "high" ? "Alta" : p.priority === "low" ? "Baixa" : "Média",
+      "Responsável": p.responsible || "",
+      "Gerente": getManagerName(p.project_manager_id),
+      "Progresso (%)": p.progress ?? 0,
+      "Início Previsto": formatDateBR(p.start_date) || "",
+      "Término Previsto": formatDateBR(p.end_date) || "",
+      "Início Real": formatDateBR(p.actual_start_date) || "",
+      "Término Real": formatDateBR(p.actual_end_date) || "",
+      "Descrição": p.description || "",
+      "Observação": p.observation || "",
+      "Observação do Cliente": p.client_observation || "",
+    }));
+  };
+
+  const getExportFilename = (ext: string) => {
+    const parts: string[] = ["projetos"];
+    if (filterClient && filterClient !== "all") {
+      const c = clients.find((x) => x.id === filterClient);
+      if (c?.company_name) parts.push(c.company_name.replace(/\s+/g, "_"));
+    }
+    if (filterSprint && filterSprint !== "all") parts.push(`sprint-${filterSprint}`);
+    const today = new Date().toISOString().slice(0, 10);
+    parts.push(today);
+    return `${parts.join("_")}.${ext}`;
+  };
+
+  const exportToExcel = () => {
+    const rows = getExportRows();
+    if (rows.length === 0) {
+      toast.error("Nenhum projeto para exportar");
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const colWidths = Object.keys(rows[0]).map((k) => ({
+      wch: Math.min(50, Math.max(k.length, ...rows.map((r) => String((r as any)[k] || "").length)) + 2),
+    }));
+    (ws as any)["!cols"] = colWidths;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Projetos");
+    XLSX.writeFile(wb, getExportFilename("xlsx"));
+    toast.success(`${rows.length} projeto(s) exportado(s)`);
+  };
+
+  const exportToPdf = () => {
+    const rows = getExportRows();
+    if (rows.length === 0) {
+      toast.error("Nenhum projeto para exportar");
+      return;
+    }
+    const pdf = new jsPDF("l", "mm", "a4");
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 10;
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(14);
+    pdf.text("Relatório de Projetos", margin, 14);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    const filterInfo: string[] = [];
+    if (filterClient && filterClient !== "all") {
+      filterInfo.push(`Cliente: ${clients.find((x) => x.id === filterClient)?.company_name || ""}`);
+    }
+    if (filterSprint && filterSprint !== "all") filterInfo.push(`Sprint: ${filterSprint}`);
+    if (filterArea && filterArea !== "all") filterInfo.push(`Área: ${filterArea}`);
+    if (filterStatus && filterStatus !== "all") filterInfo.push(`Status: ${filterStatus}`);
+    if (filterResponsible && filterResponsible !== "all") filterInfo.push(`Responsável: ${filterResponsible}`);
+    pdf.text(
+      `${filterInfo.join(" | ") || "Todos os projetos"} — Total: ${rows.length}`,
+      margin,
+      20
+    );
+
+    const headers = ["Título", "Cliente", "Status", "Prior.", "Responsável", "Prazo", "Prog."];
+    const colW = [70, 45, 32, 18, 40, 22, 18];
+    let y = 28;
+    const rowH = 6;
+
+    const drawHeader = () => {
+      pdf.setFillColor(30, 41, 59);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(8);
+      pdf.rect(margin, y, colW.reduce((a, b) => a + b, 0), rowH, "F");
+      let x = margin;
+      headers.forEach((h, i) => {
+        pdf.text(h, x + 1.5, y + 4);
+        x += colW[i];
+      });
+      y += rowH;
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFont("helvetica", "normal");
+    };
+
+    drawHeader();
+
+    rows.forEach((r, idx) => {
+      if (y + rowH > pageH - margin) {
+        pdf.addPage();
+        y = margin + 4;
+        drawHeader();
+      }
+      if (idx % 2 === 0) {
+        pdf.setFillColor(243, 244, 246);
+        pdf.rect(margin, y, colW.reduce((a, b) => a + b, 0), rowH, "F");
+      }
+      const cells = [
+        r["Título"],
+        r["Cliente"],
+        r["Status"],
+        r["Prioridade"],
+        r["Responsável"],
+        r["Término Previsto"],
+        String(r["Progresso (%)"]) + "%",
+      ];
+      let x = margin;
+      cells.forEach((c, i) => {
+        const maxChars = Math.floor(colW[i] / 1.6);
+        const text = String(c || "");
+        pdf.text(text.length > maxChars ? text.slice(0, maxChars - 1) + "…" : text, x + 1.5, y + 4);
+        x += colW[i];
+      });
+      y += rowH;
+    });
+
+    const totalPages = pdf.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(7);
+      pdf.setTextColor(120);
+      pdf.text(`Página ${i} de ${totalPages}`, pageW - margin, pageH - 4, { align: "right" });
+    }
+
+    pdf.save(getExportFilename("pdf"));
+    toast.success(`${rows.length} projeto(s) exportado(s)`);
+  };
+
+
+
   const handleKeyDown = (e: React.KeyboardEvent, projectId: string, field: string) => {
     if (e.key === "Enter") {
       saveEdit(projectId, field);
