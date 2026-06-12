@@ -278,6 +278,13 @@ const MetricsTV = () => {
     return m;
   }, [clients]);
 
+  const clientProjectMap = useMemo(() => {
+    const m = new Map<string, ClientProject>();
+    clientProjects.forEach((c) => m.set(c.id, c));
+    return m;
+  }, [clientProjects]);
+
+
   const today = getTodayLocalDate();
 
   // Resolve responsible name (project_manager_id -> profile, else responsible text, else "Sem responsável")
