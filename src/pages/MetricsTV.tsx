@@ -918,7 +918,7 @@ const MetricsTV = () => {
               </div>
               <span className="text-[10px] text-muted-foreground">% por projeto</span>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden space-y-2">
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
               {clientProjectStats.length === 0 ? (
                 <div className="text-xs text-muted-foreground text-center py-4">
                   Sem dados.
