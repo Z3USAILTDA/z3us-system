@@ -64,7 +64,9 @@ const DashboardContent = () => {
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
     { title: "Resumo da Semana", url: "/dashboard/weekly-summary", icon: BarChart3 },
+    { title: "Métricas TV", url: "/metricas-projetos-tv", icon: MonitorPlay, external: true },
   ];
+
 
   const clientMenuItems = [
     { title: "Meus Projetos", url: "/dashboard", icon: FolderKanban },
