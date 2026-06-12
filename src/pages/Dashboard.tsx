@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LayoutDashboard, Users, Building2, FolderKanban, LogOut, Menu, UserCog, FileText, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Users, Building2, FolderKanban, LogOut, Menu, UserCog, FileText, BarChart3, MonitorPlay } from "lucide-react";
 import {
   SidebarProvider,
   Sidebar,
