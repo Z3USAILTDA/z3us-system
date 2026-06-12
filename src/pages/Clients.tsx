@@ -55,6 +55,11 @@ const ClientsContent = () => {
   const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState("");
 
+  // Projetos do cliente (categorias de demandas)
+  const [clientProjects, setClientProjects] = useState<{ id: string; name: string }[]>([]);
+  const [newProjectName, setNewProjectName] = useState("");
+
+
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
