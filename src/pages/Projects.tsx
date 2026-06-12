@@ -729,14 +729,18 @@ const ProjectsContent = () => {
                         />
                       </div>
 
-                      {/* Linha 1: Cliente + Gerente + Status (mantém o grid 2 col; o 3º campo quebra para a próxima linha automaticamente) */}
+                      {/* Linha 1: Cliente + Projeto do cliente + Gerente + Status */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="client_id">Cliente</Label>
                           <select
                             id="client_id"
                             name="client_id"
-                            defaultValue={editingProject?.client_id}
+                            value={formClientId}
+                            onChange={(e) => {
+                              setFormClientId(e.target.value);
+                              setFormClientProjectId("");
+                            }}
                             className="w-full px-3 py-2 border border-input rounded-md bg-background"
                             required
                           >
@@ -748,6 +752,45 @@ const ProjectsContent = () => {
                             ))}
                           </select>
                         </div>
+
+                        {/* << NOVO: Projeto do cliente (categoria de demandas) */}
+                        <div className="space-y-2">
+                          <Label htmlFor="client_project_id">
+                            Projeto <span className="text-muted-foreground text-xs">(opcional)</span>
+                          </Label>
+                          <div className="flex gap-2">
+                            <select
+                              id="client_project_id"
+                              value={formClientProjectId}
+                              onChange={(e) => setFormClientProjectId(e.target.value)}
+                              disabled={!formClientId}
+                              className="flex-1 px-3 py-2 border border-input rounded-md bg-background disabled:opacity-50"
+                            >
+                              <option value="">Sem projeto</option>
+                              {clientProjects
+                                .filter((cp) => cp.client_id === formClientId)
+                                .map((cp) => (
+                                  <option key={cp.id} value={cp.id}>
+                                    {cp.name}
+                                  </option>
+                                ))}
+                            </select>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={handleCreateClientProject}
+                              disabled={!formClientId}
+                              title="Criar novo projeto para este cliente"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
 
                         {/* << NOVO: Gerente do Projeto */}
                         <div className="space-y-2">
