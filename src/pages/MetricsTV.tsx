@@ -181,20 +181,21 @@ const MetricsTV = () => {
   const [loggingIn, setLoggingIn] = useState(false);
 
 
-  // Auth gate: aceita sessão existente (válida há <24h) OU exige login local
+  // Auth gate: exige sessão do usuário de métricas (válida há <24h)
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const loginAtStr = localStorage.getItem(TV_SESSION_KEY);
       const loginAt = loginAtStr ? parseInt(loginAtStr, 10) : 0;
       const expired = !loginAt || Date.now() - loginAt > TV_SESSION_MS;
+      const isMetricsUser = session?.user?.email === TV_REAL_EMAIL;
 
-      if (session && !expired) {
+      if (session && isMetricsUser && !expired) {
         setAuthed(true);
         return;
       }
-      // Expirou ou sem sessão -> exige login na própria tela
-      if (session && expired) {
+      // Sessão inválida/expirada ou usuário diferente -> desloga e exige login de métricas
+      if (session) {
         await supabase.auth.signOut();
       }
       localStorage.removeItem(TV_SESSION_KEY);
@@ -202,6 +203,7 @@ const MetricsTV = () => {
       setLoading(false);
     })();
   }, []);
+
 
   const handleTvLogin = async (e: React.FormEvent) => {
     e.preventDefault();
