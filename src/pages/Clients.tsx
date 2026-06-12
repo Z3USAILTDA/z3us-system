@@ -285,7 +285,10 @@ const ClientsContent = () => {
     // Carregar emails adicionais
     const emails = await fetchClientEmails(client.id);
     setAdditionalEmails(emails);
-    
+
+    // Carregar projetos do cliente
+    await fetchClientProjects(client.id);
+
     setDialogOpen(true);
   };
 
@@ -295,6 +298,8 @@ const ClientsContent = () => {
       setEditingClient(null);
       setAdditionalEmails([]);
       setNewEmail("");
+      setClientProjects([]);
+      setNewProjectName("");
       form.reset({
         company_name: "",
         cnpj: "",
@@ -306,6 +311,7 @@ const ClientsContent = () => {
       });
     }
   };
+
 
   const adminMenuItems = [
     { title: "Dashboard", url: "/dashboard", icon: Home },
