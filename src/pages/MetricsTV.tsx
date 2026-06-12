@@ -545,7 +545,6 @@ const MetricsTV = () => {
     });
     return Array.from(byClient.values())
       .sort((a, b) => b.total - a.total)
-      .slice(0, 3)
       .map((c) => ({
         clientName: c.clientName,
         total: c.total,
@@ -555,8 +554,7 @@ const MetricsTV = () => {
             count,
             pct: c.total ? Math.round((count / c.total) * 100) : 0,
           }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 4),
+          .sort((a, b) => b.count - a.count),
       }));
   }, [projects, clientMap, clientProjectMap]);
 
