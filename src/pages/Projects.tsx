@@ -63,11 +63,16 @@ const ProjectsContent = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [managers, setManagers] = useState<any[]>([]); // << NOVO
+  const [clientProjects, setClientProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const { state } = useSidebar();
+
+  // Form-controlled fields (cliente + projeto do cliente)
+  const [formClientId, setFormClientId] = useState<string>("");
+  const [formClientProjectId, setFormClientProjectId] = useState<string>("");
 
   // Filters
   const [filterSprint, setFilterSprint] = useState("");
@@ -83,6 +88,7 @@ const ProjectsContent = () => {
   // Inline editing
   const [editingCell, setEditingCell] = useState<{ projectId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+
 
   useEffect(() => {
     checkUser();
