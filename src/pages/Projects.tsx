@@ -270,6 +270,8 @@ const ProjectsContent = () => {
 
   const handleEdit = (project: any) => {
     setEditingProject(project);
+    setFormClientId(project.client_id || "");
+    setFormClientProjectId(project.client_project_id || "");
     setDialogOpen(true);
   };
 
@@ -277,8 +279,33 @@ const ProjectsContent = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingProject(null);
+      setFormClientId("");
+      setFormClientProjectId("");
     }
   };
+
+  const handleCreateClientProject = async () => {
+    if (!formClientId) {
+      toast.error("Selecione um cliente primeiro");
+      return;
+    }
+    const name = window.prompt("Nome do novo projeto (ex: Faturamento, Ciclope):");
+    if (!name || !name.trim()) return;
+    const { data, error } = await (supabase as any)
+      .from("client_projects")
+      .insert({ client_id: formClientId, name: name.trim() })
+      .select()
+      .single();
+    if (error) {
+      toast.error(`Erro ao criar projeto: ${error.message}`);
+      return;
+    }
+    setClientProjects((prev) => [...prev, data]);
+    setFormClientProjectId(data.id);
+    toast.success("Projeto criado!");
+  };
+
+
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
