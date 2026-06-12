@@ -526,6 +526,42 @@ const MetricsTV = () => {
       .slice(0, 10);
   }, [projects, today]);
 
+  // Distribuição por projeto (categoria) dentro de cada cliente
+  const clientProjectStats = useMemo(() => {
+    type Entry = { clientName: string; total: number; projects: Map<string, number> };
+    const byClient = new Map<string, Entry>();
+    projects.forEach((p) => {
+      if (p.status === "cancelled") return;
+      const clientName = clientMap.get(p.client_id)?.company_name || "—";
+      if (!byClient.has(p.client_id)) {
+        byClient.set(p.client_id, { clientName, total: 0, projects: new Map() });
+      }
+      const cb = byClient.get(p.client_id)!;
+      cb.total++;
+      const projName = p.client_project_id
+        ? clientProjectMap.get(p.client_project_id)?.name || "—"
+        : "Sem projeto";
+      cb.projects.set(projName, (cb.projects.get(projName) || 0) + 1);
+    });
+    return Array.from(byClient.values())
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 3)
+      .map((c) => ({
+        clientName: c.clientName,
+        total: c.total,
+        projects: Array.from(c.projects.entries())
+          .map(([name, count]) => ({
+            name,
+            count,
+            pct: c.total ? Math.round((count / c.total) * 100) : 0,
+          }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 4),
+      }));
+  }, [projects, clientMap, clientProjectMap]);
+
+
+
   // Alerts
   const alerts = useMemo(() => {
     const list: { icon: any; text: string; tone: string }[] = [];
