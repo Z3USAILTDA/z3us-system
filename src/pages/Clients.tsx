@@ -55,6 +55,11 @@ const ClientsContent = () => {
   const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState("");
 
+  // Projetos do cliente (categorias de demandas)
+  const [clientProjects, setClientProjects] = useState<{ id: string; name: string }[]>([]);
+  const [newProjectName, setNewProjectName] = useState("");
+
+
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
@@ -145,7 +150,49 @@ const ClientsContent = () => {
     setAdditionalEmails(additionalEmails.filter(e => e !== emailToRemove));
   };
 
+  const fetchClientProjects = async (clientId: string) => {
+    const { data, error } = await (supabase as any)
+      .from("client_projects")
+      .select("id, name")
+      .eq("client_id", clientId)
+      .order("name");
+    if (!error && data) setClientProjects(data);
+  };
+
+  const handleAddClientProject = async () => {
+    const name = newProjectName.trim();
+    if (!name) return;
+    if (!editingClient?.id) {
+      toast.error("Salve o cliente primeiro para adicionar projetos");
+      return;
+    }
+    const { data, error } = await (supabase as any)
+      .from("client_projects")
+      .insert({ client_id: editingClient.id, name })
+      .select()
+      .single();
+    if (error) {
+      toast.error(`Erro: ${error.message}`);
+      return;
+    }
+    setClientProjects([...clientProjects, data]);
+    setNewProjectName("");
+    toast.success("Projeto adicionado!");
+  };
+
+  const handleRemoveClientProject = async (id: string) => {
+    if (!confirm("Remover este projeto? Demandas vinculadas ficarão sem projeto.")) return;
+    const { error } = await (supabase as any).from("client_projects").delete().eq("id", id);
+    if (error) {
+      toast.error(`Erro: ${error.message}`);
+      return;
+    }
+    setClientProjects(clientProjects.filter((p) => p.id !== id));
+    toast.success("Projeto removido!");
+  };
+
   const handleSubmit = async (data: ClientFormData) => {
+
     const clientData = {
       company_name: data.company_name,
       cnpj: data.cnpj,
@@ -238,7 +285,10 @@ const ClientsContent = () => {
     // Carregar emails adicionais
     const emails = await fetchClientEmails(client.id);
     setAdditionalEmails(emails);
-    
+
+    // Carregar projetos do cliente
+    await fetchClientProjects(client.id);
+
     setDialogOpen(true);
   };
 
@@ -248,6 +298,8 @@ const ClientsContent = () => {
       setEditingClient(null);
       setAdditionalEmails([]);
       setNewEmail("");
+      setClientProjects([]);
+      setNewProjectName("");
       form.reset({
         company_name: "",
         cnpj: "",
@@ -259,6 +311,7 @@ const ClientsContent = () => {
       });
     }
   };
+
 
   const adminMenuItems = [
     { title: "Dashboard", url: "/dashboard", icon: Home },
@@ -452,6 +505,59 @@ const ClientsContent = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Seção de projetos do cliente */}
+                  {editingClient && (
+                    <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+                      <Label className="flex items-center gap-2">
+                        <FolderKanban className="h-4 w-4" />
+                        Projetos do Cliente
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Categorias usadas ao criar demandas (ex: Faturamento, Ciclope)
+                      </p>
+
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nome do projeto"
+                          value={newProjectName}
+                          onChange={(e) => setNewProjectName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddClientProject();
+                            }
+                          }}
+                        />
+                        <Button type="button" variant="secondary" onClick={handleAddClientProject}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {clientProjects.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {clientProjects.map((proj) => (
+                            <Badge
+                              key={proj.id}
+                              variant="secondary"
+                              className="flex items-center gap-1 py-1"
+                            >
+                              {proj.name}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveClientProject(proj.id)}
+                                className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefone</Label>

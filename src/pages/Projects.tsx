@@ -63,11 +63,16 @@ const ProjectsContent = () => {
   const [clients, setClients] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [managers, setManagers] = useState<any[]>([]); // << NOVO
+  const [clientProjects, setClientProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const { state } = useSidebar();
+
+  // Form-controlled fields (cliente + projeto do cliente)
+  const [formClientId, setFormClientId] = useState<string>("");
+  const [formClientProjectId, setFormClientProjectId] = useState<string>("");
 
   // Filters
   const [filterSprint, setFilterSprint] = useState("");
@@ -83,6 +88,7 @@ const ProjectsContent = () => {
   // Inline editing
   const [editingCell, setEditingCell] = useState<{ projectId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+
 
   useEffect(() => {
     checkUser();
@@ -107,7 +113,7 @@ const ProjectsContent = () => {
   };
 
   const fetchData = async () => {
-    const [projectsRes, clientsRes, teamsRes, managersRes] = await Promise.all([
+    const [projectsRes, clientsRes, teamsRes, managersRes, clientProjectsRes] = await Promise.all([
       supabase
         .from("projects")
         .select(
@@ -122,6 +128,7 @@ const ProjectsContent = () => {
       supabase.from("clients").select("*").eq("status", "active"),
       supabase.from("teams").select("*").eq("status", "active").order("name"),
       supabase.from("profiles").select("id, full_name, role, email").eq("role", "admin"),
+      (supabase as any).from("client_projects").select("id, client_id, name").order("name"),
     ]);
 
     if (projectsRes.error) {
@@ -142,8 +149,13 @@ const ProjectsContent = () => {
       setManagers(managersRes.data || []);
     }
 
+    if (!clientProjectsRes.error) {
+      setClientProjects(clientProjectsRes.data || []);
+    }
+
     setLoading(false);
   };
+
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -197,7 +209,8 @@ const ProjectsContent = () => {
       const projectData = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
-      client_id: formData.get("client_id") as string,
+      client_id: (formClientId || (formData.get("client_id") as string)) as string,
+      client_project_id: formClientProjectId || null,
       status: status,
       priority: formData.get("priority") as string,
       start_date: startDate || null,
@@ -214,6 +227,7 @@ const ProjectsContent = () => {
       project_manager_id: (formData.get("project_manager_id") as string) || null,
       demanda: formData.get("demanda") as string,
     };
+
 
     if (editingProject) {
       const { error } = await supabase.from("projects").update(projectData).eq("id", editingProject.id);
@@ -256,6 +270,8 @@ const ProjectsContent = () => {
 
   const handleEdit = (project: any) => {
     setEditingProject(project);
+    setFormClientId(project.client_id || "");
+    setFormClientProjectId(project.client_project_id || "");
     setDialogOpen(true);
   };
 
@@ -263,8 +279,33 @@ const ProjectsContent = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingProject(null);
+      setFormClientId("");
+      setFormClientProjectId("");
     }
   };
+
+  const handleCreateClientProject = async () => {
+    if (!formClientId) {
+      toast.error("Selecione um cliente primeiro");
+      return;
+    }
+    const name = window.prompt("Nome do novo projeto (ex: Faturamento, Ciclope):");
+    if (!name || !name.trim()) return;
+    const { data, error } = await (supabase as any)
+      .from("client_projects")
+      .insert({ client_id: formClientId, name: name.trim() })
+      .select()
+      .single();
+    if (error) {
+      toast.error(`Erro ao criar projeto: ${error.message}`);
+      return;
+    }
+    setClientProjects((prev) => [...prev, data]);
+    setFormClientProjectId(data.id);
+    toast.success("Projeto criado!");
+  };
+
+
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -688,14 +729,18 @@ const ProjectsContent = () => {
                         />
                       </div>
 
-                      {/* Linha 1: Cliente + Gerente + Status (mantém o grid 2 col; o 3º campo quebra para a próxima linha automaticamente) */}
+                      {/* Linha 1: Cliente + Projeto do cliente + Gerente + Status */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="client_id">Cliente</Label>
                           <select
                             id="client_id"
                             name="client_id"
-                            defaultValue={editingProject?.client_id}
+                            value={formClientId}
+                            onChange={(e) => {
+                              setFormClientId(e.target.value);
+                              setFormClientProjectId("");
+                            }}
                             className="w-full px-3 py-2 border border-input rounded-md bg-background"
                             required
                           >
@@ -707,6 +752,45 @@ const ProjectsContent = () => {
                             ))}
                           </select>
                         </div>
+
+                        {/* << NOVO: Projeto do cliente (categoria de demandas) */}
+                        <div className="space-y-2">
+                          <Label htmlFor="client_project_id">
+                            Projeto <span className="text-muted-foreground text-xs">(opcional)</span>
+                          </Label>
+                          <div className="flex gap-2">
+                            <select
+                              id="client_project_id"
+                              value={formClientProjectId}
+                              onChange={(e) => setFormClientProjectId(e.target.value)}
+                              disabled={!formClientId}
+                              className="flex-1 px-3 py-2 border border-input rounded-md bg-background disabled:opacity-50"
+                            >
+                              <option value="">Sem projeto</option>
+                              {clientProjects
+                                .filter((cp) => cp.client_id === formClientId)
+                                .map((cp) => (
+                                  <option key={cp.id} value={cp.id}>
+                                    {cp.name}
+                                  </option>
+                                ))}
+                            </select>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={handleCreateClientProject}
+                              disabled={!formClientId}
+                              title="Criar novo projeto para este cliente"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
 
                         {/* << NOVO: Gerente do Projeto */}
                         <div className="space-y-2">

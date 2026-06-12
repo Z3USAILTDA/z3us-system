@@ -46,6 +46,7 @@ interface Project {
   created_at: string;
   updated_at: string;
   client_id: string;
+  client_project_id: string | null;
 }
 
 interface Profile {
@@ -58,6 +59,13 @@ interface Client {
   id: string;
   company_name: string;
 }
+
+interface ClientProject {
+  id: string;
+  client_id: string;
+  name: string;
+}
+
 
 // ----- Constants -----
 const STATUS_META: Record<string, { label: string; color: string }> = {
@@ -162,6 +170,7 @@ const MetricsTV = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [clientProjects, setClientProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
   const [lastUpdate, setLastUpdate] = useState(new Date());
@@ -170,6 +179,7 @@ const MetricsTV = () => {
   const [loginPass, setLoginPass] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
+
 
   // Auth gate: aceita sessão existente (válida há <24h) OU exige login local
   useEffect(() => {
@@ -216,21 +226,24 @@ const MetricsTV = () => {
   };
 
   const fetchData = async () => {
-    const [pj, pf, cl] = await Promise.all([
+    const [pj, pf, cl, cp] = await Promise.all([
       supabase
         .from("projects")
         .select(
-          "id,title,status,priority,start_date,end_date,actual_end_date,progress,responsible,project_manager_id,created_at,updated_at,client_id"
+          "id,title,status,priority,start_date,end_date,actual_end_date,progress,responsible,project_manager_id,created_at,updated_at,client_id,client_project_id"
         ),
       supabase.from("profiles").select("id,full_name,email"),
       supabase.from("clients").select("id,company_name"),
+      (supabase as any).from("client_projects").select("id,client_id,name"),
     ]);
-    if (pj.data) setProjects(pj.data as Project[]);
+    if (pj.data) setProjects(pj.data as any);
     if (pf.data) setProfiles(pf.data as Profile[]);
     if (cl.data) setClients(cl.data as Client[]);
+    if (cp.data) setClientProjects(cp.data as ClientProject[]);
     setLastUpdate(new Date());
     setLoading(false);
   };
+
 
   useEffect(() => {
     if (!authed) return;
@@ -264,6 +277,13 @@ const MetricsTV = () => {
     clients.forEach((c) => m.set(c.id, c));
     return m;
   }, [clients]);
+
+  const clientProjectMap = useMemo(() => {
+    const m = new Map<string, ClientProject>();
+    clientProjects.forEach((c) => m.set(c.id, c));
+    return m;
+  }, [clientProjects]);
+
 
   const today = getTodayLocalDate();
 
@@ -505,6 +525,42 @@ const MetricsTV = () => {
       .sort((a, b) => score(b) - score(a))
       .slice(0, 10);
   }, [projects, today]);
+
+  // Distribuição por projeto (categoria) dentro de cada cliente
+  const clientProjectStats = useMemo(() => {
+    type Entry = { clientName: string; total: number; projects: Map<string, number> };
+    const byClient = new Map<string, Entry>();
+    projects.forEach((p) => {
+      if (p.status === "cancelled") return;
+      const clientName = clientMap.get(p.client_id)?.company_name || "—";
+      if (!byClient.has(p.client_id)) {
+        byClient.set(p.client_id, { clientName, total: 0, projects: new Map() });
+      }
+      const cb = byClient.get(p.client_id)!;
+      cb.total++;
+      const projName = p.client_project_id
+        ? clientProjectMap.get(p.client_project_id)?.name || "—"
+        : "Sem projeto";
+      cb.projects.set(projName, (cb.projects.get(projName) || 0) + 1);
+    });
+    return Array.from(byClient.values())
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 3)
+      .map((c) => ({
+        clientName: c.clientName,
+        total: c.total,
+        projects: Array.from(c.projects.entries())
+          .map(([name, count]) => ({
+            name,
+            count,
+            pct: c.total ? Math.round((count / c.total) * 100) : 0,
+          }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 4),
+      }));
+  }, [projects, clientMap, clientProjectMap]);
+
+
 
   // Alerts
   const alerts = useMemo(() => {
@@ -782,72 +838,130 @@ const MetricsTV = () => {
             </div>
           </Card>
 
-          {/* Alerts */}
-          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center gap-1.5 mb-1.5 shrink-0">
-              <AlertTriangle className="w-4 h-4 text-warning" />
-              <h2 className="text-sm lg:text-base font-bold">Alertas operacionais</h2>
-            </div>
-            {alerts.length === 0 ? (
-              <div className="text-xs text-muted-foreground flex-1 flex items-center justify-center text-center">
-                Tudo sob controle.
-              </div>
-            ) : (
-              <ul className="space-y-1 flex-1 min-h-0 overflow-hidden">
-                {alerts.slice(0, 4).map((a, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2 p-1.5 rounded-md bg-background/60 border border-border/40"
-                  >
-                    <a.icon
-                      className="w-3.5 h-3.5 mt-0.5 shrink-0"
-                      style={{ color: `hsl(var(--${a.tone}))` }}
-                    />
-                    <span className="text-[11px] lg:text-xs leading-snug">{a.text}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-
-          {/* === Linha 2: Em atraso · Evolução · Ranking responsáveis === */}
-
-          {/* Delayed projects */}
+          {/* Merged: Atrasos & Alertas */}
           <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 text-destructive" />
-                <h2 className="text-sm lg:text-base font-bold">Em atraso</h2>
+                <h2 className="text-sm lg:text-base font-bold">Atrasos & alertas</h2>
               </div>
               <span className="text-lg font-bold text-destructive tabular-nums leading-none">
                 {delayedProjects.length}
               </span>
             </div>
-            <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
-              {delayedProjects.slice(0, 6).map(({ p, daysLate }) => (
-                <div
-                  key={p.id}
-                  className="flex items-center gap-2 p-1.5 rounded-md bg-destructive/5 border border-destructive/20"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold truncate">{p.title}</div>
-                    <div className="text-[10px] text-muted-foreground truncate">
-                      {responsibleName(p)} · {formatDateBR(p.end_date)}
+            <div className="flex-1 min-h-0 flex flex-col gap-1.5 overflow-hidden">
+              {/* Atrasos */}
+              <div className="space-y-1 overflow-hidden">
+                {delayedProjects.slice(0, 3).map(({ p, daysLate }) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-2 p-1.5 rounded-md bg-destructive/5 border border-destructive/20"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-semibold truncate">{p.title}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">
+                        {responsibleName(p)} · {formatDateBR(p.end_date)}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-sm font-bold text-destructive tabular-nums leading-none">
+                        +{daysLate}d
+                      </div>
+                      <div className="text-[9px] text-muted-foreground uppercase">
+                        {p.priority || "média"}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-sm font-bold text-destructive tabular-nums leading-none">+{daysLate}d</div>
-                    <div className="text-[9px] text-muted-foreground uppercase">{p.priority || "média"}</div>
+                ))}
+                {delayedProjects.length === 0 && (
+                  <div className="text-[11px] text-muted-foreground text-center py-1">
+                    Nenhum projeto em atraso.
                   </div>
-                </div>
-              ))}
-              {delayedProjects.length === 0 && (
-                <div className="text-xs text-muted-foreground text-center flex-1 flex items-center justify-center">
-                  Nenhum projeto em atraso.
-                </div>
+                )}
+              </div>
+
+              {/* Alertas */}
+              {alerts.length > 0 && (
+                <>
+                  <div className="border-t border-border/40 pt-1.5">
+                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground mb-1">
+                      Alertas operacionais
+                    </div>
+                    <ul className="space-y-1">
+                      {alerts.slice(0, 3).map((a, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-2 p-1 rounded-md bg-background/60 border border-border/40"
+                        >
+                          <a.icon
+                            className="w-3 h-3 mt-0.5 shrink-0"
+                            style={{ color: `hsl(var(--${a.tone}))` }}
+                          />
+                          <span className="text-[10px] lg:text-[11px] leading-snug">
+                            {a.text}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
               )}
             </div>
           </Card>
+
+          {/* === Linha 2: Projetos por cliente · Evolução · Ranking responsáveis === */}
+
+          {/* Distribuição de projetos por cliente */}
+          <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center justify-between mb-1.5 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <Target className="w-4 h-4 text-primary" />
+                <h2 className="text-sm lg:text-base font-bold">Projetos por cliente</h2>
+              </div>
+              <span className="text-[10px] text-muted-foreground">% por projeto</span>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden space-y-2">
+              {clientProjectStats.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-4">
+                  Sem dados.
+                </div>
+              ) : (
+                clientProjectStats.map((c) => (
+                  <div key={c.clientName} className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px] lg:text-xs">
+                      <span className="font-semibold truncate">{c.clientName}</span>
+                      <span className="text-muted-foreground tabular-nums shrink-0">
+                        {c.total}
+                      </span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {c.projects.map((proj) => (
+                        <div
+                          key={proj.name}
+                          className="flex items-center gap-2 text-[10px] lg:text-[11px]"
+                        >
+                          <span className="truncate flex-1 text-muted-foreground">
+                            {proj.name}
+                          </span>
+                          <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden shrink-0">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${proj.pct}%` }}
+                            />
+                          </div>
+                          <span className="tabular-nums shrink-0 w-12 text-right">
+                            <span className="font-semibold">{proj.count}</span>
+                            <span className="text-muted-foreground"> · {proj.pct}%</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
 
           {/* Monthly evolution */}
           <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
