@@ -545,7 +545,6 @@ const MetricsTV = () => {
     });
     return Array.from(byClient.values())
       .sort((a, b) => b.total - a.total)
-      .slice(0, 3)
       .map((c) => ({
         clientName: c.clientName,
         total: c.total,
@@ -555,8 +554,7 @@ const MetricsTV = () => {
             count,
             pct: c.total ? Math.round((count / c.total) * 100) : 0,
           }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 4),
+          .sort((a, b) => b.count - a.count),
       }));
   }, [projects, clientMap, clientProjectMap]);
 
@@ -920,7 +918,7 @@ const MetricsTV = () => {
               </div>
               <span className="text-[10px] text-muted-foreground">% por projeto</span>
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden space-y-2">
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
               {clientProjectStats.length === 0 ? (
                 <div className="text-xs text-muted-foreground text-center py-4">
                   Sem dados.
