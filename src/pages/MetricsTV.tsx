@@ -754,8 +754,9 @@ const MetricsTV = () => {
           />
         </section>
 
-        {/* Main grid — 3 rows fill remaining space */}
-        <section className="flex-1 min-h-0 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 grid-rows-[repeat(6,minmax(0,1fr))] sm:grid-rows-[repeat(3,minmax(0,1fr))] lg:grid-rows-2">
+        {/* Main grid — linha 1: 4 cards · linha 2: clientes ocupa largura total */}
+        <section className="flex-1 min-h-0 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 grid-rows-[repeat(5,minmax(0,1fr))] sm:grid-rows-[repeat(3,minmax(0,1fr))] lg:grid-rows-2">
+
           {/* === Linha 1: Crítico · Status · Alertas === */}
           {/* Critical project */}
           {mostCritical && (
