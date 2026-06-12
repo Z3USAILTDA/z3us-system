@@ -113,7 +113,7 @@ const ProjectsContent = () => {
   };
 
   const fetchData = async () => {
-    const [projectsRes, clientsRes, teamsRes, managersRes] = await Promise.all([
+    const [projectsRes, clientsRes, teamsRes, managersRes, clientProjectsRes] = await Promise.all([
       supabase
         .from("projects")
         .select(
@@ -128,6 +128,7 @@ const ProjectsContent = () => {
       supabase.from("clients").select("*").eq("status", "active"),
       supabase.from("teams").select("*").eq("status", "active").order("name"),
       supabase.from("profiles").select("id, full_name, role, email").eq("role", "admin"),
+      (supabase as any).from("client_projects").select("id, client_id, name").order("name"),
     ]);
 
     if (projectsRes.error) {
@@ -148,8 +149,13 @@ const ProjectsContent = () => {
       setManagers(managersRes.data || []);
     }
 
+    if (!clientProjectsRes.error) {
+      setClientProjects(clientProjectsRes.data || []);
+    }
+
     setLoading(false);
   };
+
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
