@@ -46,6 +46,7 @@ interface Project {
   created_at: string;
   updated_at: string;
   client_id: string;
+  client_project_id: string | null;
 }
 
 interface Profile {
@@ -58,6 +59,13 @@ interface Client {
   id: string;
   company_name: string;
 }
+
+interface ClientProject {
+  id: string;
+  client_id: string;
+  name: string;
+}
+
 
 // ----- Constants -----
 const STATUS_META: Record<string, { label: string; color: string }> = {
