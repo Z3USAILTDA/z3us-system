@@ -170,6 +170,7 @@ const MetricsTV = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [clientProjects, setClientProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
   const [lastUpdate, setLastUpdate] = useState(new Date());
@@ -178,6 +179,7 @@ const MetricsTV = () => {
   const [loginPass, setLoginPass] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
+
 
   // Auth gate: aceita sessão existente (válida há <24h) OU exige login local
   useEffect(() => {
