@@ -506,6 +506,59 @@ const ClientsContent = () => {
                     )}
                   </div>
 
+                  {/* Seção de projetos do cliente */}
+                  {editingClient && (
+                    <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+                      <Label className="flex items-center gap-2">
+                        <FolderKanban className="h-4 w-4" />
+                        Projetos do Cliente
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Categorias usadas ao criar demandas (ex: Faturamento, Ciclope)
+                      </p>
+
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nome do projeto"
+                          value={newProjectName}
+                          onChange={(e) => setNewProjectName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddClientProject();
+                            }
+                          }}
+                        />
+                        <Button type="button" variant="secondary" onClick={handleAddClientProject}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {clientProjects.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {clientProjects.map((proj) => (
+                            <Badge
+                              key={proj.id}
+                              variant="secondary"
+                              className="flex items-center gap-1 py-1"
+                            >
+                              {proj.name}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveClientProject(proj.id)}
+                                className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+
+
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefone</Label>
                     <Input
