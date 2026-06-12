@@ -150,7 +150,49 @@ const ClientsContent = () => {
     setAdditionalEmails(additionalEmails.filter(e => e !== emailToRemove));
   };
 
+  const fetchClientProjects = async (clientId: string) => {
+    const { data, error } = await (supabase as any)
+      .from("client_projects")
+      .select("id, name")
+      .eq("client_id", clientId)
+      .order("name");
+    if (!error && data) setClientProjects(data);
+  };
+
+  const handleAddClientProject = async () => {
+    const name = newProjectName.trim();
+    if (!name) return;
+    if (!editingClient?.id) {
+      toast.error("Salve o cliente primeiro para adicionar projetos");
+      return;
+    }
+    const { data, error } = await (supabase as any)
+      .from("client_projects")
+      .insert({ client_id: editingClient.id, name })
+      .select()
+      .single();
+    if (error) {
+      toast.error(`Erro: ${error.message}`);
+      return;
+    }
+    setClientProjects([...clientProjects, data]);
+    setNewProjectName("");
+    toast.success("Projeto adicionado!");
+  };
+
+  const handleRemoveClientProject = async (id: string) => {
+    if (!confirm("Remover este projeto? Demandas vinculadas ficarão sem projeto.")) return;
+    const { error } = await (supabase as any).from("client_projects").delete().eq("id", id);
+    if (error) {
+      toast.error(`Erro: ${error.message}`);
+      return;
+    }
+    setClientProjects(clientProjects.filter((p) => p.id !== id));
+    toast.success("Projeto removido!");
+  };
+
   const handleSubmit = async (data: ClientFormData) => {
+
     const clientData = {
       company_name: data.company_name,
       cnpj: data.cnpj,
