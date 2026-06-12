@@ -43,6 +43,41 @@ export type Database = {
           },
         ]
       }
+      client_projects: {
+        Row: {
+          client_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_users: {
         Row: {
           client_id: string
@@ -275,6 +310,7 @@ export type Database = {
           area: string | null
           client_id: string
           client_observation: string | null
+          client_project_id: string | null
           created_at: string
           demanda: string | null
           description: string | null
@@ -298,6 +334,7 @@ export type Database = {
           area?: string | null
           client_id: string
           client_observation?: string | null
+          client_project_id?: string | null
           created_at?: string
           demanda?: string | null
           description?: string | null
@@ -321,6 +358,7 @@ export type Database = {
           area?: string | null
           client_id?: string
           client_observation?: string | null
+          client_project_id?: string | null
           created_at?: string
           demanda?: string | null
           description?: string | null
@@ -344,6 +382,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_client_project_id_fkey"
+            columns: ["client_project_id"]
+            isOneToOne: false
+            referencedRelation: "client_projects"
             referencedColumns: ["id"]
           },
           {
