@@ -209,7 +209,8 @@ const ProjectsContent = () => {
       const projectData = {
       title: formData.get("title") as string,
       description: formData.get("description") as string,
-      client_id: formData.get("client_id") as string,
+      client_id: (formClientId || (formData.get("client_id") as string)) as string,
+      client_project_id: formClientProjectId || null,
       status: status,
       priority: formData.get("priority") as string,
       start_date: startDate || null,
@@ -226,6 +227,7 @@ const ProjectsContent = () => {
       project_manager_id: (formData.get("project_manager_id") as string) || null,
       demanda: formData.get("demanda") as string,
     };
+
 
     if (editingProject) {
       const { error } = await supabase.from("projects").update(projectData).eq("id", editingProject.id);
