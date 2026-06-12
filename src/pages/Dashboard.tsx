@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LayoutDashboard, Users, Building2, FolderKanban, LogOut, Menu, UserCog, FileText, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Users, Building2, FolderKanban, LogOut, Menu, UserCog, FileText, BarChart3, MonitorPlay } from "lucide-react";
 import {
   SidebarProvider,
   Sidebar,
@@ -64,7 +64,9 @@ const DashboardContent = () => {
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
     { title: "Resumo da Semana", url: "/dashboard/weekly-summary", icon: BarChart3 },
+    { title: "Métricas TV", url: "/metricas-projetos-tv", icon: MonitorPlay, external: true },
   ];
+
 
   const clientMenuItems = [
     { title: "Meus Projetos", url: "/dashboard", icon: FolderKanban },
@@ -122,19 +124,32 @@ const DashboardContent = () => {
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        end
-                        className={({ isActive }) =>
-                          isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
-                        }
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {state !== "collapsed" && <span>{item.title}</span>}
-                      </NavLink>
+                      {(item as any).external ? (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:bg-sidebar-accent/50"
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {state !== "collapsed" && <span>{item.title}</span>}
+                        </a>
+                      ) : (
+                        <NavLink
+                          to={item.url}
+                          end
+                          className={({ isActive }) =>
+                            isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
+                          }
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {state !== "collapsed" && <span>{item.title}</span>}
+                        </NavLink>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
+
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
