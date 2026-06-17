@@ -43,8 +43,8 @@ const getStoredAccessToken = () => {
 };
 
 const updatePasswordWithToken = async (accessToken: string, newPassword: string) => {
-  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
-    method: "PUT",
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/set-client-password`, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
@@ -55,7 +55,7 @@ const updatePasswordWithToken = async (accessToken: string, newPassword: string)
 
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.msg || payload?.message || "Erro ao definir senha");
+    throw new Error(payload?.error || payload?.msg || payload?.message || "Erro ao definir senha");
   }
 };
 
