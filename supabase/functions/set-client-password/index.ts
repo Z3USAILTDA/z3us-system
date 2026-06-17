@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
@@ -92,9 +92,8 @@ serve(async (req) => {
   if (req.method === "GET") {
     const url = new URL(req.url);
     const inviteToken = url.searchParams.get("invite_token") ?? "";
-    const redirectUrl = new URL("/reset-password", APP_URL);
-    if (inviteToken) redirectUrl.searchParams.set("invite_token", inviteToken);
-    return Response.redirect(redirectUrl.toString(), 302);
+    if (!inviteToken) return htmlResponse(renderPasswordPage("", "Link inválido. Solicite um novo convite ao administrador."), 400);
+    return htmlResponse(renderPasswordPage(inviteToken));
   }
 
   if (req.method !== "POST") {
