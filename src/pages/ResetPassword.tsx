@@ -128,7 +128,7 @@ const ResetPassword = () => {
         setAccessToken(tokens.access_token);
         finish(true);
         window.history.replaceState(null, "", window.location.pathname + window.location.search);
-        void supabase.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
+        storeAuthSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
         return;
       }
 
@@ -139,24 +139,13 @@ const ResetPassword = () => {
         return;
       }
 
-      const result = await withTimeout(supabase.auth.getSession(), 8000);
-      setAccessToken(result?.data?.session?.access_token ?? null);
-      finish(Boolean(result?.data?.session));
+      finish(false);
     };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-        if (!session && (event === "INITIAL_SESSION" || inviteToken)) return;
-        if (session?.access_token) setAccessToken(session.access_token);
-        finish(Boolean(session));
-      }
-    });
 
     initializeRecoverySession();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
     };
   }, []);
 
@@ -185,14 +174,10 @@ const ResetPassword = () => {
         throw new Error("Não foi possível criar a sessão. Solicite um novo convite.");
       }
 
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token,
-      });
-      if (sessionError) throw sessionError;
+      storeAuthSession(session as { access_token: string; refresh_token: string });
 
       toast.success("Acesso liberado com sucesso!");
-      navigate("/dashboard", { replace: true });
+      window.location.replace("/dashboard");
     } catch (err: any) {
       toast.error(err?.message || "Erro ao definir senha");
       setIsLoading(false);
