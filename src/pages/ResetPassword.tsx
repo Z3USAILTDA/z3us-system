@@ -79,7 +79,10 @@ const updatePasswordWithToken = async (newPassword: string, accessToken?: string
       throw new Error((await readResponseMessage(response)) || "Erro ao definir senha");
     }
 
-    return { email: payload?.email as string | undefined };
+    return {
+      email: payload?.email as string | undefined,
+      session: payload?.session as { access_token?: string; refresh_token?: string } | undefined,
+    };
   } catch (error: any) {
     if (error?.name === "AbortError") {
       throw new Error("A solicitação demorou demais. Tente novamente em alguns instantes.");
@@ -176,9 +179,15 @@ const ResetPassword = () => {
         return;
       }
 
-      const { email } = await updatePasswordWithToken(password, token, inviteToken);
+      const { email, session } = await updatePasswordWithToken(password, token, inviteToken);
 
-      if (email) {
+      if (session?.access_token && session?.refresh_token) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+        });
+        if (sessionError) throw sessionError;
+      } else if (email) {
         const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
         if (loginError) throw loginError;
       }
