@@ -10,14 +10,6 @@ import { FolderKanban, Calendar, MessageSquare, Clock, TrendingUp, CheckCircle2,
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import logoBranco from "@/assets/logo-branco.png";
-import ClientProjectModal from "./ClientProjectModal";
-
-const formatDateBR = (date?: string | null) => {
-  if (!date) return "Não definido";
-  const [y, m, d] = date.split("T")[0].split("-");
-  if (!y || !m || !d) return "Não definido";
-  return `${d}/${m}/${y}`;
-};
 
 const ClientDashboard = () => {
   const [projects, setProjects] = useState<any[]>([]);
@@ -32,8 +24,6 @@ const ClientDashboard = () => {
     total: number;
     percentage: number;
   }>>([]);
-  const [selectedProject, setSelectedProject] = useState<any | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -424,10 +414,9 @@ const ClientDashboard = () => {
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
           {filteredProjects.map((project, index) => (
-            <Card
-              key={project.id}
-              onClick={() => { setSelectedProject(project); setModalOpen(true); }}
-              className="relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 group overflow-hidden cursor-pointer"
+            <Card 
+              key={project.id} 
+              className="relative bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 group overflow-hidden"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
@@ -462,14 +451,18 @@ const ClientDashboard = () => {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div className="text-sm">
                       <p className="text-muted-foreground">Entrega</p>
-                      <p className="font-medium">{formatDateBR(project.end_date)}</p>
+                      <p className="font-medium">
+                        {project.actual_end_date
+                          ? new Date(project.actual_end_date).toLocaleDateString("pt-BR")
+                          : "Não definido"}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4 text-muted-foreground" />
                     <div className="text-sm">
                       <p className="text-muted-foreground">Observação</p>
-                      <p className="font-medium line-clamp-1">
+                      <p className="font-medium">
                         {project.client_observation || "Sem observação"}
                       </p>
                     </div>
@@ -480,16 +473,6 @@ const ClientDashboard = () => {
           ))}
         </div>
       )}
-
-      <ClientProjectModal
-        project={selectedProject}
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        onSaved={(projectId, observation) => {
-          setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, client_observation: observation } : p));
-          setSelectedProject((prev: any) => prev ? { ...prev, client_observation: observation } : prev);
-        }}
-      />
     </div>
   );
 };
