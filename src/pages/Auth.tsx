@@ -36,12 +36,6 @@ const Auth = () => {
   const checkUser = async () => {
     if (hasUsableStoredSession()) {
       navigate("/dashboard");
-      return;
-    }
-
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      navigate("/dashboard");
     }
   };
 
