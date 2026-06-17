@@ -178,46 +178,28 @@ const ResetPassword = () => {
     }
     setIsLoading(true);
     try {
-      const sessionResult = accessToken || inviteToken ? null : await withTimeout(supabase.auth.getSession(), 3000);
-      const token = accessToken || getStoredAccessToken() || sessionResult?.data?.session?.access_token;
-
+      const token = accessToken || getStoredAccessToken();
       if (!token && !inviteToken) {
         toast.error("Link expirado. Solicite um novo convite ao administrador.");
         setIsLoading(false);
         return;
       }
 
-      const { email, session } = await updatePasswordWithToken(password, token, inviteToken);
-      const loginEmail = email || getEmailFromInviteToken(inviteToken);
+      const { session } = await updatePasswordWithToken(password, token, inviteToken);
 
-      if (session?.access_token && session?.refresh_token) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        });
-        if (sessionError) throw sessionError;
-      } else if (loginEmail) {
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-        if (loginError) throw loginError;
+      if (!session?.access_token || !session?.refresh_token) {
+        throw new Error("Não foi possível criar a sessão. Solicite um novo convite.");
       }
+
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      });
+      if (sessionError) throw sessionError;
 
       toast.success("Acesso liberado com sucesso!");
-      setIsLoading(false);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
-      const loginEmail = getEmailFromInviteToken(inviteToken);
-      if (err?.name === "PasswordUpdateTimeout" && loginEmail) {
-        for (let attempt = 0; attempt < 6; attempt += 1) {
-          await wait(1500);
-          const { error: loginError } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-          if (!loginError) {
-            toast.success("Acesso liberado com sucesso!");
-            setIsLoading(false);
-            navigate("/dashboard");
-            return;
-          }
-        }
-      }
       toast.error(err?.message || "Erro ao definir senha");
       setIsLoading(false);
     }

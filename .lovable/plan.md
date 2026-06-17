@@ -1,40 +1,32 @@
-## Diagnóstico
+Diagnóstico rápido:
+- O convite por email está sendo reenviado corretamente.
+- O gargalo está depois que o cliente define a senha: o fluxo ainda pode depender de um login separado por senha depois de salvar a senha.
+- Quando a sessão não volta pronta da função, a tela tenta um fallback com `signInWithPassword`, que pode demorar, falhar silenciosamente ou deixar a experiência parecendo travada.
+- Também há um caminho HTML antigo na função que, se acessado diretamente, manda o cliente para `/auth` em vez de concluir a sessão automaticamente.
 
-O cliente não está conseguindo entrar pelo link porque o fluxo atual ficou dividido em duas etapas lentas e frágeis:
+Plano de correção urgente:
+1. Tornar a função do link de acesso transacional
+   - Validar o token do convite.
+   - Salvar a senha.
+   - Confirmar o email.
+   - Criar a sessão do cliente imediatamente.
+   - Só responder sucesso se a sessão tiver sido criada com `access_token` e `refresh_token`.
 
-1. O link abre `/reset-password` com `invite_token`.
-2. A página chama a função `set-client-password` para salvar a senha.
-3. Só depois o navegador tenta fazer `signInWithPassword` no cliente.
-4. O backend de autenticação está levando vários segundos em chamadas de `/user`, `/admin/users` e `/token`; quando isso demora, a tela parece travar ou o login fica pendente.
+2. Remover o fallback lento no frontend
+   - Após definir senha, a página `/reset-password` deve apenas aplicar a sessão retornada pela função.
+   - Não deve fazer uma segunda tentativa de login por senha no navegador.
+   - Não deve ficar em “salvando” por muito tempo.
 
-Também há um problema de rota: quando o login finalmente acontece, o código navega para `/dashboard`, mas o usuário está tentando acessar `/dashboard/clients`. Para perfil de cliente, essa rota não é adequada; o menu do cliente aponta para `/dashboard`.
+3. Ajustar mensagens e estado de carregamento
+   - Enquanto processa: “Entrando...” ou “Liberando acesso...”.
+   - Em sucesso: redirecionar direto para `/dashboard`.
+   - Se houver falha real do backend, liberar o botão e pedir novo envio do convite, sem loop infinito.
 
-## Plano de correção
+4. Corrigir o caminho direto do link
+   - Se o link for aberto pelo app, manter `/reset-password?invite_token=...`.
+   - Se por algum motivo a função for aberta diretamente, ela não deve mandar o cliente para `/auth` como fluxo principal.
 
-1. **Fazer o link de acesso gerar sessão no backend**
-   - Após definir a senha, a função `set-client-password` também fará o login com o e-mail e senha recém-definidos.
-   - Ela retornará os tokens da sessão diretamente para a página.
-   - Isso evita depender de uma segunda tentativa lenta de login no navegador.
-
-2. **Aplicar a sessão imediatamente no frontend**
-   - A página `/reset-password` usará os tokens retornados para salvar a sessão com `setSession`.
-   - Depois disso, redirecionará direto para `/dashboard`.
-   - O fallback com várias tentativas será removido ou reduzido para não deixar o usuário esperando indefinidamente.
-
-3. **Evitar travamento visual**
-   - Adicionar limite curto e mensagem clara só se a função realmente falhar.
-   - Não deixar o botão em estado infinito.
-
-4. **Ajustar o acesso do cliente à rota correta**
-   - Cliente deve cair em `/dashboard`, que já renderiza `ClientDashboard` quando o perfil não é admin.
-   - Se necessário, proteger `/dashboard/clients` para não ser usado como destino de cliente.
-
-## Arquivos envolvidos
-
-- `supabase/functions/set-client-password/index.ts`
-- `src/pages/ResetPassword.tsx`
-- Possivelmente `src/pages/Dashboard.tsx` para tolerar melhor sessão recém-criada e evitar loading indevido.
-
-## Resultado esperado
-
-Ao clicar no link do e-mail e definir a senha, o cliente entra automaticamente no portal sem precisar tentar login manual e sem ficar preso em carregamento.
+5. Validar com logs e teste direto
+   - Testar a função com um convite válido.
+   - Confirmar que a resposta retorna sessão.
+   - Confirmar que o cliente cai no dashboard sem chamada extra de login e sem demora de salvamento.
