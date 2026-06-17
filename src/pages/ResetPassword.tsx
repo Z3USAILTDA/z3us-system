@@ -9,6 +9,22 @@ import { toast } from "sonner";
 import { Loader2, KeyRound } from "lucide-react";
 import logoZ3us from "@/assets/logo-z3us.png";
 
+const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T | null> => {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+  ]);
+};
+
+const getRecoveryTokensFromUrl = () => {
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  return {
+    access_token: hashParams.get("access_token"),
+    refresh_token: hashParams.get("refresh_token"),
+    type: hashParams.get("type"),
+  };
+};
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -18,20 +34,41 @@ const ResetPassword = () => {
   const [confirm, setConfirm] = useState("");
 
   useEffect(() => {
-    // Supabase processa o token do link de recovery automaticamente
+    let mounted = true;
+    const finish = (valid: boolean) => {
+      if (!mounted) return;
+      setHasSession(valid);
+      setChecking(false);
+    };
+
+    const initializeRecoverySession = async () => {
+      const tokens = getRecoveryTokensFromUrl();
+
+      if (tokens.access_token && tokens.refresh_token) {
+        const result = await withTimeout(
+          supabase.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token }),
+          8000
+        );
+        finish(Boolean(result?.data?.session || tokens.type === "recovery"));
+        return;
+      }
+
+      const result = await withTimeout(supabase.auth.getSession(), 8000);
+      finish(Boolean(result?.data?.session));
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-        setHasSession(true);
-        setChecking(false);
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        finish(Boolean(session));
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setHasSession(true);
-      setChecking(false);
-    });
+    initializeRecoverySession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
