@@ -10,7 +10,6 @@ const corsHeaders = {
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const LOGO_URL = "https://ssljlgmcoilghdyxqihu.supabase.co/storage/v1/object/public/email-assets/logo-z3us.png";
 const APP_URL = "https://projetos.z3us.my";
-const FUNCTIONS_URL = "https://ssljlgmcoilghdyxqihu.supabase.co/functions/v1";
 
 const encoder = new TextEncoder();
 
@@ -197,7 +196,7 @@ serve(async (req) => {
     if (clientUserError) throw clientUserError;
 
     const inviteToken = await createInviteToken(invitedUserId, email, clientId, nonce);
-    const inviteUrl = `${FUNCTIONS_URL}/set-client-password?invite_token=${encodeURIComponent(inviteToken)}`;
+    const inviteUrl = `${APP_URL}/reset-password?invite_token=${encodeURIComponent(inviteToken)}`;
 
     // Envia email via Hermes
     const { error: emailError } = await resend.emails.send({
