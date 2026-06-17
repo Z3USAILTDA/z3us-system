@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle, X, Mail, FileText } from "lucide-react";
+import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle, X, Mail, FileText, Send, CheckCircle2, Loader2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -54,6 +54,10 @@ const ClientsContent = () => {
   // Estado para emails adicionais
   const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState("");
+
+  // Estado de convites
+  const [invitingEmail, setInvitingEmail] = useState<string | null>(null);
+  const [emailsWithAccount, setEmailsWithAccount] = useState<Set<string>>(new Set());
 
   // Projetos do cliente (categorias de demandas)
   const [clientProjects, setClientProjects] = useState<{ id: string; name: string }[]>([]);
@@ -278,6 +282,17 @@ const ClientsContent = () => {
     }
   };
 
+  const checkEmailsAccounts = async (emails: string[]) => {
+    const result = new Set<string>();
+    await Promise.all(
+      emails.filter(Boolean).map(async (email) => {
+        const { data } = await supabase.rpc("email_has_account", { _email: email });
+        if (data) result.add(email.toLowerCase());
+      })
+    );
+    setEmailsWithAccount(result);
+  };
+
   const handleEdit = async (client: any) => {
     setEditingClient(client);
     form.reset(client);
@@ -289,7 +304,31 @@ const ClientsContent = () => {
     // Carregar projetos do cliente
     await fetchClientProjects(client.id);
 
+    // Checar quais emails já têm conta
+    checkEmailsAccounts([client.email, ...emails]);
+
     setDialogOpen(true);
+  };
+
+  const handleInvite = async (email: string) => {
+    if (!editingClient?.id) {
+      toast.error("Salve o cliente antes de enviar convites");
+      return;
+    }
+    try {
+      setInvitingEmail(email);
+      const { data, error } = await supabase.functions.invoke("invite-client-user", {
+        body: { email, clientId: editingClient.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data?.status === "resent" ? "Convite reenviado!" : "Convite enviado!");
+      setEmailsWithAccount((prev) => new Set(prev).add(email.toLowerCase()));
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao enviar convite");
+    } finally {
+      setInvitingEmail(null);
+    }
   };
 
   const handleDialogChange = (open: boolean) => {
@@ -300,6 +339,7 @@ const ClientsContent = () => {
       setNewEmail("");
       setClientProjects([]);
       setNewProjectName("");
+      setEmailsWithAccount(new Set());
       form.reset({
         company_name: "",
         cnpj: "",
@@ -450,11 +490,36 @@ const ClientsContent = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Principal</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        {...form.register("email")}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="email"
+                          type="email"
+                          {...form.register("email")}
+                          className="flex-1"
+                        />
+                        {editingClient && form.watch("email") && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInvite(form.getValues("email"))}
+                            disabled={invitingEmail === form.watch("email")}
+                            title={
+                              emailsWithAccount.has(form.watch("email")?.toLowerCase() ?? "")
+                                ? "Reenviar acesso"
+                                : "Enviar convite de acesso"
+                            }
+                          >
+                            {invitingEmail === form.watch("email") ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : emailsWithAccount.has(form.watch("email")?.toLowerCase() ?? "") ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                       {form.formState.errors.email && (
                         <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
                       )}
@@ -489,19 +554,55 @@ const ClientsContent = () => {
                     </div>
 
                     {additionalEmails.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {additionalEmails.map((email) => (
-                          <Badge key={email} variant="secondary" className="flex items-center gap-1 py-1">
-                            {email}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveEmail(email)}
-                              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                      <div className="flex flex-col gap-2 mt-2">
+                        {additionalEmails.map((email) => {
+                          const hasAccount = emailsWithAccount.has(email.toLowerCase());
+                          const isInviting = invitingEmail === email;
+                          return (
+                            <div
+                              key={email}
+                              className="flex items-center justify-between gap-2 bg-background border rounded-md px-3 py-1.5"
                             >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <span className="text-sm truncate">{email}</span>
+                                {hasAccount && (
+                                  <Badge variant="outline" className="text-[10px] py-0 h-5 border-green-500/50 text-green-500">
+                                    Convidado
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {editingClient && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    onClick={() => handleInvite(email)}
+                                    disabled={isInviting}
+                                  >
+                                    {isInviting ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <Send className="h-3 w-3 mr-1" />
+                                        {hasAccount ? "Reenviar" : "Convidar"}
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveEmail(email)}
+                                  className="hover:bg-destructive/20 rounded-full p-1"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

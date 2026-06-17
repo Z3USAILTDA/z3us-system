@@ -14,6 +14,7 @@ import Documentation from "./pages/Documentation";
 import WeeklySummary from "./pages/WeeklySummary";
 import MetricsTV from "./pages/MetricsTV";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/teams" element={<Teams />} />
           <Route path="/dashboard/clients" element={<Clients />} />
