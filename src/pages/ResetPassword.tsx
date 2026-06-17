@@ -46,20 +46,22 @@ const getStoredAccessToken = () => {
 };
 
 const updatePasswordWithToken = async (newPassword: string, accessToken?: string | null, inviteToken?: string | null) => {
-  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/set-client-password`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    },
-    body: JSON.stringify({ password: newPassword, inviteToken }),
+  const { data, error } = await supabase.functions.invoke("set-client-password", {
+    body: { password: newPassword, inviteToken },
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
   });
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload?.error || payload?.msg || payload?.message || "Erro ao definir senha");
+  if (error) {
+    let serverMessage: string | undefined;
+    try {
+      const ctx: any = (error as any).context;
+      if (ctx && typeof ctx.json === "function") {
+        const payload = await ctx.json();
+        serverMessage = payload?.error || payload?.message;
+      }
+    } catch {}
+    throw new Error(serverMessage || error.message || "Erro ao definir senha");
   }
+  if ((data as any)?.error) throw new Error((data as any).error);
 };
 
 const ResetPassword = () => {
@@ -145,18 +147,7 @@ const ResetPassword = () => {
         return;
       }
 
-      const result = await withTimeout(
-        updatePasswordWithToken(password, token, inviteToken).then(() => ({ error: null })).catch((error) => ({ error })),
-        15000
-      );
-
-      if (!result) {
-        toast.error("Tempo esgotado. Tente novamente ou solicite um novo convite.");
-        setIsLoading(false);
-        return;
-      }
-
-      if (result.error) throw result.error;
+      await updatePasswordWithToken(password, token, inviteToken);
 
       toast.success("Senha definida com sucesso!");
       setIsLoading(false);
