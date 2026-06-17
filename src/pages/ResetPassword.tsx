@@ -83,7 +83,8 @@ const ResetPassword = () => {
       const tokens = getRecoveryTokensFromUrl();
 
       if (tokens.invite_token) {
-        window.location.replace(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/set-client-password?invite_token=${encodeURIComponent(tokens.invite_token)}`);
+        setInviteToken(tokens.invite_token);
+        finish(true);
         return;
       }
 
