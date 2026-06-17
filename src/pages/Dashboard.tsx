@@ -197,7 +197,7 @@ const DashboardContent = () => {
         </header>
 
         <main className="flex-1 p-3 sm:p-6 overflow-auto">
-          {profile?.role === "admin" ? <AdminDashboard /> : <ClientDashboard />}
+          {profile?.role === "admin" ? <AdminDashboard /> : <ClientDashboard userId={user?.id} />}
         </main>
       </div>
     </div>
