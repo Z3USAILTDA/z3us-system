@@ -282,6 +282,17 @@ const ClientsContent = () => {
     }
   };
 
+  const checkEmailsAccounts = async (emails: string[]) => {
+    const result = new Set<string>();
+    await Promise.all(
+      emails.filter(Boolean).map(async (email) => {
+        const { data } = await supabase.rpc("email_has_account", { _email: email });
+        if (data) result.add(email.toLowerCase());
+      })
+    );
+    setEmailsWithAccount(result);
+  };
+
   const handleEdit = async (client: any) => {
     setEditingClient(client);
     form.reset(client);
@@ -293,7 +304,31 @@ const ClientsContent = () => {
     // Carregar projetos do cliente
     await fetchClientProjects(client.id);
 
+    // Checar quais emails já têm conta
+    checkEmailsAccounts([client.email, ...emails]);
+
     setDialogOpen(true);
+  };
+
+  const handleInvite = async (email: string) => {
+    if (!editingClient?.id) {
+      toast.error("Salve o cliente antes de enviar convites");
+      return;
+    }
+    try {
+      setInvitingEmail(email);
+      const { data, error } = await supabase.functions.invoke("invite-client-user", {
+        body: { email, clientId: editingClient.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data?.status === "resent" ? "Convite reenviado!" : "Convite enviado!");
+      setEmailsWithAccount((prev) => new Set(prev).add(email.toLowerCase()));
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao enviar convite");
+    } finally {
+      setInvitingEmail(null);
+    }
   };
 
   const handleDialogChange = (open: boolean) => {
@@ -304,6 +339,7 @@ const ClientsContent = () => {
       setNewEmail("");
       setClientProjects([]);
       setNewProjectName("");
+      setEmailsWithAccount(new Set());
       form.reset({
         company_name: "",
         cnpj: "",
