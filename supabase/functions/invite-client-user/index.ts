@@ -175,13 +175,15 @@ serve(async (req) => {
     // Garante que o usuário tenha perfil, role e vínculo com o cliente mesmo sem depender de triggers.
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
-      .upsert({
+      .insert({
         id: invitedUserId,
         email,
         full_name: email.split("@")[0],
         role: "client",
-      }, { onConflict: "id" });
-    if (profileError) throw profileError;
+      })
+      .select("id")
+      .maybeSingle();
+    if (profileError && profileError.code !== "23505") throw profileError;
 
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
