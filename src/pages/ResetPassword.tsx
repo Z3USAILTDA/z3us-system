@@ -73,9 +73,13 @@ const updatePasswordWithToken = async (newPassword: string, accessToken?: string
       signal: controller.signal,
     });
 
+    const payload = await response.json().catch(() => ({}));
+
     if (!response.ok) {
       throw new Error((await readResponseMessage(response)) || "Erro ao definir senha");
     }
+
+    return { email: payload?.email as string | undefined };
   } catch (error: any) {
     if (error?.name === "AbortError") {
       throw new Error("A solicitação demorou demais. Tente novamente em alguns instantes.");
@@ -172,11 +176,16 @@ const ResetPassword = () => {
         return;
       }
 
-      await updatePasswordWithToken(password, token, inviteToken);
+      const { email } = await updatePasswordWithToken(password, token, inviteToken);
 
-      toast.success("Senha definida com sucesso!");
+      if (email) {
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (loginError) throw loginError;
+      }
+
+      toast.success("Acesso liberado com sucesso!");
       setIsLoading(false);
-      navigate("/auth");
+      navigate("/dashboard");
     } catch (err: any) {
       toast.error(err?.message || "Erro ao definir senha");
       setIsLoading(false);

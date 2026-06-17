@@ -187,7 +187,7 @@ serve(async (req) => {
     if (wantsHtml) return htmlResponse(renderSuccessPage());
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, email }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
