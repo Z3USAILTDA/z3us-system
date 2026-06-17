@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 const APP_URL = "https://projetos.z3us.my";
+const LOGO_URL = "https://ssljlgmcoilghdyxqihu.supabase.co/storage/v1/object/public/email-assets/logo-z3us.png";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -61,7 +62,26 @@ async function readInviteToken(inviteToken: string) {
 async function readJsonBody(req: Request) {
   const text = await req.text();
   if (!text.trim()) return {};
+  if ((req.headers.get("content-type") ?? "").includes("application/x-www-form-urlencoded")) {
+    const params = new URLSearchParams(text);
+    return Object.fromEntries(params.entries());
+  }
   return JSON.parse(text);
+}
+
+function htmlResponse(html: string, status = 200) {
+  return new Response(html, {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8" },
+  });
+}
+
+function renderPasswordPage(inviteToken: string, error = "") {
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Definir senha</title><style>body{margin:0;min-height:100vh;background:#0f172a;color:#e2e8f0;font-family:Arial,sans-serif;display:grid;place-items:center}main{width:min(92vw,420px);background:#111827;border:1px solid #334155;border-radius:14px;padding:28px;box-shadow:0 20px 60px #0008}.logo{display:block;margin:0 auto 18px;height:72px}h1{text-align:center;margin:0 0 8px;font-size:24px}p{color:#94a3b8;text-align:center;line-height:1.5}label{display:block;margin:16px 0 8px}input{box-sizing:border-box;width:100%;padding:12px;border-radius:8px;border:1px solid #334155;background:#020617;color:#e2e8f0;font-size:16px}button{width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#3b82f6;color:white;font-weight:700;font-size:15px;cursor:pointer}.error{background:#7f1d1d;color:#fecaca;border-radius:8px;padding:10px;margin:14px 0;text-align:center}.small{font-size:13px}</style></head><body><main><img class="logo" src="${LOGO_URL}" alt="Z3US"/><h1>Definir senha</h1><p>Crie sua senha para acessar o portal Z3US.</p>${error ? `<div class="error">${error}</div>` : ""}<form method="post"><input type="hidden" name="inviteToken" value="${inviteToken.replace(/"/g, "&quot;")}"/><label for="password">Nova senha</label><input id="password" name="password" type="password" minlength="8" required autocomplete="new-password"/><label for="confirmPassword">Confirmar senha</label><input id="confirmPassword" name="confirmPassword" type="password" minlength="8" required autocomplete="new-password"/><button type="submit">Definir senha e acessar</button></form><p class="small">A senha deve ter no mínimo 8 caracteres.</p></main></body></html>`;
+}
+
+function renderSuccessPage() {
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta http-equiv="refresh" content="3;url=${APP_URL}/auth"/><title>Senha definida</title><style>body{margin:0;min-height:100vh;background:#0f172a;color:#e2e8f0;font-family:Arial,sans-serif;display:grid;place-items:center}main{width:min(92vw,420px);background:#111827;border:1px solid #334155;border-radius:14px;padding:28px;text-align:center;box-shadow:0 20px 60px #0008}.logo{height:72px;margin-bottom:18px}a{color:#60a5fa}</style></head><body><main><img class="logo" src="${LOGO_URL}" alt="Z3US"/><h1>Senha definida com sucesso</h1><p>Você já pode acessar o portal com seu e-mail e a nova senha.</p><p><a href="${APP_URL}/auth">Ir para o login</a></p></main></body></html>`;
 }
 
 serve(async (req) => {
@@ -72,9 +92,7 @@ serve(async (req) => {
   if (req.method === "GET") {
     const url = new URL(req.url);
     const inviteToken = url.searchParams.get("invite_token") ?? "";
-    const redirectUrl = new URL("/reset-password", APP_URL);
-    if (inviteToken) redirectUrl.searchParams.set("invite_token", inviteToken);
-    return Response.redirect(redirectUrl.toString(), 302);
+    return htmlResponse(renderPasswordPage(inviteToken, inviteToken ? "" : "Link inválido. Solicite um novo convite ao administrador."), inviteToken ? 200 : 400);
   }
 
   if (req.method !== "POST") {
