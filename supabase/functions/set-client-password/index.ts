@@ -164,36 +164,30 @@ serve(async (req) => {
     });
     if (updateError) throw updateError;
 
+    const syncTasks: Promise<unknown>[] = [];
     if (email) {
-      const { error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .insert({ id: userId, email, full_name: email.split("@")[0], role: "client" })
-        .select("id")
-        .maybeSingle();
-      if (profileError && profileError.code !== "23505") throw profileError;
-
-      const { error: roleError } = await supabaseAdmin
-        .from("user_roles")
-        .upsert({ user_id: userId, role: "client" }, { onConflict: "user_id,role" });
-      if (roleError) throw roleError;
+      syncTasks.push(
+        supabaseAdmin
+          .from("profiles")
+          .upsert({ id: userId, email, full_name: email.split("@")[0], role: "client" }, { onConflict: "id" }),
+        supabaseAdmin
+          .from("user_roles")
+          .upsert({ user_id: userId, role: "client" }, { onConflict: "user_id,role" }),
+      );
     }
     if (clientId) {
-      const { error: clientUserError } = await supabaseAdmin
-        .from("client_users")
-        .upsert({ client_id: clientId, user_id: userId }, { onConflict: "client_id,user_id" });
-      if (clientUserError) throw clientUserError;
+      syncTasks.push(
+        supabaseAdmin
+          .from("client_users")
+          .upsert({ client_id: clientId, user_id: userId }, { onConflict: "client_id,user_id" }),
+      );
     }
 
-    const supabaseAuth = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "",
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
-    const { data: signInData, error: signInError } = email
-      ? await supabaseAuth.auth.signInWithPassword({ email, password })
-      : { data: null, error: new Error("Não foi possível iniciar a sessão") };
-    if (signInError || !signInData?.session) throw signInError ?? new Error("Não foi possível iniciar a sessão");
+    const syncResults = await Promise.all(syncTasks);
+    for (const result of syncResults) {
+      const error = (result as { error?: Error | null })?.error;
+      if (error) throw error;
+    }
 
     if (wantsHtml) return htmlResponse(renderSuccessPage());
 
@@ -201,10 +195,6 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         email,
-        session: {
-          access_token: signInData.session.access_token,
-          refresh_token: signInData.session.refresh_token,
-        },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

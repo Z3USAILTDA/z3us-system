@@ -48,18 +48,24 @@ const getStoredAccessToken = () => {
   return null;
 };
 
-const readResponseMessage = async (response: Response) => {
+const getEmailFromInviteToken = (token?: string | null) => {
+  if (!token) return undefined;
   try {
-    const payload = await response.json();
-    return payload?.error || payload?.message;
+    const payload = token.split(".")[0];
+    if (!payload) return undefined;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
+    return JSON.parse(atob(padded))?.email as string | undefined;
   } catch {
     return undefined;
   }
 };
 
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
 const updatePasswordWithToken = async (newPassword: string, accessToken?: string | null, inviteToken?: string | null) => {
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), 25000);
+  const timeoutId = window.setTimeout(() => controller.abort(), 18000);
 
   try {
     const response = await fetch(FUNCTIONS_URL, {
@@ -76,7 +82,7 @@ const updatePasswordWithToken = async (newPassword: string, accessToken?: string
     const payload = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error((await readResponseMessage(response)) || "Erro ao definir senha");
+      throw new Error(payload?.error || payload?.message || "Erro ao definir senha");
     }
 
     return {
@@ -85,7 +91,9 @@ const updatePasswordWithToken = async (newPassword: string, accessToken?: string
     };
   } catch (error: any) {
     if (error?.name === "AbortError") {
-      throw new Error("A solicitação demorou demais. Tente novamente em alguns instantes.");
+      const timeoutError = new Error("timeout");
+      timeoutError.name = "PasswordUpdateTimeout";
+      throw timeoutError;
     }
     throw error;
   } finally {
@@ -180,6 +188,7 @@ const ResetPassword = () => {
       }
 
       const { email, session } = await updatePasswordWithToken(password, token, inviteToken);
+      const loginEmail = email || getEmailFromInviteToken(inviteToken);
 
       if (session?.access_token && session?.refresh_token) {
         const { error: sessionError } = await supabase.auth.setSession({
@@ -187,8 +196,8 @@ const ResetPassword = () => {
           refresh_token: session.refresh_token,
         });
         if (sessionError) throw sessionError;
-      } else if (email) {
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      } else if (loginEmail) {
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
         if (loginError) throw loginError;
       }
 
@@ -196,6 +205,19 @@ const ResetPassword = () => {
       setIsLoading(false);
       navigate("/dashboard");
     } catch (err: any) {
+      const loginEmail = getEmailFromInviteToken(inviteToken);
+      if (err?.name === "PasswordUpdateTimeout" && loginEmail) {
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          await wait(1500);
+          const { error: loginError } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
+          if (!loginError) {
+            toast.success("Acesso liberado com sucesso!");
+            setIsLoading(false);
+            navigate("/dashboard");
+            return;
+          }
+        }
+      }
       toast.error(err?.message || "Erro ao definir senha");
       setIsLoading(false);
     }
