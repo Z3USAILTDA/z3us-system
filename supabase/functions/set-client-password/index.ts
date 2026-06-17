@@ -166,10 +166,34 @@ serve(async (req) => {
 
     if (wantsHtml) return htmlResponse(renderSuccessPage());
 
+    let session: { access_token?: string; refresh_token?: string } | undefined;
+    if (email) {
+      try {
+        const supabasePublic = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "",
+          { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+        const { data: signInData, error: signInError } = await supabasePublic.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          console.error("set-client-password sign-in error:", signInError.message);
+        }
+        if (signInData?.session?.access_token && signInData?.session?.refresh_token) {
+          session = {
+            access_token: signInData.session.access_token,
+            refresh_token: signInData.session.refresh_token,
+          };
+        }
+      } catch (e) {
+        console.error("set-client-password sign-in fallback:", e);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         email,
+        session,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
