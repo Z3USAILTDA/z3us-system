@@ -9,6 +9,9 @@ import { toast } from "sonner";
 import { Loader2, KeyRound } from "lucide-react";
 import logoZ3us from "@/assets/logo-z3us.png";
 
+const FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/set-client-password`;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
 const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T | null> => {
   return Promise.race([
     promise,
@@ -45,23 +48,42 @@ const getStoredAccessToken = () => {
   return null;
 };
 
-const updatePasswordWithToken = async (newPassword: string, accessToken?: string | null, inviteToken?: string | null) => {
-  const { data, error } = await supabase.functions.invoke("set-client-password", {
-    body: { password: newPassword, inviteToken },
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-  });
-  if (error) {
-    let serverMessage: string | undefined;
-    try {
-      const ctx: any = (error as any).context;
-      if (ctx && typeof ctx.json === "function") {
-        const payload = await ctx.json();
-        serverMessage = payload?.error || payload?.message;
-      }
-    } catch {}
-    throw new Error(serverMessage || error.message || "Erro ao definir senha");
+const readResponseMessage = async (response: Response) => {
+  try {
+    const payload = await response.json();
+    return payload?.error || payload?.message;
+  } catch {
+    return undefined;
   }
-  if ((data as any)?.error) throw new Error((data as any).error);
+};
+
+const updatePasswordWithToken = async (newPassword: string, accessToken?: string | null, inviteToken?: string | null) => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 25000);
+
+  try {
+    const response = await fetch(FUNCTIONS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_KEY,
+        Authorization: accessToken ? `Bearer ${accessToken}` : `Bearer ${SUPABASE_KEY}`,
+      },
+      body: JSON.stringify({ password: newPassword, inviteToken }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error((await readResponseMessage(response)) || "Erro ao definir senha");
+    }
+  } catch (error: any) {
+    if (error?.name === "AbortError") {
+      throw new Error("A solicitação demorou demais. Tente novamente em alguns instantes.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 };
 
 const ResetPassword = () => {
