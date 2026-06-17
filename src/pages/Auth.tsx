@@ -12,6 +12,7 @@ import logoZ3us from "@/assets/logo-z3us.png";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { clearAuthStorage, hasUsableStoredSession, storeAuthSession } from "@/lib/authSession";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -33,6 +34,11 @@ const Auth = () => {
   }, []);
 
   const checkUser = async () => {
+    if (hasUsableStoredSession()) {
+      navigate("/dashboard");
+      return;
+    }
+
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       navigate("/dashboard");
@@ -42,12 +48,7 @@ const Auth = () => {
   const onLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      // Limpa qualquer token antigo para evitar locks travados do supabase-js
-      try {
-        Object.keys(localStorage)
-          .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
-          .forEach((k) => localStorage.removeItem(k));
-      } catch (_) {}
+      clearAuthStorage();
 
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
       const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -72,11 +73,7 @@ const Auth = () => {
         return;
       }
 
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: payload.access_token,
-        refresh_token: payload.refresh_token,
-      });
-      if (sessionError) throw sessionError;
+      storeAuthSession(payload);
 
       toast.success("Login realizado com sucesso!");
       window.location.replace("/dashboard");
