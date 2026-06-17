@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
@@ -92,8 +92,9 @@ serve(async (req) => {
   if (req.method === "GET") {
     const url = new URL(req.url);
     const inviteToken = url.searchParams.get("invite_token") ?? "";
-    if (!inviteToken) return htmlResponse(renderPasswordPage("", "Link inválido. Solicite um novo convite ao administrador."), 400);
-    return htmlResponse(renderPasswordPage(inviteToken));
+    const redirectUrl = new URL("/reset-password", APP_URL);
+    if (inviteToken) redirectUrl.searchParams.set("invite_token", inviteToken);
+    return Response.redirect(redirectUrl.toString(), 302);
   }
 
   if (req.method !== "POST") {
@@ -164,13 +165,30 @@ serve(async (req) => {
     });
     if (updateError) throw updateError;
 
+    if (email) {
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .insert({ id: userId, email, full_name: email.split("@")[0], role: "client" })
+        .select("id")
+        .maybeSingle();
+      if (profileError && profileError.code !== "23505") throw profileError;
+
+      const { error: roleError } = await supabaseAdmin
+        .from("user_roles")
+        .upsert({ user_id: userId, role: "client" }, { onConflict: "user_id,role" });
+      if (roleError) throw roleError;
+    }
+    if (clientId) {
+      const { error: clientUserError } = await supabaseAdmin
+        .from("client_users")
+        .upsert({ client_id: clientId, user_id: userId }, { onConflict: "client_id,user_id" });
+      if (clientUserError) throw clientUserError;
+    }
+
     if (wantsHtml) return htmlResponse(renderSuccessPage());
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        email,
-      }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {

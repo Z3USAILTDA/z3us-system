@@ -9,9 +9,6 @@ import { toast } from "sonner";
 import { Loader2, KeyRound } from "lucide-react";
 import logoZ3us from "@/assets/logo-z3us.png";
 
-const FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/set-client-password`;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
 const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T | null> => {
   return Promise.race([
     promise,
@@ -22,12 +19,11 @@ const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<
 const getRecoveryTokensFromUrl = () => {
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const searchParams = new URLSearchParams(window.location.search);
-  const inviteToken = searchParams.get("invite_token") || searchParams.get("inviteToken") || hashParams.get("invite_token") || hashParams.get("inviteToken");
   return {
     access_token: hashParams.get("access_token"),
     refresh_token: hashParams.get("refresh_token"),
     type: hashParams.get("type"),
-    invite_token: inviteToken,
+    invite_token: searchParams.get("invite_token"),
   };
 };
 
@@ -48,56 +44,20 @@ const getStoredAccessToken = () => {
   return null;
 };
 
-const getEmailFromInviteToken = (token?: string | null) => {
-  if (!token) return undefined;
-  try {
-    const payload = token.split(".")[0];
-    if (!payload) return undefined;
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "=");
-    return JSON.parse(atob(padded))?.email as string | undefined;
-  } catch {
-    return undefined;
-  }
-};
-
-const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
-
 const updatePasswordWithToken = async (newPassword: string, accessToken?: string | null, inviteToken?: string | null) => {
-  const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), 18000);
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/set-client-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: JSON.stringify({ password: newPassword, inviteToken }),
+  });
 
-  try {
-    const response = await fetch(FUNCTIONS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: SUPABASE_KEY,
-        Authorization: accessToken ? `Bearer ${accessToken}` : `Bearer ${SUPABASE_KEY}`,
-      },
-      body: JSON.stringify({ password: newPassword, inviteToken }),
-      signal: controller.signal,
-    });
-
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      throw new Error(payload?.error || payload?.message || "Erro ao definir senha");
-    }
-
-    return {
-      email: payload?.email as string | undefined,
-      session: payload?.session as { access_token?: string; refresh_token?: string } | undefined,
-    };
-  } catch (error: any) {
-    if (error?.name === "AbortError") {
-      const timeoutError = new Error("timeout");
-      timeoutError.name = "PasswordUpdateTimeout";
-      throw timeoutError;
-    }
-    throw error;
-  } finally {
-    window.clearTimeout(timeoutId);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.error || payload?.msg || payload?.message || "Erro ao definir senha");
   }
 };
 
@@ -119,17 +79,15 @@ const ResetPassword = () => {
       setChecking(false);
     };
 
-    const tokens = getRecoveryTokensFromUrl();
-
-    if (tokens.invite_token) {
-      setInviteToken(tokens.invite_token.trim());
-      finish(true);
-      return () => {
-        mounted = false;
-      };
-    }
-
     const initializeRecoverySession = async () => {
+      const tokens = getRecoveryTokensFromUrl();
+
+      if (tokens.invite_token) {
+        setInviteToken(tokens.invite_token);
+        finish(true);
+        return;
+      }
+
       if (tokens.access_token && tokens.refresh_token) {
         setAccessToken(tokens.access_token);
         finish(true);
@@ -152,7 +110,6 @@ const ResetPassword = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-        if (!session && (event === "INITIAL_SESSION" || inviteToken)) return;
         if (session?.access_token) setAccessToken(session.access_token);
         finish(Boolean(session));
       }
@@ -187,37 +144,23 @@ const ResetPassword = () => {
         return;
       }
 
-      const { email, session } = await updatePasswordWithToken(password, token, inviteToken);
-      const loginEmail = email || getEmailFromInviteToken(inviteToken);
+      const result = await withTimeout(
+        updatePasswordWithToken(password, token, inviteToken).then(() => ({ error: null })).catch((error) => ({ error })),
+        15000
+      );
 
-      if (session?.access_token && session?.refresh_token) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-        });
-        if (sessionError) throw sessionError;
-      } else if (loginEmail) {
-        const { error: loginError } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-        if (loginError) throw loginError;
+      if (!result) {
+        toast.error("Tempo esgotado. Tente novamente ou solicite um novo convite.");
+        setIsLoading(false);
+        return;
       }
 
-      toast.success("Acesso liberado com sucesso!");
+      if (result.error) throw result.error;
+
+      toast.success("Senha definida com sucesso!");
       setIsLoading(false);
-      navigate("/dashboard");
+      navigate("/auth");
     } catch (err: any) {
-      const loginEmail = getEmailFromInviteToken(inviteToken);
-      if (err?.name === "PasswordUpdateTimeout" && loginEmail) {
-        for (let attempt = 0; attempt < 6; attempt += 1) {
-          await wait(1500);
-          const { error: loginError } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-          if (!loginError) {
-            toast.success("Acesso liberado com sucesso!");
-            setIsLoading(false);
-            navigate("/dashboard");
-            return;
-          }
-        }
-      }
       toast.error(err?.message || "Erro ao definir senha");
       setIsLoading(false);
     }
