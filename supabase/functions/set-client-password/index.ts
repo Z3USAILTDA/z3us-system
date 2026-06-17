@@ -92,7 +92,9 @@ serve(async (req) => {
   if (req.method === "GET") {
     const url = new URL(req.url);
     const inviteToken = url.searchParams.get("invite_token") ?? "";
-    return htmlResponse(renderPasswordPage(inviteToken, inviteToken ? "" : "Link inválido. Solicite um novo convite ao administrador."), inviteToken ? 200 : 400);
+    const redirectUrl = new URL("/reset-password", APP_URL);
+    if (inviteToken) redirectUrl.searchParams.set("invite_token", inviteToken);
+    return Response.redirect(redirectUrl.toString(), 302);
   }
 
   if (req.method !== "POST") {
