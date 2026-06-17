@@ -51,9 +51,19 @@ const DashboardContent = () => {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logout realizado com sucesso!");
-    navigate("/auth");
+    try {
+      await supabase.auth.signOut();
+    } catch (_) {
+      // ignore
+    }
+    // Limpa qualquer token residual e força reload total para evitar
+    // travamento do client Supabase (navigator locks) no próximo login
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch (_) {}
+    window.location.replace("/auth");
   };
 
   const adminMenuItems = [
