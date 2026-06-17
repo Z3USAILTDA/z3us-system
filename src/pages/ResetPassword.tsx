@@ -18,10 +18,12 @@ const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<
 
 const getRecoveryTokensFromUrl = () => {
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const searchParams = new URLSearchParams(window.location.search);
   return {
     access_token: hashParams.get("access_token"),
     refresh_token: hashParams.get("refresh_token"),
     type: hashParams.get("type"),
+    invite_token: searchParams.get("invite_token"),
   };
 };
 
@@ -42,15 +44,15 @@ const getStoredAccessToken = () => {
   return null;
 };
 
-const updatePasswordWithToken = async (accessToken: string, newPassword: string) => {
+const updatePasswordWithToken = async (newPassword: string, accessToken?: string | null, inviteToken?: string | null) => {
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/set-client-password`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      Authorization: `Bearer ${accessToken}`,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
-    body: JSON.stringify({ password: newPassword }),
+    body: JSON.stringify({ password: newPassword, inviteToken }),
   });
 
   const payload = await response.json().catch(() => ({}));
@@ -65,6 +67,7 @@ const ResetPassword = () => {
   const [hasSession, setHasSession] = useState(false);
   const [checking, setChecking] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
@@ -78,6 +81,12 @@ const ResetPassword = () => {
 
     const initializeRecoverySession = async () => {
       const tokens = getRecoveryTokensFromUrl();
+
+      if (tokens.invite_token) {
+        setInviteToken(tokens.invite_token);
+        finish(true);
+        return;
+      }
 
       if (tokens.access_token && tokens.refresh_token) {
         setAccessToken(tokens.access_token);
@@ -126,17 +135,17 @@ const ResetPassword = () => {
     }
     setIsLoading(true);
     try {
-      const sessionResult = accessToken ? null : await withTimeout(supabase.auth.getSession(), 3000);
+      const sessionResult = accessToken || inviteToken ? null : await withTimeout(supabase.auth.getSession(), 3000);
       const token = accessToken || getStoredAccessToken() || sessionResult?.data?.session?.access_token;
 
-      if (!token) {
+      if (!token && !inviteToken) {
         toast.error("Link expirado. Solicite um novo convite ao administrador.");
         setIsLoading(false);
         return;
       }
 
       const result = await withTimeout(
-        updatePasswordWithToken(token, password).then(() => ({ error: null })).catch((error) => ({ error })),
+        updatePasswordWithToken(password, token, inviteToken).then(() => ({ error: null })).catch((error) => ({ error })),
         15000
       );
 
