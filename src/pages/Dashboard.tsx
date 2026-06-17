@@ -20,6 +20,7 @@ import {
 import { NavLink } from "react-router-dom";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import ClientDashboard from "@/components/dashboard/ClientDashboard";
+import { fetchUserFromAccessToken, getStoredAuthSession, revokeStoredSession } from "@/lib/authSession";
 
 const DashboardContent = () => {
   const navigate = useNavigate();
@@ -33,36 +34,37 @@ const DashboardContent = () => {
   }, []);
 
   const checkUser = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const storedSession = getStoredAuthSession();
+    const session = storedSession ? { user: storedSession.user as any, access_token: storedSession.access_token } : null;
 
-    if (!session) {
+    if (!session?.access_token) {
       navigate("/auth");
       return;
     }
 
-    setUser(session.user);
+    const userFromSession = session.user;
+    let userId = userFromSession?.id;
 
-    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+    if (!userId) {
+      const authUser = await fetchUserFromAccessToken(session.access_token);
+      if (!authUser?.id) {
+        navigate("/auth");
+        return;
+      }
+      userId = authUser.id;
+      setUser(authUser);
+    } else {
+      setUser(userFromSession);
+    }
+
+    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", userId).single();
 
     setProfile(profileData);
     setLoading(false);
   };
 
   const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (_) {
-      // ignore
-    }
-    // Limpa qualquer token residual e força reload total para evitar
-    // travamento do client Supabase (navigator locks) no próximo login
-    try {
-      Object.keys(localStorage)
-        .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
-        .forEach((k) => localStorage.removeItem(k));
-    } catch (_) {}
+    revokeStoredSession();
     window.location.replace("/auth");
   };
 
@@ -193,7 +195,7 @@ const DashboardContent = () => {
         </header>
 
         <main className="flex-1 p-3 sm:p-6 overflow-auto">
-          {profile?.role === "admin" ? <AdminDashboard /> : <ClientDashboard />}
+          {profile?.role === "admin" ? <AdminDashboard /> : <ClientDashboard userId={user?.id} />}
         </main>
       </div>
     </div>

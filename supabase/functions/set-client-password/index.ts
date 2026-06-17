@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -84,7 +83,7 @@ function renderSuccessPage() {
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta http-equiv="refresh" content="3;url=${APP_URL}/auth"/><title>Senha definida</title><style>body{margin:0;min-height:100vh;background:#0f172a;color:#e2e8f0;font-family:Arial,sans-serif;display:grid;place-items:center}main{width:min(92vw,420px);background:#111827;border:1px solid #334155;border-radius:14px;padding:28px;text-align:center;box-shadow:0 20px 60px #0008}.logo{height:72px;margin-bottom:18px}a{color:#60a5fa}</style></head><body><main><img class="logo" src="${LOGO_URL}" alt="Z3US"/><h1>Senha definida com sucesso</h1><p>Você já pode acessar o portal com seu e-mail e a nova senha.</p><p><a href="${APP_URL}/auth">Ir para o login</a></p></main></body></html>`;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -172,14 +171,11 @@ serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    let session: { access_token: string; refresh_token: string } | undefined;
+    let session: Record<string, unknown> | undefined;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const { data: signInData, error: signInError } = await supabasePublic.auth.signInWithPassword({ email, password });
       if (signInData?.session?.access_token && signInData?.session?.refresh_token) {
-        session = {
-          access_token: signInData.session.access_token,
-          refresh_token: signInData.session.refresh_token,
-        };
+        session = signInData.session as unknown as Record<string, unknown>;
         break;
       }
       if (signInError) console.error(`set-client-password sign-in attempt ${attempt + 1}:`, signInError.message);
@@ -191,7 +187,7 @@ serve(async (req) => {
     if (wantsHtml) {
       const projectRef = (Deno.env.get("SUPABASE_URL") ?? "").replace(/^https?:\/\//, "").split(".")[0];
       const storageKey = `sb-${projectRef}-auth-token`;
-      const sessionJson = JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token });
+      const sessionJson = JSON.stringify(session);
       const html = `<!doctype html><html><head><meta charset="utf-8"><title>Entrando...</title></head><body><script>
 try { localStorage.setItem(${JSON.stringify(storageKey)}, ${JSON.stringify(sessionJson)}); } catch(e){}
 window.location.replace(${JSON.stringify(APP_URL + "/dashboard")});
