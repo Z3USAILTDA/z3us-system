@@ -19,7 +19,11 @@ const formatDateBR = (date?: string | null) => {
   return `${d}/${m}/${y}`;
 };
 
-const ClientDashboard = () => {
+type ClientDashboardProps = {
+  userId?: string | null;
+};
+
+const ClientDashboard = ({ userId }: ClientDashboardProps) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -40,9 +44,10 @@ const ClientDashboard = () => {
   }, []);
 
   const fetchProjects = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
     // Primeiro tenta buscar pela tabela client_users (nova estrutura de múltiplos usuários)
     let clientId: string | null = null;
@@ -50,7 +55,7 @@ const ClientDashboard = () => {
     const { data: clientUserData } = await supabase
       .from("client_users")
       .select("client_id")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .limit(1)
       .maybeSingle();
 
@@ -61,7 +66,7 @@ const ClientDashboard = () => {
       const { data: clientData } = await supabase
         .from("clients")
         .select("id")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .maybeSingle();
       
       if (clientData) {
