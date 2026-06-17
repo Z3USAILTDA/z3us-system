@@ -172,14 +172,11 @@ serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    let session: { access_token: string; refresh_token: string } | undefined;
+    let session: Record<string, unknown> | undefined;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const { data: signInData, error: signInError } = await supabasePublic.auth.signInWithPassword({ email, password });
       if (signInData?.session?.access_token && signInData?.session?.refresh_token) {
-        session = {
-          access_token: signInData.session.access_token,
-          refresh_token: signInData.session.refresh_token,
-        };
+        session = signInData.session as unknown as Record<string, unknown>;
         break;
       }
       if (signInError) console.error(`set-client-password sign-in attempt ${attempt + 1}:`, signInError.message);
@@ -191,7 +188,7 @@ serve(async (req) => {
     if (wantsHtml) {
       const projectRef = (Deno.env.get("SUPABASE_URL") ?? "").replace(/^https?:\/\//, "").split(".")[0];
       const storageKey = `sb-${projectRef}-auth-token`;
-      const sessionJson = JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token });
+      const sessionJson = JSON.stringify(session);
       const html = `<!doctype html><html><head><meta charset="utf-8"><title>Entrando...</title></head><body><script>
 try { localStorage.setItem(${JSON.stringify(storageKey)}, ${JSON.stringify(sessionJson)}); } catch(e){}
 window.location.replace(${JSON.stringify(APP_URL + "/dashboard")});
