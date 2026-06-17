@@ -11,6 +11,44 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const LOGO_URL = "https://ssljlgmcoilghdyxqihu.supabase.co/storage/v1/object/public/email-assets/logo-z3us.png";
 const APP_URL = "https://projetos.z3us.my";
 
+const encoder = new TextEncoder();
+
+function base64UrlEncode(input: string | ArrayBuffer): string {
+  const bytes = typeof input === "string" ? encoder.encode(input) : new Uint8Array(input);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+async function signPayload(payload: string): Promise<string> {
+  const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  if (!secret) throw new Error("Configuração do servidor indisponível");
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  return base64UrlEncode(signature);
+}
+
+async function createInviteToken(userId: string, email: string, clientId: string, nonce: string): Promise<string> {
+  const payload = base64UrlEncode(JSON.stringify({
+    purpose: "client-password",
+    userId,
+    email,
+    clientId,
+    nonce,
+    exp: Date.now() + 60 * 60 * 1000,
+  }));
+  const signature = await signPayload(payload);
+  return `${payload}.${signature}`;
+}
+
 function generateStrongPassword(): string {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);
@@ -104,29 +142,59 @@ serve(async (req) => {
 
     let isResend = false;
 
+    let invitedUserId: string | null = existing?.id ?? null;
+    const nonce = crypto.randomUUID();
+
     if (existing) {
       isResend = true;
+
+      const { error: metadataError } = await supabaseAdmin.auth.admin.updateUserById(existing.id, {
+        email_confirm: true,
+        app_metadata: {
+          ...(existing.app_metadata ?? {}),
+          client_invite_nonce: nonce,
+        },
+      });
+      if (metadataError) throw metadataError;
     } else {
       // Cria novo usuário com role 'client' e senha aleatória
       const password = generateStrongPassword();
-      const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+      const { data: createdUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: { full_name: email.split("@")[0], role: "client" },
+        app_metadata: { client_invite_nonce: nonce },
       });
       if (createError) throw createError;
+      invitedUserId = createdUser.user?.id ?? null;
     }
 
-    // Gera link de recovery para definição de senha
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "recovery",
-      email,
-      options: { redirectTo: `${APP_URL}/reset-password` },
-    });
-    if (linkError) throw linkError;
-    const inviteUrl = linkData?.properties?.action_link;
-    if (!inviteUrl) throw new Error("Não foi possível gerar link de acesso");
+    if (!invitedUserId) throw new Error("Não foi possível preparar o acesso do cliente");
+
+    // Garante que o usuário tenha perfil, role e vínculo com o cliente mesmo sem depender de triggers.
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .upsert({
+        id: invitedUserId,
+        email,
+        full_name: email.split("@")[0],
+        role: "client",
+      }, { onConflict: "id" });
+    if (profileError) throw profileError;
+
+    const { error: roleError } = await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: invitedUserId, role: "client" }, { onConflict: "user_id,role" });
+    if (roleError) throw roleError;
+
+    const { error: clientUserError } = await supabaseAdmin
+      .from("client_users")
+      .upsert({ client_id: clientId, user_id: invitedUserId }, { onConflict: "client_id,user_id" });
+    if (clientUserError) throw clientUserError;
+
+    const inviteToken = await createInviteToken(invitedUserId, email, clientId, nonce);
+    const inviteUrl = `${APP_URL}/reset-password?invite_token=${encodeURIComponent(inviteToken)}`;
 
     // Envia email via Hermes
     const { error: emailError } = await resend.emails.send({
