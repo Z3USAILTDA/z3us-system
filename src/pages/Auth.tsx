@@ -40,20 +40,40 @@ const Auth = () => {
   };
 
   const onLogin = async (data: LoginFormData) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      // Limpa qualquer token antigo que possa travar o supabase-js
+      try {
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+          .forEach((k) => localStorage.removeItem(k));
+      } catch (_) {}
+
+      const loginPromise = supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
-      if (error) {
-        toast.error(error.message || "Erro ao fazer login");
+      const result = await Promise.race([
+        loginPromise,
+        new Promise<{ error: { message: string } }>((resolve) =>
+          setTimeout(() => resolve({ error: { message: "timeout" } }), 12000)
+        ),
+      ]);
+
+      if ((result as any)?.error) {
+        const msg = (result as any).error.message;
+        if (msg === "timeout") {
+          toast.error("Conexão lenta. Recarregando...");
+          setTimeout(() => window.location.reload(), 600);
+          return;
+        }
+        toast.error(msg || "Erro ao fazer login");
         return;
       }
 
       toast.success("Login realizado com sucesso!");
-      navigate("/dashboard");
+      window.location.replace("/dashboard");
     } catch (error: any) {
       toast.error("Erro ao fazer login");
     } finally {
