@@ -490,11 +490,36 @@ const ClientsContent = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Principal</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        {...form.register("email")}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="email"
+                          type="email"
+                          {...form.register("email")}
+                          className="flex-1"
+                        />
+                        {editingClient && form.watch("email") && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInvite(form.getValues("email"))}
+                            disabled={invitingEmail === form.watch("email")}
+                            title={
+                              emailsWithAccount.has(form.watch("email")?.toLowerCase() ?? "")
+                                ? "Reenviar acesso"
+                                : "Enviar convite de acesso"
+                            }
+                          >
+                            {invitingEmail === form.watch("email") ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : emailsWithAccount.has(form.watch("email")?.toLowerCase() ?? "") ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                       {form.formState.errors.email && (
                         <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
                       )}
