@@ -14,6 +14,7 @@ import Documentation from "./pages/Documentation";
 import WeeklySummary from "./pages/WeeklySummary";
 import MetricsTV from "./pages/MetricsTV";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
