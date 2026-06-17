@@ -19,11 +19,12 @@ const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<
 const getRecoveryTokensFromUrl = () => {
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const searchParams = new URLSearchParams(window.location.search);
+  const inviteToken = searchParams.get("invite_token") || searchParams.get("inviteToken") || hashParams.get("invite_token") || hashParams.get("inviteToken");
   return {
     access_token: hashParams.get("access_token"),
     refresh_token: hashParams.get("refresh_token"),
     type: hashParams.get("type"),
-    invite_token: searchParams.get("invite_token"),
+    invite_token: inviteToken,
   };
 };
 
@@ -83,7 +84,7 @@ const ResetPassword = () => {
       const tokens = getRecoveryTokensFromUrl();
 
       if (tokens.invite_token) {
-        setInviteToken(tokens.invite_token);
+        setInviteToken(tokens.invite_token.trim());
         finish(true);
         return;
       }
