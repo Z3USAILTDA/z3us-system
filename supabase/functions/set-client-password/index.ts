@@ -164,37 +164,43 @@ serve(async (req) => {
     });
     if (updateError) throw updateError;
 
-    if (wantsHtml) return htmlResponse(renderSuccessPage());
+    if (!email) throw new Error("Não foi possível identificar o email do usuário");
 
-    let session: { access_token?: string; refresh_token?: string } | undefined;
-    if (email) {
-      try {
-        const supabasePublic = createClient(
-          Deno.env.get("SUPABASE_URL") ?? "",
-          Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "",
-          { auth: { autoRefreshToken: false, persistSession: false } }
-        );
-        const { data: signInData, error: signInError } = await supabasePublic.auth.signInWithPassword({ email, password });
-        if (signInError) {
-          console.error("set-client-password sign-in error:", signInError.message);
-        }
-        if (signInData?.session?.access_token && signInData?.session?.refresh_token) {
-          session = {
-            access_token: signInData.session.access_token,
-            refresh_token: signInData.session.refresh_token,
-          };
-        }
-      } catch (e) {
-        console.error("set-client-password sign-in fallback:", e);
+    const supabasePublic = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "",
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    let session: { access_token: string; refresh_token: string } | undefined;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const { data: signInData, error: signInError } = await supabasePublic.auth.signInWithPassword({ email, password });
+      if (signInData?.session?.access_token && signInData?.session?.refresh_token) {
+        session = {
+          access_token: signInData.session.access_token,
+          refresh_token: signInData.session.refresh_token,
+        };
+        break;
       }
+      if (signInError) console.error(`set-client-password sign-in attempt ${attempt + 1}:`, signInError.message);
+      await new Promise((r) => setTimeout(r, 400));
+    }
+
+    if (!session) throw new Error("Não foi possível criar a sessão. Tente novamente em instantes.");
+
+    if (wantsHtml) {
+      const projectRef = (Deno.env.get("SUPABASE_URL") ?? "").replace(/^https?:\/\//, "").split(".")[0];
+      const storageKey = `sb-${projectRef}-auth-token`;
+      const sessionJson = JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token });
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>Entrando...</title></head><body><script>
+try { localStorage.setItem(${JSON.stringify(storageKey)}, ${JSON.stringify(sessionJson)}); } catch(e){}
+window.location.replace(${JSON.stringify(APP_URL + "/dashboard")});
+</script></body></html>`;
+      return htmlResponse(html);
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        email,
-        session,
-      }),
+      JSON.stringify({ success: true, email, session }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
