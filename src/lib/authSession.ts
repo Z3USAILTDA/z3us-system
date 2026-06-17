@@ -62,6 +62,18 @@ export const hasUsableStoredSession = () => {
   return session.expires_at > Math.floor(Date.now() / 1000) + 30;
 };
 
+export const fetchUserFromAccessToken = async (accessToken: string) => {
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) return null;
+  return response.json();
+};
+
 export const revokeStoredSession = () => {
   const accessToken = getStoredAuthSession()?.access_token;
   clearAuthStorage();
