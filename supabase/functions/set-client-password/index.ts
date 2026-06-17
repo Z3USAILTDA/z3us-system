@@ -4,7 +4,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
+
+const APP_URL = "https://projetos.z3us.my";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -55,13 +58,34 @@ async function readInviteToken(inviteToken: string) {
   return parsed as { userId: string; email: string; clientId: string; nonce: string };
 }
 
+async function readJsonBody(req: Request) {
+  const text = await req.text();
+  if (!text.trim()) return {};
+  return JSON.parse(text);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  if (req.method === "GET") {
+    const url = new URL(req.url);
+    const inviteToken = url.searchParams.get("invite_token") ?? "";
+    const redirectUrl = new URL("/reset-password", APP_URL);
+    if (inviteToken) redirectUrl.searchParams.set("invite_token", inviteToken);
+    return Response.redirect(redirectUrl.toString(), 302);
+  }
+
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Método não permitido" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 405 }
+    );
+  }
+
   try {
-    const body = await req.json();
+    const body = await readJsonBody(req);
     const password = String(body.password ?? "");
     const inviteToken = typeof body.inviteToken === "string" ? body.inviteToken : undefined;
 
