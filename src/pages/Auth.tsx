@@ -42,40 +42,46 @@ const Auth = () => {
   const onLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      // Limpa qualquer token antigo que possa travar o supabase-js
+      // Limpa qualquer token antigo para evitar locks travados do supabase-js
       try {
         Object.keys(localStorage)
           .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
           .forEach((k) => localStorage.removeItem(k));
       } catch (_) {}
 
-      const loginPromise = supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-      const result = await Promise.race([
-        loginPromise,
-        new Promise<{ error: { message: string } }>((resolve) =>
-          setTimeout(() => resolve({ error: { message: "timeout" } }), 12000)
-        ),
-      ]);
-
-      if ((result as any)?.error) {
-        const msg = (result as any).error.message;
-        if (msg === "timeout") {
-          toast.error("Conexão lenta. Recarregando...");
-          setTimeout(() => window.location.reload(), 600);
-          return;
+      // Chama o endpoint de auth diretamente (sem passar pelo SDK que pode travar)
+      const res = await fetch(
+        `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_KEY,
+          },
+          body: JSON.stringify({ email: data.email, password: data.password }),
         }
-        toast.error(msg || "Erro ao fazer login");
+      );
+
+      const payload = await res.json().catch(() => ({}));
+
+      if (!res.ok || !payload?.access_token || !payload?.refresh_token) {
+        toast.error(payload?.error_description || payload?.msg || "Email ou senha inválidos");
         return;
       }
+
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: payload.access_token,
+        refresh_token: payload.refresh_token,
+      });
+      if (sessionError) throw sessionError;
 
       toast.success("Login realizado com sucesso!");
       window.location.replace("/dashboard");
     } catch (error: any) {
-      toast.error("Erro ao fazer login");
+      toast.error(error?.message || "Erro ao fazer login");
     } finally {
       setIsLoading(false);
     }
