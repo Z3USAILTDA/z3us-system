@@ -44,16 +44,29 @@ const ResetPassword = () => {
       toast.error("As senhas não conferem");
       return;
     }
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) {
-        toast.error(error.message || "Erro ao definir senha");
+      console.log("[ResetPassword] calling updateUser...");
+      const updatePromise = supabase.auth.updateUser({ password });
+      const timeoutPromise = new Promise<any>((resolve) =>
+        setTimeout(
+          () => resolve({ error: { message: "Tempo esgotado. Faça login com a nova senha." } }),
+          15000
+        )
+      );
+      const result: any = await Promise.race([updatePromise, timeoutPromise]);
+      console.log("[ResetPassword] updateUser result", result);
+      if (result?.error) {
+        toast.error(result.error.message || "Erro ao definir senha");
+        setIsLoading(false);
         return;
       }
       toast.success("Senha definida com sucesso!");
+      setIsLoading(false);
       navigate("/dashboard");
-    } finally {
+    } catch (err: any) {
+      console.error("[ResetPassword] updateUser threw", err);
+      toast.error(err?.message || "Erro ao definir senha");
       setIsLoading(false);
     }
   };
