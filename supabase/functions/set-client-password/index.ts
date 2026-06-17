@@ -111,17 +111,23 @@ serve(async (req) => {
     if (updateError) throw updateError;
 
     if (email) {
-      await supabaseAdmin
+      const { error: profileError } = await supabaseAdmin
         .from("profiles")
-        .upsert({ id: userId, email, full_name: email.split("@")[0], role: "client" }, { onConflict: "id" });
-      await supabaseAdmin
+        .insert({ id: userId, email, full_name: email.split("@")[0], role: "client" })
+        .select("id")
+        .maybeSingle();
+      if (profileError && profileError.code !== "23505") throw profileError;
+
+      const { error: roleError } = await supabaseAdmin
         .from("user_roles")
         .upsert({ user_id: userId, role: "client" }, { onConflict: "user_id,role" });
+      if (roleError) throw roleError;
     }
     if (clientId) {
-      await supabaseAdmin
+      const { error: clientUserError } = await supabaseAdmin
         .from("client_users")
         .upsert({ client_id: clientId, user_id: userId }, { onConflict: "client_id,user_id" });
+      if (clientUserError) throw clientUserError;
     }
 
     return new Response(
