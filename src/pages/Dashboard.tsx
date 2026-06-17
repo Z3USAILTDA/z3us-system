@@ -20,7 +20,7 @@ import {
 import { NavLink } from "react-router-dom";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import ClientDashboard from "@/components/dashboard/ClientDashboard";
-import { getStoredAuthSession, revokeStoredSession } from "@/lib/authSession";
+import { fetchUserFromAccessToken, getStoredAuthSession, revokeStoredSession } from "@/lib/authSession";
 
 const DashboardContent = () => {
   const navigate = useNavigate();
@@ -35,9 +35,7 @@ const DashboardContent = () => {
 
   const checkUser = async () => {
     const storedSession = getStoredAuthSession();
-    const session = storedSession
-      ? { user: storedSession.user as any, access_token: storedSession.access_token }
-      : (await supabase.auth.getSession()).data.session;
+    const session = storedSession ? { user: storedSession.user as any, access_token: storedSession.access_token } : null;
 
     if (!session?.access_token) {
       navigate("/auth");
@@ -48,13 +46,13 @@ const DashboardContent = () => {
     let userId = userFromSession?.id;
 
     if (!userId) {
-      const { data: authUser, error: userError } = await supabase.auth.getUser(session.access_token);
-      if (userError || !authUser?.user) {
+      const authUser = await fetchUserFromAccessToken(session.access_token);
+      if (!authUser?.id) {
         navigate("/auth");
         return;
       }
-      userId = authUser.user.id;
-      setUser(authUser.user);
+      userId = authUser.id;
+      setUser(authUser);
     } else {
       setUser(userFromSession);
     }
