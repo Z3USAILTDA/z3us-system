@@ -464,6 +464,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_client_observation: {
+        Args: { _observation: string; _project_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "client"
