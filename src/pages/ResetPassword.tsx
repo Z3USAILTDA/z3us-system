@@ -82,15 +82,17 @@ const ResetPassword = () => {
       setChecking(false);
     };
 
+    const tokens = getRecoveryTokensFromUrl();
+
+    if (tokens.invite_token) {
+      setInviteToken(tokens.invite_token.trim());
+      finish(true);
+      return () => {
+        mounted = false;
+      };
+    }
+
     const initializeRecoverySession = async () => {
-      const tokens = getRecoveryTokensFromUrl();
-
-      if (tokens.invite_token) {
-        setInviteToken(tokens.invite_token.trim());
-        finish(true);
-        return;
-      }
-
       if (tokens.access_token && tokens.refresh_token) {
         setAccessToken(tokens.access_token);
         finish(true);
@@ -113,6 +115,7 @@ const ResetPassword = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        if (!session && (event === "INITIAL_SESSION" || inviteToken)) return;
         if (session?.access_token) setAccessToken(session.access_token);
         finish(Boolean(session));
       }
