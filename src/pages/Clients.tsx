@@ -55,6 +55,10 @@ const ClientsContent = () => {
   const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState("");
 
+  // Estado de convites
+  const [invitingEmail, setInvitingEmail] = useState<string | null>(null);
+  const [emailsWithAccount, setEmailsWithAccount] = useState<Set<string>>(new Set());
+
   // Projetos do cliente (categorias de demandas)
   const [clientProjects, setClientProjects] = useState<{ id: string; name: string }[]>([]);
   const [newProjectName, setNewProjectName] = useState("");
