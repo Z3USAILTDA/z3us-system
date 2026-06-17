@@ -76,6 +76,7 @@ serve(async (req) => {
     let userId: string;
     let email: string | undefined;
     let clientId: string | undefined;
+    let appMetadata: Record<string, unknown> = {};
 
     if (typeof inviteToken === "string" && inviteToken.trim()) {
       const invite = await readInviteToken(inviteToken.trim());
@@ -90,6 +91,7 @@ serve(async (req) => {
       userId = invite.userId;
       email = invite.email;
       clientId = invite.clientId;
+      appMetadata = user.app_metadata ?? {};
     } else {
       const authHeader = req.headers.get("Authorization");
       if (!authHeader) throw new Error("Link expirado. Solicite um novo convite ao administrador.");
@@ -98,12 +100,13 @@ serve(async (req) => {
       if (userError || !user) throw new Error("Link expirado. Solicite um novo convite ao administrador.");
       userId = user.id;
       email = user.email ?? undefined;
+      appMetadata = user.app_metadata ?? {};
     }
 
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
       password,
       email_confirm: true,
-      app_metadata: { client_invite_nonce: null },
+      app_metadata: { ...appMetadata, client_invite_nonce: null },
     });
     if (updateError) throw updateError;
 
