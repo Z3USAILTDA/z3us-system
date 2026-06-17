@@ -62,7 +62,6 @@ const DashboardContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
-    { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
     { title: "Resumo da Semana", url: "/dashboard/weekly-summary", icon: BarChart3 },
     { title: "Métricas TV", url: "/metricas-projetos-tv", icon: MonitorPlay, external: true },
   ];
@@ -70,7 +69,6 @@ const DashboardContent = () => {
 
   const clientMenuItems = [
     { title: "Meus Projetos", url: "/dashboard", icon: FolderKanban },
-    { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
