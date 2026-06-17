@@ -131,10 +131,10 @@ serve(async (req) => {
     // Busca o nome do cliente para personalização
     const { data: client } = await supabaseAdmin
       .from("clients")
-      .select("name")
+      .select("company_name, contact_name")
       .eq("id", clientId)
       .maybeSingle();
-    const clientName = client?.name ?? "Cliente";
+    const clientName = client?.company_name ?? client?.contact_name ?? "Cliente";
 
     // Verifica se já existe usuário com este email
     const { data: listed } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
