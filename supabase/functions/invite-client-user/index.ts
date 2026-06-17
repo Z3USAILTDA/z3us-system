@@ -197,8 +197,7 @@ serve(async (req) => {
     if (clientUserError) throw clientUserError;
 
     const inviteToken = await createInviteToken(invitedUserId, email, clientId, nonce);
-    const functionBaseUrl = `${Deno.env.get("SUPABASE_URL") ?? ""}/functions/v1/set-client-password`;
-    const inviteUrl = `${functionBaseUrl}?invite_token=${encodeURIComponent(inviteToken)}`;
+    const inviteUrl = `${APP_URL}/reset-password?invite_token=${encodeURIComponent(inviteToken)}`;
 
     // Envia email via Hermes
     const { error: emailError } = await resend.emails.send({
