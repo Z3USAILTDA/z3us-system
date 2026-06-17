@@ -44,7 +44,7 @@ async function createInviteToken(userId: string, email: string, clientId: string
     email,
     clientId,
     nonce,
-    exp: Date.now() + 60 * 60 * 1000,
+    exp: Date.now() + 7 * 24 * 60 * 60 * 1000,
   }));
   const signature = await signPayload(payload);
   return `${payload}.${signature}`;
@@ -74,7 +74,7 @@ function buildEmailHtml(clientName: string, inviteUrl: string, recipientEmail: s
       <h1 style="margin:0 0 16px 0;font-size:22px;color:#ffffff;">${title}</h1>
       <p style="margin:0 0 16px 0;line-height:1.6;font-size:15px;">${intro}</p>
       <p style="margin:0 0 24px 0;line-height:1.6;font-size:15px;">
-        Para começar, defina sua senha clicando no botão abaixo. Esse link é pessoal e expira em 1 hora.
+        Para começar, defina sua senha clicando no botão abaixo. Esse link é pessoal e expira em 7 dias.
       </p>
       <div style="text-align:center;margin:28px 0;">
         <a href="${inviteUrl}" style="display:inline-block;background:#3b82f6;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px;">
