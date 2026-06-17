@@ -4,7 +4,8 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-api-version",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -43,7 +44,7 @@ async function createInviteToken(userId: string, email: string, clientId: string
     email,
     clientId,
     nonce,
-    exp: Date.now() + 60 * 60 * 1000,
+    exp: Date.now() + 7 * 24 * 60 * 60 * 1000,
   }));
   const signature = await signPayload(payload);
   return `${payload}.${signature}`;
@@ -73,7 +74,7 @@ function buildEmailHtml(clientName: string, inviteUrl: string, recipientEmail: s
       <h1 style="margin:0 0 16px 0;font-size:22px;color:#ffffff;">${title}</h1>
       <p style="margin:0 0 16px 0;line-height:1.6;font-size:15px;">${intro}</p>
       <p style="margin:0 0 24px 0;line-height:1.6;font-size:15px;">
-        Para começar, defina sua senha clicando no botão abaixo. Esse link é pessoal e expira em 1 hora.
+        Para começar, defina sua senha clicando no botão abaixo. Esse link é pessoal e expira em 7 dias.
       </p>
       <div style="text-align:center;margin:28px 0;">
         <a href="${inviteUrl}" style="display:inline-block;background:#3b82f6;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px;">
@@ -131,10 +132,10 @@ serve(async (req) => {
     // Busca o nome do cliente para personalização
     const { data: client } = await supabaseAdmin
       .from("clients")
-      .select("name")
+      .select("company_name, contact_name")
       .eq("id", clientId)
       .maybeSingle();
-    const clientName = client?.name ?? "Cliente";
+    const clientName = client?.company_name ?? client?.contact_name ?? "Cliente";
 
     // Verifica se já existe usuário com este email
     const { data: listed } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });

@@ -70,7 +70,6 @@ const DashboardContent = () => {
 
   const clientMenuItems = [
     { title: "Meus Projetos", url: "/dashboard", icon: FolderKanban },
-    { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 
   const menuItems = profile?.role === "admin" ? adminMenuItems : clientMenuItems;
