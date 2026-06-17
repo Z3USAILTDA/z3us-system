@@ -184,10 +184,28 @@ serve(async (req) => {
       if (clientUserError) throw clientUserError;
     }
 
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "",
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    const { data: signInData, error: signInError } = email
+      ? await supabaseAuth.auth.signInWithPassword({ email, password })
+      : { data: null, error: new Error("Não foi possível iniciar a sessão") };
+    if (signInError || !signInData?.session) throw signInError ?? new Error("Não foi possível iniciar a sessão");
+
     if (wantsHtml) return htmlResponse(renderSuccessPage());
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({
+        success: true,
+        email,
+        session: {
+          access_token: signInData.session.access_token,
+          refresh_token: signInData.session.refresh_token,
+        },
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
