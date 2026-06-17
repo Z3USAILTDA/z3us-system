@@ -105,10 +105,19 @@ serve(async (req) => {
   try {
     const body = await readJsonBody(req);
     const password = String(body.password ?? "");
+    const confirmPassword = typeof body.confirmPassword === "string" ? body.confirmPassword : password;
     const inviteToken = typeof body.inviteToken === "string" ? body.inviteToken : undefined;
+    const wantsHtml = (req.headers.get("content-type") ?? "").includes("application/x-www-form-urlencoded");
 
     if (typeof password !== "string" || password.length < 8) {
-      throw new Error("A senha deve ter no mínimo 8 caracteres");
+      const message = "A senha deve ter no mínimo 8 caracteres";
+      if (wantsHtml) return htmlResponse(renderPasswordPage(inviteToken ?? "", message), 400);
+      throw new Error(message);
+    }
+    if (password !== confirmPassword) {
+      const message = "As senhas não conferem";
+      if (wantsHtml) return htmlResponse(renderPasswordPage(inviteToken ?? "", message), 400);
+      throw new Error(message);
     }
 
     const supabaseAdmin = createClient(
@@ -173,6 +182,8 @@ serve(async (req) => {
         .upsert({ client_id: clientId, user_id: userId }, { onConflict: "client_id,user_id" });
       if (clientUserError) throw clientUserError;
     }
+
+    if (wantsHtml) return htmlResponse(renderSuccessPage());
 
     return new Response(
       JSON.stringify({ success: true }),
