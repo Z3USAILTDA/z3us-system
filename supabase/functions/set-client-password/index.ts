@@ -192,6 +192,9 @@ serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erro ao definir senha";
     console.error("set-client-password error:", message);
+    if ((req.headers.get("content-type") ?? "").includes("application/x-www-form-urlencoded")) {
+      return htmlResponse(renderPasswordPage("", message), 400);
+    }
     return new Response(
       JSON.stringify({ error: message }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
