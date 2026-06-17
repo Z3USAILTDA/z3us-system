@@ -25,6 +25,23 @@ const getRecoveryTokensFromUrl = () => {
   };
 };
 
+const getStoredAccessToken = () => {
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith("sb-") || !key.endsWith("-auth-token")) continue;
+      const value = localStorage.getItem(key);
+      if (!value) continue;
+      const parsed = JSON.parse(value);
+      const token = parsed?.access_token || parsed?.currentSession?.access_token;
+      if (token) return token as string;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+};
+
 const updatePasswordWithToken = async (accessToken: string, newPassword: string) => {
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
     method: "PUT",
@@ -70,6 +87,13 @@ const ResetPassword = () => {
         return;
       }
 
+      const storedToken = getStoredAccessToken();
+      if (storedToken) {
+        setAccessToken(storedToken);
+        finish(true);
+        return;
+      }
+
       const result = await withTimeout(supabase.auth.getSession(), 8000);
       setAccessToken(result?.data?.session?.access_token ?? null);
       finish(Boolean(result?.data?.session));
@@ -102,8 +126,8 @@ const ResetPassword = () => {
     }
     setIsLoading(true);
     try {
-      const sessionResult = await withTimeout(supabase.auth.getSession(), 3000);
-      const token = accessToken || sessionResult?.data?.session?.access_token;
+      const sessionResult = accessToken ? null : await withTimeout(supabase.auth.getSession(), 3000);
+      const token = accessToken || getStoredAccessToken() || sessionResult?.data?.session?.access_token;
 
       if (!token) {
         toast.error("Link expirado. Solicite um novo convite ao administrador.");
