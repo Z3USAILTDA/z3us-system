@@ -164,31 +164,6 @@ serve(async (req) => {
     });
     if (updateError) throw updateError;
 
-    const syncTasks: Promise<unknown>[] = [];
-    if (email) {
-      syncTasks.push(
-        supabaseAdmin
-          .from("profiles")
-          .upsert({ id: userId, email, full_name: email.split("@")[0], role: "client" }, { onConflict: "id" }),
-        supabaseAdmin
-          .from("user_roles")
-          .upsert({ user_id: userId, role: "client" }, { onConflict: "user_id,role" }),
-      );
-    }
-    if (clientId) {
-      syncTasks.push(
-        supabaseAdmin
-          .from("client_users")
-          .upsert({ client_id: clientId, user_id: userId }, { onConflict: "client_id,user_id" }),
-      );
-    }
-
-    const syncResults = await Promise.all(syncTasks);
-    for (const result of syncResults) {
-      const error = (result as { error?: Error | null })?.error;
-      if (error) throw error;
-    }
-
     if (wantsHtml) return htmlResponse(renderSuccessPage());
 
     return new Response(
