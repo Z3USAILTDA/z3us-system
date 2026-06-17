@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,16 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Loader2, KeyRound } from "lucide-react";
 import logoZ3us from "@/assets/logo-z3us.png";
+import { getStoredAuthSession, storeAuthSession } from "@/lib/authSession";
 
 const FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/set-client-password`;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T | null> => {
-  return Promise.race([
-    promise,
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
-  ]);
-};
 
 const getRecoveryTokensFromUrl = () => {
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -32,6 +25,9 @@ const getRecoveryTokensFromUrl = () => {
 };
 
 const getStoredAccessToken = () => {
+  const storedSession = getStoredAuthSession();
+  if (storedSession?.access_token) return storedSession.access_token;
+
   try {
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
@@ -60,8 +56,6 @@ const getEmailFromInviteToken = (token?: string | null) => {
     return undefined;
   }
 };
-
-const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 const updatePasswordWithToken = async (newPassword: string, accessToken?: string | null, inviteToken?: string | null) => {
   const controller = new AbortController();
