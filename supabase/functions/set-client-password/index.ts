@@ -189,14 +189,13 @@ serve(async (req) => {
     if (!session) throw new Error("Não foi possível criar a sessão. Tente novamente em instantes.");
 
     if (wantsHtml) {
+      const projectRef = (Deno.env.get("SUPABASE_URL") ?? "").replace(/^https?:\/\//, "").split(".")[0];
+      const storageKey = `sb-${projectRef}-auth-token`;
+      const sessionJson = JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token });
       const html = `<!doctype html><html><head><meta charset="utf-8"><title>Entrando...</title></head><body><script>
-        try {
-          var key = Object.keys(localStorage).find(function(k){return k.indexOf('sb-')===0 && k.indexOf('-auth-token')>0;});
-          if (!key) key = 'sb-${(Deno.env.get("SUPABASE_URL") ?? "").replace(/^https?:\\/\\//,"").split(".")[0]}-auth-token';
-          localStorage.setItem(key, JSON.stringify({access_token:${JSON.stringify(session.access_token)},refresh_token:${JSON.stringify(session.refresh_token)}}));
-        } catch(e){}
-        window.location.replace('${APP_URL}/dashboard');
-      </script></body></html>`;
+try { localStorage.setItem(${JSON.stringify(storageKey)}, ${JSON.stringify(sessionJson)}); } catch(e){}
+window.location.replace(${JSON.stringify(APP_URL + "/dashboard")});
+</script></body></html>`;
       return htmlResponse(html);
     }
 
