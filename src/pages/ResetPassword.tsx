@@ -25,11 +25,29 @@ const getRecoveryTokensFromUrl = () => {
   };
 };
 
+const updatePasswordWithToken = async (accessToken: string, newPassword: string) => {
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ password: newPassword }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.msg || payload?.message || "Erro ao definir senha");
+  }
+};
+
 const ResetPassword = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
@@ -45,20 +63,21 @@ const ResetPassword = () => {
       const tokens = getRecoveryTokensFromUrl();
 
       if (tokens.access_token && tokens.refresh_token) {
-        const result = await withTimeout(
-          supabase.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token }),
-          8000
-        );
-        finish(Boolean(result?.data?.session || tokens.type === "recovery"));
+        setAccessToken(tokens.access_token);
+        finish(true);
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        void supabase.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
         return;
       }
 
       const result = await withTimeout(supabase.auth.getSession(), 8000);
+      setAccessToken(result?.data?.session?.access_token ?? null);
       finish(Boolean(result?.data?.session));
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        if (session?.access_token) setAccessToken(session.access_token);
         finish(Boolean(session));
       }
     });
@@ -83,26 +102,32 @@ const ResetPassword = () => {
     }
     setIsLoading(true);
     try {
-      console.log("[ResetPassword] calling updateUser...");
-      const updatePromise = supabase.auth.updateUser({ password });
-      const timeoutPromise = new Promise<any>((resolve) =>
-        setTimeout(
-          () => resolve({ error: { message: "Tempo esgotado. Faça login com a nova senha." } }),
-          15000
-        )
-      );
-      const result: any = await Promise.race([updatePromise, timeoutPromise]);
-      console.log("[ResetPassword] updateUser result", result);
-      if (result?.error) {
-        toast.error(result.error.message || "Erro ao definir senha");
+      const sessionResult = await withTimeout(supabase.auth.getSession(), 3000);
+      const token = accessToken || sessionResult?.data?.session?.access_token;
+
+      if (!token) {
+        toast.error("Link expirado. Solicite um novo convite ao administrador.");
         setIsLoading(false);
         return;
       }
+
+      const result = await withTimeout(
+        updatePasswordWithToken(token, password).then(() => ({ error: null })).catch((error) => ({ error })),
+        15000
+      );
+
+      if (!result) {
+        toast.error("Tempo esgotado. Tente novamente ou solicite um novo convite.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (result.error) throw result.error;
+
       toast.success("Senha definida com sucesso!");
       setIsLoading(false);
-      navigate("/dashboard");
+      navigate("/auth");
     } catch (err: any) {
-      console.error("[ResetPassword] updateUser threw", err);
       toast.error(err?.message || "Erro ao definir senha");
       setIsLoading(false);
     }
