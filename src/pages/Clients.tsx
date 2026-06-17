@@ -554,19 +554,55 @@ const ClientsContent = () => {
                     </div>
 
                     {additionalEmails.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {additionalEmails.map((email) => (
-                          <Badge key={email} variant="secondary" className="flex items-center gap-1 py-1">
-                            {email}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveEmail(email)}
-                              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                      <div className="flex flex-col gap-2 mt-2">
+                        {additionalEmails.map((email) => {
+                          const hasAccount = emailsWithAccount.has(email.toLowerCase());
+                          const isInviting = invitingEmail === email;
+                          return (
+                            <div
+                              key={email}
+                              className="flex items-center justify-between gap-2 bg-background border rounded-md px-3 py-1.5"
                             >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                <span className="text-sm truncate">{email}</span>
+                                {hasAccount && (
+                                  <Badge variant="outline" className="text-[10px] py-0 h-5 border-green-500/50 text-green-500">
+                                    Convidado
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {editingClient && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    onClick={() => handleInvite(email)}
+                                    disabled={isInviting}
+                                  >
+                                    {isInviting ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <>
+                                        <Send className="h-3 w-3 mr-1" />
+                                        {hasAccount ? "Reenviar" : "Convidar"}
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveEmail(email)}
+                                  className="hover:bg-destructive/20 rounded-full p-1"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
