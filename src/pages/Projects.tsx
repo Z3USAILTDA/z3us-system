@@ -135,7 +135,8 @@ const ProjectsContent = () => {
           )
         `,
         )
-        .order("created_at", { ascending: false }),
+        .order("end_date", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: true }),
       supabase.from("clients").select("*").eq("status", "active"),
       supabase.from("teams").select("*").eq("status", "active").order("name"),
       supabase.from("profiles").select("id, full_name, role, email").eq("role", "admin"),
