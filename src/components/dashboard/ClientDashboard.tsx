@@ -83,13 +83,15 @@ const ClientDashboard = ({ userId }: ClientDashboardProps) => {
       .from("projects")
       .select("*")
       .eq("client_id", clientId)
-      .order("created_at", { ascending: false });
+      .order("end_date", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true });
 
     // Ordena projetos: primeiro os que têm client_observation, depois os demais
-    const sortedProjects = (projectsData || []).sort((a, b) => {
+    // Dentro de cada grupo, mantém a ordem cronológica (por end_date) já vinda do banco
+    const sortedProjects = (projectsData || []).slice().sort((a, b) => {
       const aHasObservation = a.client_observation && a.client_observation.trim() !== '';
       const bHasObservation = b.client_observation && b.client_observation.trim() !== '';
-      
+
       if (aHasObservation && !bHasObservation) return -1;
       if (!aHasObservation && bHasObservation) return 1;
       return 0;
