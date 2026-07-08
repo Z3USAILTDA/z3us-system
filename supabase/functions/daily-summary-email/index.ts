@@ -552,7 +552,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resendClient.emails.send({
       from: "Z3US System <noreply@hermes.z3us.ai>",
       to: ["devs@z3us.ai"],
-      cc: ["herbert@z3us.ai", "rodrigo@z3us.ai", "larissa@z3us.ai"],
+      cc: ["herbert@z3us.ai", "rodrigo@z3us.ai", "larissa@z3us.ai", "wconceicao@z3us.ai", "asilva@z3us.ai"],
       subject: `📊 Resumo Diário Z3US – ${formatDateBR(today)} | ${created.length} criadas, ${completed.length} concluídas, ${overdue.length} em atraso`,
       html: emailHtml,
       attachments: [
