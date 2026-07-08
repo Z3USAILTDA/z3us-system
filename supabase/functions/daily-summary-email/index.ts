@@ -348,6 +348,26 @@ async function generatePdfReport(
     }
   };
 
+  // Sanitiza texto para WinAnsi (fontes StandardFonts não suportam Unicode como →, ✓, emojis)
+  const sanitize = (text: string): string =>
+    text
+      .replace(/→/g, "->").replace(/←/g, "<-").replace(/↑/g, "^").replace(/↓/g, "v")
+      .replace(/[""]/g, '"').replace(/['']/g, "'").replace(/…/g, "...")
+      .replace(/•/g, "-").replace(/[^\x00-\xFF]/g, "?");
+
+  const originalDrawText = currentPage.drawText.bind(currentPage);
+  const wrapDrawText = (page: any) => {
+    const orig = page.drawText.bind(page);
+    page.drawText = (text: string, options: any) => orig(sanitize(String(text ?? "")), options);
+  };
+  wrapDrawText(currentPage);
+  const origAddPage = pdfDoc.addPage.bind(pdfDoc);
+  pdfDoc.addPage = ((...args: any[]) => {
+    const p = origAddPage(...args);
+    wrapDrawText(p);
+    return p;
+  }) as any;
+
   // ===== CAPA =====
   currentPage.drawRectangle({
     x: 0, y: 0, width: pageWidth, height: pageHeight,
@@ -552,7 +572,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resendClient.emails.send({
       from: "Z3US System <noreply@hermes.z3us.ai>",
       to: ["devs@z3us.ai"],
-      cc: ["herbert@z3us.ai", "rodrigo@z3us.ai", "larissa@z3us.ai"],
+      cc: ["herbert@z3us.ai", "rodrigo@z3us.ai", "larissa@z3us.ai", "wconceicao@z3us.ai", "asilva@z3us.ai"],
       subject: `📊 Resumo Diário Z3US – ${formatDateBR(today)} | ${created.length} criadas, ${completed.length} concluídas, ${overdue.length} em atraso`,
       html: emailHtml,
       attachments: [
