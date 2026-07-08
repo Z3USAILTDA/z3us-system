@@ -348,6 +348,26 @@ async function generatePdfReport(
     }
   };
 
+  // Sanitiza texto para WinAnsi (fontes StandardFonts não suportam Unicode como →, ✓, emojis)
+  const sanitize = (text: string): string =>
+    text
+      .replace(/→/g, "->").replace(/←/g, "<-").replace(/↑/g, "^").replace(/↓/g, "v")
+      .replace(/[""]/g, '"').replace(/['']/g, "'").replace(/…/g, "...")
+      .replace(/•/g, "-").replace(/[^\x00-\xFF]/g, "?");
+
+  const originalDrawText = currentPage.drawText.bind(currentPage);
+  const wrapDrawText = (page: any) => {
+    const orig = page.drawText.bind(page);
+    page.drawText = (text: string, options: any) => orig(sanitize(String(text ?? "")), options);
+  };
+  wrapDrawText(currentPage);
+  const origAddPage = pdfDoc.addPage.bind(pdfDoc);
+  pdfDoc.addPage = ((...args: any[]) => {
+    const p = origAddPage(...args);
+    wrapDrawText(p);
+    return p;
+  }) as any;
+
   // ===== CAPA =====
   currentPage.drawRectangle({
     x: 0, y: 0, width: pageWidth, height: pageHeight,
