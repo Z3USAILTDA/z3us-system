@@ -811,8 +811,8 @@ const ProjectsContent = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-3 sm:p-6 overflow-auto">
-          <div className="space-y-6">
+        <main className="flex-1 p-3 sm:p-6 overflow-auto min-w-0">
+          <div className="space-y-6 min-w-0 w-full">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold">Gerenciar Projetos</h1>
