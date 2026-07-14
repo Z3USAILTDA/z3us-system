@@ -1266,8 +1266,8 @@ const ProjectsContent = () => {
                 ))}
               </div>
             ) : (
-              <Card className="min-w-0">
-                <CardContent className="p-3 sm:p-6 min-w-0">
+              <Card className="min-w-0 w-full max-w-full overflow-hidden">
+                <CardContent className="p-3 sm:p-6 min-w-0 w-full max-w-full">
                   {/* Filters */}
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
