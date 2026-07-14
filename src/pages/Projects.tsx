@@ -119,6 +119,11 @@ const ProjectsContent = () => {
     checkUser();
   }, []);
 
+  // Reset pagination when filters or sorting change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterSprint, filterArea, filterClient, filterClientProject, filterStatus, filterResponsible, sortColumn, sortDirection]);
+
   const checkUser = async () => {
     const {
       data: { session },
