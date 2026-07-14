@@ -124,6 +124,12 @@ const ProjectsContent = () => {
     setCurrentPage(1);
   }, [filterSprint, filterArea, filterClient, filterClientProject, filterStatus, filterResponsible, sortColumn, sortDirection]);
 
+  // Reset project filter when client filter changes
+  useEffect(() => {
+    setFilterClientProject("all");
+  }, [filterClient]);
+
+
   const checkUser = async () => {
     const {
       data: { session },
@@ -471,7 +477,9 @@ const ProjectsContent = () => {
     .filter((r) => activeTeamNames.has(r));
   const uniqueClientProjects = [...new Set(projects.map((p) => p.client_project_id).filter(Boolean))]
     .map((id) => clientProjects.find((cp) => cp.id === id))
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((cp: any) => !filterClient || filterClient === "all" || cp.client_id === filterClient);
+
 
   const clearFilters = () => {
     setFilterSprint("all");
