@@ -1318,15 +1318,19 @@ const ProjectsContent = () => {
                             className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                           />
                         </PaginationItem>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              isActive={page === currentPage}
-                              onClick={() => setCurrentPage(page)}
-                              className="cursor-pointer"
-                            >
-                              {page}
-                            </PaginationLink>
+                        {getPaginationPages().map((page, idx) => (
+                          <PaginationItem key={`${page}-${idx}`}>
+                            {page === "..." ? (
+                              <PaginationEllipsis />
+                            ) : (
+                              <PaginationLink
+                                isActive={page === currentPage}
+                                onClick={() => setCurrentPage(page as number)}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            )}
                           </PaginationItem>
                         ))}
                         <PaginationItem>
