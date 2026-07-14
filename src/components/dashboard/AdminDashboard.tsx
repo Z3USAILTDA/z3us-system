@@ -125,6 +125,7 @@ const AdminDashboard = () => {
   const [todayDemandsByPerson, setTodayDemandsByPerson] = useState<PersonDemands[]>([]);
   const [todayDemandsByClient, setTodayDemandsByClient] = useState<ClientDemands[]>([]);
   const [todayProjects, setTodayProjects] = useState<Project[]>([]);
+  const [inactiveTeamNames, setInactiveTeamNames] = useState<Set<string>>(new Set());
   const [yesterdayStats, setYesterdayStats] = useState<YesterdayStats>({
     created: 0,
     completed: 0,
@@ -139,13 +140,22 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchClients();
+    fetchInactiveTeams();
   }, []);
 
   useEffect(() => {
     fetchStats();
     fetchTodayDemands();
     fetchYesterdayStats();
-  }, [selectedClient]);
+  }, [selectedClient, inactiveTeamNames]);
+
+  const fetchInactiveTeams = async () => {
+    const { data } = await supabase
+      .from("teams")
+      .select("name")
+      .neq("status", "active");
+    setInactiveTeamNames(new Set((data || []).map((t: any) => t.name)));
+  };
 
   const fetchClients = async () => {
     const { data } = await supabase
@@ -230,6 +240,7 @@ const AdminDashboard = () => {
     const personMap = new Map<string, PersonDemands>();
     filteredProjects.forEach(project => {
       const person = project.responsible || "Não atribuído";
+      if (project.responsible && inactiveTeamNames.has(project.responsible)) return;
       const clientName = (project.clients as any)?.company_name || "Sem cliente";
       
       if (!personMap.has(person)) {
@@ -394,6 +405,7 @@ const AdminDashboard = () => {
     // Calculate top responsibles
     const responsibleCount = new Map<string, number>();
     [...filteredCreated, ...filteredCompleted].forEach(p => {
+      if (p.responsible && inactiveTeamNames.has(p.responsible)) return;
       const name = p.responsible || "Não atribuído";
       responsibleCount.set(name, (responsibleCount.get(name) || 0) + 1);
     });
@@ -527,7 +539,7 @@ const AdminDashboard = () => {
     allProjects?.forEach(project => {
       const person = project.responsible;
       // Skip if no responsible assigned or if user is excluded
-      if (!person || person.trim() === "" || excludedUsers.includes(person)) return;
+      if (!person || person.trim() === "" || excludedUsers.includes(person) || inactiveTeamNames.has(person)) return;
       
       if (!personMap.has(person)) {
         personMap.set(person, { total: 0, onTime: 0, delayed: 0, delayedDays: 0, projects: [] });
