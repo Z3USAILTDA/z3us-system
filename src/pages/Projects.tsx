@@ -89,6 +89,7 @@ const ProjectsContent = () => {
   const [filterSprint, setFilterSprint] = useState("");
   const [filterArea, setFilterArea] = useState("");
   const [filterClient, setFilterClient] = useState("");
+  const [filterClientProject, setFilterClientProject] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterResponsible, setFilterResponsible] = useState("");
 
@@ -357,7 +358,8 @@ const ProjectsContent = () => {
     if (filterSprint && filterSprint !== "all" && project.sprint !== filterSprint) return false;
     if (filterArea && filterArea !== "all" && project.area !== filterArea) return false;
     if (filterClient && filterClient !== "all" && project.client_id !== filterClient) return false;
-    
+    if (filterClientProject && filterClientProject !== "all" && project.client_project_id !== filterClientProject) return false;
+
     // Special filter for overdue projects
     if (filterStatus === "overdue") {
       const now = new Date();
@@ -369,7 +371,7 @@ const ProjectsContent = () => {
     } else if (filterStatus && filterStatus !== "all" && project.status !== filterStatus) {
       return false;
     }
-    
+
     if (filterResponsible && filterResponsible !== "all" && project.responsible !== filterResponsible) return false;
     return true;
   });
@@ -426,11 +428,15 @@ const ProjectsContent = () => {
   });
   const uniqueAreas = [...new Set(projects.map((p) => p.area).filter(Boolean))];
   const uniqueResponsibles = [...new Set(projects.map((p) => p.responsible).filter(Boolean))];
+  const uniqueClientProjects = [...new Set(projects.map((p) => p.client_project_id).filter(Boolean))]
+    .map((id) => clientProjects.find((cp) => cp.id === id))
+    .filter(Boolean);
 
   const clearFilters = () => {
     setFilterSprint("all");
     setFilterArea("all");
     setFilterClient("all");
+    setFilterClientProject("all");
     setFilterStatus("all");
     setFilterResponsible("all");
   };
@@ -439,6 +445,7 @@ const ProjectsContent = () => {
     (filterSprint && filterSprint !== "all") ||
     (filterArea && filterArea !== "all") ||
     (filterClient && filterClient !== "all") ||
+    (filterClientProject && filterClientProject !== "all") ||
     (filterStatus && filterStatus !== "all") ||
     (filterResponsible && filterResponsible !== "all");
 
@@ -576,6 +583,9 @@ const ProjectsContent = () => {
     const filterInfo: string[] = [];
     if (filterClient && filterClient !== "all") {
       filterInfo.push(`Cliente: ${clients.find((x) => x.id === filterClient)?.company_name || ""}`);
+    }
+    if (filterClientProject && filterClientProject !== "all") {
+      filterInfo.push(`Projeto: ${clientProjects.find((x) => x.id === filterClientProject)?.name || ""}`);
     }
     if (filterSprint && filterSprint !== "all") filterInfo.push(`Sprint: ${filterSprint}`);
     if (filterArea && filterArea !== "all") filterInfo.push(`Área: ${filterArea}`);
@@ -812,11 +822,11 @@ const ProjectsContent = () => {
                 {viewMode === "cards" && (
                   <>
                     <Select value={filterClient || "all"} onValueChange={setFilterClient}>
-                      <SelectTrigger className="h-9 w-full sm:w-[180px]">
-                        <SelectValue placeholder="Todos os clientes" />
+                      <SelectTrigger className="h-8 w-full sm:w-[150px]">
+                        <SelectValue placeholder="Cliente" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos os clientes</SelectItem>
+                        <SelectItem value="all">Todos</SelectItem>
                         {clients.map((client) => (
                           <SelectItem key={client.id} value={client.id}>
                             {client.company_name}
@@ -825,12 +835,26 @@ const ProjectsContent = () => {
                       </SelectContent>
                     </Select>
 
-                    <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
-                      <SelectTrigger className="h-9 w-full sm:w-[140px]">
-                        <SelectValue placeholder="Todas as sprints" />
+                    <Select value={filterClientProject || "all"} onValueChange={setFilterClientProject}>
+                      <SelectTrigger className="h-8 w-full sm:w-[150px]">
+                        <SelectValue placeholder="Projeto" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todas as sprints</SelectItem>
+                        <SelectItem value="all">Todos</SelectItem>
+                        {uniqueClientProjects.map((cp) => (
+                          <SelectItem key={cp.id} value={cp.id}>
+                            {cp.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
+                      <SelectTrigger className="h-8 w-full sm:w-[120px]">
+                        <SelectValue placeholder="Sprint" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
                         {uniqueSprints.map((sprint) => (
                           <SelectItem key={sprint} value={sprint}>
                             {sprint}
@@ -839,8 +863,8 @@ const ProjectsContent = () => {
                       </SelectContent>
                     </Select>
 
-                    {((filterClient && filterClient !== "all") || (filterSprint && filterSprint !== "all")) && (
-                      <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
+                    {hasActiveFilters && (
+                      <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2">
                         <X className="h-4 w-4" />
                       </Button>
                     )}
@@ -1245,21 +1269,21 @@ const ProjectsContent = () => {
               <Card>
                 <CardContent className="p-3 sm:p-6">
                   {/* Filters */}
-                  <div className="mb-6 space-y-4">
-                    <div className="flex items-center justify-between">
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-medium">Filtros</h3>
                       {hasActiveFilters && (
-                        <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
+                        <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2">
                           <X className="h-4 w-4 mr-1" />
-                          Limpar Filtros
+                          Limpar
                         </Button>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                      <div className="space-y-2">
-                        <Label className="text-xs">Sprint</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Sprint</Label>
                         <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="h-8 text-xs">
                             <SelectValue placeholder="Todos" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1273,10 +1297,10 @@ const ProjectsContent = () => {
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-xs">Área</Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Área</Label>
                         <Select value={filterArea || "all"} onValueChange={setFilterArea}>
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="h-8 text-xs">
                             <SelectValue placeholder="Todas" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1290,10 +1314,10 @@ const ProjectsContent = () => {
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-xs">Cliente</Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Cliente</Label>
                         <Select value={filterClient || "all"} onValueChange={setFilterClient}>
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="h-8 text-xs">
                             <SelectValue placeholder="Todos" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1307,10 +1331,27 @@ const ProjectsContent = () => {
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-xs">Status</Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Projeto</Label>
+                        <Select value={filterClientProject || "all"} onValueChange={setFilterClientProject}>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Todos" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {uniqueClientProjects.map((cp) => (
+                              <SelectItem key={cp.id} value={cp.id}>
+                                {cp.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Status</Label>
                         <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="h-8 text-xs">
                             <SelectValue placeholder="Todos" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1327,10 +1368,10 @@ const ProjectsContent = () => {
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-xs">Responsável</Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Responsável</Label>
                         <Select value={filterResponsible || "all"} onValueChange={setFilterResponsible}>
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="h-8 text-xs">
                             <SelectValue placeholder="Todos" />
                           </SelectTrigger>
                           <SelectContent>
