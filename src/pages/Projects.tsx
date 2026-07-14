@@ -106,6 +106,10 @@ const ProjectsContent = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+
   // Inline editing
   const [editingCell, setEditingCell] = useState<{ projectId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState<string>("");
