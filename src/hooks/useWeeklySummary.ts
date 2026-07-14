@@ -356,12 +356,12 @@ export function useWeeklySummary() {
       const personClientCount = new Map<string, Map<string, number>>();
 
       createdThisWeek.forEach(p => {
-        if (!p.responsible) return;
+        if (!p.responsible || !activeTeamNameSet.has(p.responsible)) return;
         addToPerson(p.responsible).created++;
       });
 
       completedThisWeek.forEach(p => {
-        if (!p.responsible) return;
+        if (!p.responsible || !activeTeamNameSet.has(p.responsible)) return;
         const pr = addToPerson(p.responsible);
         pr.completed++;
         personCompletedCount.set(p.responsible, (personCompletedCount.get(p.responsible) || 0) + 1);
@@ -385,7 +385,7 @@ export function useWeeklySummary() {
       });
 
       overdue.forEach(p => {
-        if (!p.responsible) return;
+        if (!p.responsible || !activeTeamNameSet.has(p.responsible)) return;
         addToPerson(p.responsible).overdue++;
       });
 
