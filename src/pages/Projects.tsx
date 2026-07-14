@@ -795,7 +795,7 @@ const ProjectsContent = () => {
         </SidebarContent>
       </Sidebar>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b border-border bg-card flex items-center px-3 sm:px-6">
           <SidebarTrigger>
             <Button variant="ghost" size="icon">
@@ -1388,7 +1388,7 @@ const ProjectsContent = () => {
                   </div>
 
                   <div className="overflow-x-auto -mx-3 sm:mx-0">
-                  <Table className="w-full min-w-0">
+                  <Table className="min-w-[900px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead
