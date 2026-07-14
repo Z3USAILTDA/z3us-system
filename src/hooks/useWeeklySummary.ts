@@ -240,9 +240,10 @@ export function useWeeklySummary() {
       if (filterStatus !== "all") filtered = filtered.filter(p => p.status === filterStatus);
       if (filterTeam !== "all") filtered = filtered.filter(p => p.teamNames.some(t => t === filterTeam));
 
-      // Extract responsible options from all (pre-filter)
+      // Extract responsible options from all (pre-filter), excluding inactive team members
+      const activeTeamNameSet = new Set((teamsRes.data || []).map((t: any) => t.name));
       const respSet = new Set<string>();
-      mapped.forEach(p => { if (p.responsible) respSet.add(p.responsible); });
+      mapped.forEach(p => { if (p.responsible && activeTeamNameSet.has(p.responsible)) respSet.add(p.responsible); });
       setResponsibleOptions(Array.from(respSet).sort());
 
       // Created this week
