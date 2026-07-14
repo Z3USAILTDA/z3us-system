@@ -240,6 +240,7 @@ const AdminDashboard = () => {
     const personMap = new Map<string, PersonDemands>();
     filteredProjects.forEach(project => {
       const person = project.responsible || "Não atribuído";
+      if (project.responsible && inactiveTeamNames.has(project.responsible)) return;
       const clientName = (project.clients as any)?.company_name || "Sem cliente";
       
       if (!personMap.has(person)) {
