@@ -1279,7 +1279,7 @@ const ProjectsContent = () => {
                         </Button>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-0 min-w-0 flex-1">
                       <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">Sprint</Label>
                         <Select value={filterSprint || "all"} onValueChange={setFilterSprint}>
