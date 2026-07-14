@@ -1386,6 +1386,7 @@ const ProjectsContent = () => {
                             <SortIcon column="client" />
                           </div>
                         </TableHead>
+                        <TableHead>Projeto</TableHead>
                         <TableHead
                           className="cursor-pointer hover:bg-muted/50 transition-colors"
                           onClick={() => handleSort("status")}
@@ -1477,6 +1478,11 @@ const ProjectsContent = () => {
                           </TableCell>
                           <TableCell>
                             <span className="text-sm">{project.clients?.company_name}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm">
+                              {clientProjects.find((cp) => cp.id === project.client_project_id)?.name || "-"}
+                            </span>
                           </TableCell>
                           <TableCell>
                             {editingCell?.projectId === project.id && editingCell?.field === "status" ? (
