@@ -1551,7 +1551,7 @@ const ProjectsContent = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortedProjects.map((project) => (
+                      {paginatedProjects.map((project) => (
                         <TableRow key={project.id}>
                           <TableCell>
                             {renderEditableCell(project, "sprint", project.sprint || "-")}
