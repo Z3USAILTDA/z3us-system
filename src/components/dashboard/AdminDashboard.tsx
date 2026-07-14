@@ -405,6 +405,7 @@ const AdminDashboard = () => {
     // Calculate top responsibles
     const responsibleCount = new Map<string, number>();
     [...filteredCreated, ...filteredCompleted].forEach(p => {
+      if (p.responsible && inactiveTeamNames.has(p.responsible)) return;
       const name = p.responsible || "Não atribuído";
       responsibleCount.set(name, (responsibleCount.get(name) || 0) + 1);
     });
