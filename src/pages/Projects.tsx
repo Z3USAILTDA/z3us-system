@@ -1212,83 +1212,119 @@ const ProjectsContent = () => {
                 </CardContent>
               </Card>
             ) : viewMode === "cards" ? (
-              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {sortedProjects.map((project) => (
-                  <Card key={project.id} className="hover:shadow-lg transition-all">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <CardTitle className="text-lg">{project.title}</CardTitle>
-                        <Badge className={getStatusColor(project.status)}>{getStatusLabel(project.status)}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {project.description || "Sem descrição"}
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <span>{project.clients?.company_name}</span>
-                      </div>
-
-                      {/* << NOVO: Mostra gerente quando houver */}
-                      {project.project_manager_id && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Gerente:</span>{" "}
-                          <span className="font-medium">{getManagerName(project.project_manager_id)}</span>
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  {paginatedProjects.map((project) => (
+                    <Card key={project.id} className="hover:shadow-lg transition-all">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <CardTitle className="text-lg">{project.title}</CardTitle>
+                          <Badge className={getStatusColor(project.status)}>{getStatusLabel(project.status)}</Badge>
                         </div>
-                      )}
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {project.description || "Sem descrição"}
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <span>{project.clients?.company_name}</span>
+                        </div>
 
-                      <div className="flex gap-2 flex-wrap">
-                        {project.area && <Badge variant="outline">{project.area}</Badge>}
-                        {project.sprint && <Badge variant="secondary">Sprint: {project.sprint}</Badge>}
-                        {project.priority && (
-                          <Badge
-                            variant={
-                              project.priority === "high"
-                                ? "destructive"
-                                : project.priority === "medium"
-                                  ? "default"
-                                  : "secondary"
-                            }
-                          >
-                            {project.priority === "high" ? "Alta" : project.priority === "medium" ? "Média" : "Baixa"}
-                          </Badge>
+                        {/* << NOVO: Mostra gerente quando houver */}
+                        {project.project_manager_id && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Gerente:</span>{" "}
+                            <span className="font-medium">{getManagerName(project.project_manager_id)}</span>
+                          </div>
                         )}
-                      </div>
 
-                      {project.responsible && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Responsável:</span>{" "}
-                          <span className="font-medium">{project.responsible}</span>
+                        <div className="flex gap-2 flex-wrap">
+                          {project.area && <Badge variant="outline">{project.area}</Badge>}
+                          {project.sprint && <Badge variant="secondary">Sprint: {project.sprint}</Badge>}
+                          {project.priority && (
+                            <Badge
+                              variant={
+                                project.priority === "high"
+                                  ? "destructive"
+                                  : project.priority === "medium"
+                                    ? "default"
+                                    : "secondary"
+                              }
+                            >
+                              {project.priority === "high" ? "Alta" : project.priority === "medium" ? "Média" : "Baixa"}
+                            </Badge>
+                          )}
                         </div>
-                      )}
 
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Progresso</span>
-                          <span className="font-medium">{project.progress}%</span>
+                        {project.responsible && (
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Responsável:</span>{" "}
+                            <span className="font-medium">{project.responsible}</span>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Progresso</span>
+                            <span className="font-medium">{project.progress}%</span>
+                          </div>
+                          <Progress value={project.progress} className="h-2" />
                         </div>
-                        <Progress value={project.progress} className="h-2" />
-                      </div>
 
-                      {project.end_date && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          <span>Entrega: {formatDateBR(project.end_date)}</span>
+                        {project.end_date && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            <span>Entrega: {formatDateBR(project.end_date)}</span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end gap-2 pt-4 border-t">
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(project)}>
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDelete(project.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      )}
-
-                      <div className="flex justify-end gap-2 pt-4 border-t">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(project)}>
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(project.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2">
+                    <p className="text-xs text-muted-foreground">
+                      Mostrando {paginatedProjects.length} de {sortedProjects.length} demanda(s)
+                    </p>
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              isActive={page === currentPage}
+                              onClick={() => setCurrentPage(page)}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
               </div>
             ) : (
               <Card className="min-w-0 w-full max-w-full overflow-hidden">
