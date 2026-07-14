@@ -1388,7 +1388,7 @@ const ProjectsContent = () => {
                   </div>
 
                   <div className="overflow-x-auto -mx-3 sm:mx-0">
-                  <Table className="min-w-[900px]">
+                  <Table className="w-full min-w-0">
                     <TableHeader>
                       <TableRow>
                         <TableHead
