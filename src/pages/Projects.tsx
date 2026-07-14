@@ -466,7 +466,9 @@ const ProjectsContent = () => {
     return numA - numB;
   });
   const uniqueAreas = [...new Set(projects.map((p) => p.area).filter(Boolean))];
-  const uniqueResponsibles = [...new Set(projects.map((p) => p.responsible).filter(Boolean))];
+  const activeTeamNames = new Set(teams.map((t: any) => t.name));
+  const uniqueResponsibles = [...new Set(projects.map((p) => p.responsible).filter(Boolean))]
+    .filter((r) => activeTeamNames.has(r));
   const uniqueClientProjects = [...new Set(projects.map((p) => p.client_project_id).filter(Boolean))]
     .map((id) => clientProjects.find((cp) => cp.id === id))
     .filter(Boolean);
