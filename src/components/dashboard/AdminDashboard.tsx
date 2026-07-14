@@ -539,7 +539,7 @@ const AdminDashboard = () => {
     allProjects?.forEach(project => {
       const person = project.responsible;
       // Skip if no responsible assigned or if user is excluded
-      if (!person || person.trim() === "" || excludedUsers.includes(person)) return;
+      if (!person || person.trim() === "" || excludedUsers.includes(person) || inactiveTeamNames.has(person)) return;
       
       if (!personMap.has(person)) {
         personMap.set(person, { total: 0, onTime: 0, delayed: 0, delayedDays: 0, projects: [] });
