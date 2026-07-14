@@ -124,6 +124,12 @@ const ProjectsContent = () => {
     setCurrentPage(1);
   }, [filterSprint, filterArea, filterClient, filterClientProject, filterStatus, filterResponsible, sortColumn, sortDirection]);
 
+  // Reset project filter when client filter changes
+  useEffect(() => {
+    setFilterClientProject("all");
+  }, [filterClient]);
+
+
   const checkUser = async () => {
     const {
       data: { session },
