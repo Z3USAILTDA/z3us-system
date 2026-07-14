@@ -420,6 +420,13 @@ const ProjectsContent = () => {
     return 0;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(sortedProjects.length / itemsPerPage);
+  const paginatedProjects = sortedProjects.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       // Toggle direction if same column
