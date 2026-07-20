@@ -1067,6 +1067,22 @@ const ProjectsContent = () => {
                     )}
                   </>
                 )}
+                <input
+                  id="import-projects-file"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="hidden"
+                  onChange={handleImportFile}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9"
+                  onClick={() => document.getElementById("import-projects-file")?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Importar
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-9">
