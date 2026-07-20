@@ -711,6 +711,153 @@ const ProjectsContent = () => {
     toast.success(`${rows.length} projeto(s) exportado(s)`);
   };
 
+  const parseImportDate = (v: any): string | null => {
+    if (v === null || v === undefined || v === "") return null;
+    if (v instanceof Date) {
+      const y = v.getFullYear();
+      const m = String(v.getMonth() + 1).padStart(2, "0");
+      const d = String(v.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+    if (typeof v === "number") {
+      // Excel serial date
+      const utc = Math.round((v - 25569) * 86400 * 1000);
+      const dt = new Date(utc);
+      return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}-${String(dt.getUTCDate()).padStart(2, "0")}`;
+    }
+    const s = String(v).trim();
+    if (!s || s === "-") return null;
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if (m) {
+      const [, d, mo, y] = m;
+      const yr = y.length === 2 ? `20${y}` : y;
+      return `${yr}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    }
+    return null;
+  };
+
+  const mapImportStatus = (v: any): string => {
+    const s = String(v || "").toLowerCase().trim();
+    if (!s) return "planning";
+    if (s.includes("conclu")) return "completed";
+    if (s.includes("andam") || s.includes("progress")) return "in_progress";
+    if (s.includes("aguard") || s.includes("client")) return "waiting_client";
+    if (s.includes("pausa") || s.includes("hold")) return "on_hold";
+    if (s.includes("cancel")) return "cancelled";
+    if (s.includes("teste") || s === "test") return "test";
+    return "planning";
+  };
+
+  const mapImportPriority = (v: any): string => {
+    const s = String(v || "").toLowerCase().trim();
+    if (s.startsWith("alt") || s === "high") return "high";
+    if (s.startsWith("bai") || s === "low") return "low";
+    if (s.startsWith("crit") || s === "critical") return "critical";
+    return "medium";
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array", cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<any>(ws, { defval: null, raw: true });
+
+      if (!rows.length) {
+        toast.error("Planilha vazia");
+        return;
+      }
+
+      const norm = (s: string) => (s || "").toString().trim().toLowerCase();
+      const clientByName = new Map(clients.map((c) => [norm(c.company_name), c.id]));
+      const projectsByClient = new Map<string, Map<string, string>>();
+      clientProjects.forEach((cp: any) => {
+        if (!projectsByClient.has(cp.client_id)) projectsByClient.set(cp.client_id, new Map());
+        projectsByClient.get(cp.client_id)!.set(norm(cp.name), cp.id);
+      });
+      const managerByName = new Map(managers.map((m: any) => [norm(m.full_name), m.id]));
+
+      const toInsert: any[] = [];
+      const errors: string[] = [];
+
+      rows.forEach((r, idx) => {
+        const get = (keys: string[]) => {
+          for (const k of keys) {
+            for (const rk of Object.keys(r)) {
+              if (norm(rk) === norm(k)) return r[rk];
+            }
+          }
+          return null;
+        };
+        const title = get(["Título", "Titulo", "Title"]);
+        if (!title) return;
+        const clientName = get(["Cliente", "Client"]);
+        const clientId = clientByName.get(norm(clientName));
+        if (!clientId) {
+          errors.push(`Linha ${idx + 2}: cliente "${clientName}" não encontrado`);
+          return;
+        }
+        const projName = get(["Projeto do Cliente", "Projeto", "Project"]);
+        let clientProjectId: string | null = null;
+        if (projName) {
+          clientProjectId = projectsByClient.get(clientId)?.get(norm(projName)) || null;
+        }
+        const managerName = get(["Gerente", "Manager"]);
+        const managerId = managerName ? managerByName.get(norm(managerName)) || null : null;
+
+        toInsert.push({
+          title: String(title),
+          demanda: get(["Demanda"]) ? String(get(["Demanda"])) : null,
+          client_id: clientId,
+          client_project_id: clientProjectId,
+          area: get(["Área", "Area"]) ? String(get(["Área", "Area"])) : null,
+          sprint: get(["Sprint"]) !== null ? String(get(["Sprint"])) : null,
+          status: mapImportStatus(get(["Status"])),
+          priority: mapImportPriority(get(["Prioridade", "Priority"])),
+          responsible: get(["Responsável", "Responsavel", "Responsible"]) ? String(get(["Responsável", "Responsavel", "Responsible"])) : null,
+          project_manager_id: managerId,
+          progress: (() => {
+            const p = get(["Progresso (%)", "Progresso", "Progress"]);
+            const n = p === null || p === "" ? null : Number(p);
+            return Number.isFinite(n) ? n : null;
+          })(),
+          start_date: parseImportDate(get(["Início Previsto", "Inicio Previsto", "Start"])),
+          end_date: parseImportDate(get(["Término Previsto", "Termino Previsto", "End"])),
+          actual_start_date: parseImportDate(get(["Início Real", "Inicio Real"])),
+          actual_end_date: parseImportDate(get(["Término Real", "Termino Real"])),
+          description: get(["Descrição", "Descricao", "Description"]) ? String(get(["Descrição", "Descricao", "Description"])) : null,
+          observation: get(["Observação", "Observacao", "Observation"]) ? String(get(["Observação", "Observacao", "Observation"])) : null,
+          client_observation: get(["Observação do Cliente", "Observacao do Cliente"]) ? String(get(["Observação do Cliente", "Observacao do Cliente"])) : null,
+        });
+      });
+
+      if (!toInsert.length) {
+        toast.error("Nenhuma linha válida" + (errors.length ? `: ${errors[0]}` : ""));
+        return;
+      }
+
+      toast.loading(`Importando ${toInsert.length} demanda(s)...`, { id: "import" });
+      const { error } = await supabase.from("projects").insert(toInsert as any);
+      toast.dismiss("import");
+      if (error) {
+        toast.error(`Erro na importação: ${error.message}`);
+        return;
+      }
+      toast.success(`${toInsert.length} demanda(s) importada(s)${errors.length ? ` (${errors.length} ignorada(s))` : ""}`);
+      if (errors.length) console.warn("Import warnings:", errors);
+      fetchData();
+    } catch (err: any) {
+      toast.error(`Falha ao ler arquivo: ${err.message || err}`);
+    }
+  };
+
+
+
 
 
   const handleKeyDown = (e: React.KeyboardEvent, projectId: string, field: string) => {
