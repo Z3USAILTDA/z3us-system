@@ -30,6 +30,7 @@ import {
   Zap,
 } from "lucide-react";
 import { getTodayLocalDate, formatDateBR } from "@/lib/utils";
+import { clearAuthStorage, getStoredAuthSession, hasUsableStoredSession, storeAuthSession } from "@/lib/authSession";
 
 // ----- Types -----
 interface Project {
