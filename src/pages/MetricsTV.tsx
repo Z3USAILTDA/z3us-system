@@ -269,7 +269,7 @@ const MetricsTV = () => {
       const loginAt = parseInt(localStorage.getItem(TV_SESSION_KEY) || "0", 10);
       if (!loginAt || Date.now() - loginAt > TV_SESSION_MS) {
         localStorage.removeItem(TV_SESSION_KEY);
-        supabase.auth.signOut();
+        clearAuthStorage();
         setAuthed(false);
       }
     }, 60_000);
