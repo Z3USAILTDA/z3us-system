@@ -183,48 +183,59 @@ const MetricsTV = () => {
 
   // Auth gate: exige sessão do usuário de métricas (válida há <24h)
   useEffect(() => {
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const loginAtStr = localStorage.getItem(TV_SESSION_KEY);
-      const loginAt = loginAtStr ? parseInt(loginAtStr, 10) : 0;
-      const expired = !loginAt || Date.now() - loginAt > TV_SESSION_MS;
-      const isMetricsUser = session?.user?.email === TV_REAL_EMAIL;
+    const session = getStoredAuthSession();
+    const loginAtStr = localStorage.getItem(TV_SESSION_KEY);
+    const loginAt = loginAtStr ? parseInt(loginAtStr, 10) : 0;
+    const expired = !loginAt || Date.now() - loginAt > TV_SESSION_MS;
 
-      if (session && isMetricsUser && !expired) {
-        setAuthed(true);
-        return;
-      }
-      // Sessão inválida/expirada ou usuário diferente -> desloga e exige login de métricas
-      if (session) {
-        await supabase.auth.signOut();
-      }
-      localStorage.removeItem(TV_SESSION_KEY);
-      setAuthed(false);
-      setLoading(false);
-    })();
+    if (session && hasUsableStoredSession() && !expired) {
+      setAuthed(true);
+      return;
+    }
+    clearAuthStorage();
+    localStorage.removeItem(TV_SESSION_KEY);
+    setAuthed(false);
+    setLoading(false);
   }, []);
 
 
   const handleTvLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
-    if (loginUser.trim().toLowerCase() !== TV_USERNAME || loginPass !== TV_PASSWORD) {
+    const user = loginUser.trim().toLowerCase();
+    const isTvUser = user === TV_USERNAME || user === TV_REAL_EMAIL;
+    if (!isTvUser || loginPass !== TV_PASSWORD) {
       setLoginError("Usuário ou senha inválidos.");
       return;
     }
     setLoggingIn(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: TV_REAL_EMAIL,
-      password: TV_REAL_PASSWORD,
-    });
-    setLoggingIn(false);
-    if (error) {
+    try {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      clearAuthStorage();
+
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY },
+        body: JSON.stringify({ email: TV_REAL_EMAIL, password: TV_REAL_PASSWORD }),
+      });
+      const payload = await res.json().catch(() => ({}));
+
+      if (!res.ok || !payload?.access_token || !payload?.refresh_token) {
+        setLoginError("Falha ao acessar o painel. Tente novamente.");
+        return;
+      }
+
+      storeAuthSession(payload);
+      localStorage.setItem(TV_SESSION_KEY, Date.now().toString());
+      setAuthed(true);
+      setLoading(true);
+    } catch {
       setLoginError("Falha ao acessar o painel. Tente novamente.");
-      return;
+    } finally {
+      setLoggingIn(false);
     }
-    localStorage.setItem(TV_SESSION_KEY, Date.now().toString());
-    setAuthed(true);
-    setLoading(true);
   };
 
   const fetchData = async () => {
