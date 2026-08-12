@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LayoutDashboard, Users, Building2, FolderKanban, LogOut, Menu, UserCog, FileText, BarChart3, MonitorPlay } from "lucide-react";
+import { LayoutDashboard, Users, Building2, FolderKanban, LogOut, Menu, UserCog, FileText, BarChart3, MonitorPlay, Sparkles } from "lucide-react";
 import {
   SidebarProvider,
   Sidebar,
@@ -74,6 +74,7 @@ const DashboardContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Novos Projetos", url: "/dashboard/novos-projetos", icon: Sparkles },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
     { title: "Resumo da Semana", url: "/dashboard/weekly-summary", icon: BarChart3 },
     { title: "Métricas TV", url: "/metricas-projetos-tv", icon: MonitorPlay, external: true },

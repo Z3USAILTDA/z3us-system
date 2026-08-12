@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Teams from "./pages/Teams";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
+import NewProjects from "./pages/NewProjects";
 import Users from "./pages/Users";
 import Documentation from "./pages/Documentation";
 import WeeklySummary from "./pages/WeeklySummary";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/dashboard/teams" element={<Teams />} />
           <Route path="/dashboard/clients" element={<Clients />} />
           <Route path="/dashboard/projects" element={<Projects />} />
+          <Route path="/dashboard/novos-projetos" element={<NewProjects />} />
           <Route path="/dashboard/users" element={<Users />} />
           <Route path="/dashboard/documentation" element={<Documentation />} />
           <Route path="/dashboard/weekly-summary" element={<WeeklySummary />} />
