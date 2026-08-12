@@ -12,7 +12,7 @@ import {
   Home, Users, Building2, FolderKanban, LogOut, UserCircle, FileText,
   ChevronLeft, ChevronRight, Download, TrendingUp, TrendingDown, Minus,
   BarChart3, Clock, Target, AlertTriangle, CheckCircle2, CalendarX,
-  Lightbulb, ShieldAlert, Zap, Calendar,
+  Lightbulb, ShieldAlert, Zap, Calendar, Sparkles
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -89,6 +89,7 @@ const WeeklySummaryContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Novos Projetos", url: "/dashboard/novos-projetos", icon: Sparkles },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
     { title: "Resumo da Semana", url: "/dashboard/weekly-summary", icon: BarChart3 },
   ];

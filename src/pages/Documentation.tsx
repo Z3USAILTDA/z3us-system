@@ -36,7 +36,7 @@ import {
   ZoomIn,
   ZoomOut,
   ChevronLeft,
-  ChevronRight,
+  ChevronRight, Sparkles
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -171,6 +171,7 @@ const DocumentationContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Novos Projetos", url: "/dashboard/novos-projetos", icon: Sparkles },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 

@@ -19,7 +19,7 @@ import {
   UserCircle,
   KeyRound,
   UserCog,
-  FileText,
+  FileText, Sparkles
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -173,6 +173,7 @@ const UsersContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: UsersIcon },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Novos Projetos", url: "/dashboard/novos-projetos", icon: Sparkles },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 

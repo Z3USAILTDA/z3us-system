@@ -107,44 +107,16 @@ const STAGES: { id: Stage; label: string; color: string; badge: string }[] = [
 
 const DEVS = ["Ana", "Amanda", "Larissa", "Paulo", "Roberto", "Thayná"];
 
-const STORAGE_KEY = "z3us-novos-projetos-v1";
+const STORAGE_KEY = "z3us-novos-projetos-v2";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 const seed = (): DB => ({
-  clientes: [
-    { id: "c1", nome: "Banco Vetor" },
-    { id: "c2", nome: "Z3US.ai" },
-  ],
-  projetos: [
-    { id: "p1", nome: "Open Finance API", clienteId: "c1", desc: "Integração com ecossistema Open Finance" },
-    { id: "p2", nome: "Hercules", clienteId: "c2", desc: "Engenharia de LLM e API para o APP" },
-    { id: "p3", nome: "Portal do cliente", clienteId: "c2", desc: "Área logada com faturas e chamados" },
-    { id: "p4", nome: "Ajuste ponto", clienteId: "c2", desc: "Módulo de ajuste de ponto" },
-    { id: "p5", nome: "Cartão de ponto", clienteId: "c2", desc: "Sistema de RH" },
-  ],
-  sprints: [
-    { id: "s14", nome: "Sprint 14", inicio: "2026-05-04", fim: "2026-05-29" },
-    { id: "s15", nome: "Sprint 15", inicio: "2026-06-01", fim: "2026-06-26" },
-    { id: "s16", nome: "Sprint 16", inicio: "2026-07-06", fim: "2026-07-24" },
-    { id: "s17", nome: "Sprint 17", inicio: "2026-07-27", fim: "2026-08-21" },
-  ],
-  tarefas: [
-    { id: uid(), projetoId: "p1", sprintId: "s17", dev: "Ana", titulo: "Consentimento LGPD para compartilhamento de dados", desc: "Fluxo de consentimento conforme resolução BCB", stage: "backlog", pts: 8, iniPrev: "2026-07-27", fimPrev: "2026-08-07", iniReal: "", fimReal: "" },
-    { id: uid(), projetoId: "p1", sprintId: "s17", dev: "Paulo", titulo: "Agregação de contas de outros bancos", desc: "", stage: "todo", pts: 13, iniPrev: "2026-08-03", fimPrev: "2026-08-21", iniReal: "", fimReal: "" },
-    { id: uid(), projetoId: "p1", sprintId: "s17", dev: "Roberto", titulo: "Recebimento de webhooks de saldo", desc: "", stage: "backlog", pts: 5, iniPrev: "2026-08-10", fimPrev: "2026-08-18", iniReal: "", fimReal: "" },
-    { id: uid(), projetoId: "p2", sprintId: "s15", dev: "Paulo", titulo: "Pipeline de ingestão de dados", desc: "", stage: "done", pts: 8, iniPrev: "2026-06-01", fimPrev: "2026-06-12", iniReal: "2026-06-01", fimReal: "2026-06-11" },
-    { id: uid(), projetoId: "p2", sprintId: "s16", dev: "Amanda", titulo: "Fine-tuning do modelo base", desc: "", stage: "dev", pts: 13, iniPrev: "2026-07-06", fimPrev: "2026-07-17", iniReal: "2026-07-07", fimReal: "" },
-    { id: uid(), projetoId: "p2", sprintId: "s16", dev: "Roberto", titulo: "Endpoint de inferência da API", desc: "", stage: "dev", pts: 8, iniPrev: "2026-07-06", fimPrev: "2026-07-24", iniReal: "2026-07-08", fimReal: "" },
-    { id: uid(), projetoId: "p2", sprintId: "s16", dev: "Larissa", titulo: "Guardrails e moderação de respostas", desc: "", stage: "todo", pts: 5, iniPrev: "2026-07-20", fimPrev: "2026-07-24", iniReal: "", fimReal: "" },
-    { id: uid(), projetoId: "p3", sprintId: "s16", dev: "Thayná", titulo: "Consulta de faturas no portal", desc: "", stage: "done", pts: 5, iniPrev: "2026-07-06", fimPrev: "2026-07-15", iniReal: "2026-07-06", fimReal: "2026-07-14" },
-    { id: uid(), projetoId: "p4", sprintId: "s15", dev: "Larissa", titulo: "Solicitação de ajuste de ponto", desc: "", stage: "done", pts: 5, iniPrev: "2026-06-22", fimPrev: "2026-06-26", iniReal: "2026-06-22", fimReal: "2026-06-26" },
-    { id: uid(), projetoId: "p4", sprintId: "s16", dev: "Thayná", titulo: "Trilha de auditoria de alterações", desc: "", stage: "homolog", pts: 3, iniPrev: "2026-07-06", fimPrev: "2026-07-15", iniReal: "2026-07-07", fimReal: "" },
-    { id: uid(), projetoId: "p5", sprintId: "s14", dev: "Ana", titulo: "Registro de ponto com geolocalização", desc: "", stage: "done", pts: 8, iniPrev: "2026-05-04", fimPrev: "2026-05-15", iniReal: "2026-05-04", fimReal: "2026-05-14" },
-    { id: uid(), projetoId: "p5", sprintId: "s14", dev: "Amanda", titulo: "Espelho de ponto mensal", desc: "", stage: "done", pts: 5, iniPrev: "2026-05-18", fimPrev: "2026-05-27", iniReal: "2026-05-18", fimReal: "2026-05-29" },
-    { id: uid(), projetoId: "p5", sprintId: "s15", dev: "Paulo", titulo: "Aprovação de ajustes de ponto pelo gestor", desc: "", stage: "done", pts: 5, iniPrev: "2026-06-01", fimPrev: "2026-06-10", iniReal: "2026-06-02", fimReal: "2026-06-09" },
-  ],
-  seqSprint: 18,
+  clientes: [],
+  projetos: [],
+  sprints: [],
+  tarefas: [],
+  seqSprint: 1,
 });
 
 /* --------------------------------- helpers -------------------------------- */
