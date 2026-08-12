@@ -207,6 +207,7 @@ const ProjectsContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: Users },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
+    { title: "Novos Projetos", url: "/dashboard/novos-projetos", icon: Sparkles },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
   ];
 
