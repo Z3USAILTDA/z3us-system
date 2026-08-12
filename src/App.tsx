@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Teams from "./pages/Teams";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
+import NewProjects from "./pages/NewProjects";
 import Users from "./pages/Users";
 import Documentation from "./pages/Documentation";
 import WeeklySummary from "./pages/WeeklySummary";
