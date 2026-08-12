@@ -19,7 +19,7 @@ import {
   UserCircle,
   KeyRound,
   UserCog,
-  FileText,
+  FileText, Sparkles
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {

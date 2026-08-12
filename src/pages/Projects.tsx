@@ -40,7 +40,7 @@ import {
   Download,
   Upload,
   FileSpreadsheet,
-  FileDown,
+  FileDown, Sparkles
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";

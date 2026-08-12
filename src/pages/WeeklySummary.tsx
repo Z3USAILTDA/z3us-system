@@ -12,7 +12,7 @@ import {
   Home, Users, Building2, FolderKanban, LogOut, UserCircle, FileText,
   ChevronLeft, ChevronRight, Download, TrendingUp, TrendingDown, Minus,
   BarChart3, Clock, Target, AlertTriangle, CheckCircle2, CalendarX,
-  Lightbulb, ShieldAlert, Zap, Calendar,
+  Lightbulb, ShieldAlert, Zap, Calendar, Sparkles
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,

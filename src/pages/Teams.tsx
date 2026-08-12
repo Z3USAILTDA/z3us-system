@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle, FileText } from "lucide-react";
+import { Plus, Edit2, Trash2, Home, Users, FolderKanban, Building2, LogOut, UserCircle, FileText, Sparkles } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
