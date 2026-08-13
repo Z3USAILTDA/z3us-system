@@ -189,8 +189,7 @@ const DashboardContent = () => {
 
           <div className="ml-auto flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
-              <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
+              <p className="text-sm font-medium capitalize">{profile?.role === "admin" ? "Admin" : profile?.role}</p>
             </div>
           </div>
         </header>

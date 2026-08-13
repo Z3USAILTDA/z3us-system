@@ -170,6 +170,7 @@ const NewProjectsContent = () => {
   const [sprintModal, setSprintModal] = useState(false);
   const [sprintForm, setSprintForm] = useState({ id: "", nome: "", inicio: "", fim: "" });
   const [dragId, setDragId] = useState<string | null>(null);
+  const [tab, setTab] = useState("projetos");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
@@ -463,6 +464,7 @@ const NewProjectsContent = () => {
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
     { title: "Novos Projetos", url: "/dashboard/novos-projetos", icon: Sparkles },
+    { title: "Administração", action: () => setTab("admin"), icon: BarChart3 },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
     { title: "Resumo da Semana", url: "/dashboard/weekly-summary", icon: BarChart3 },
     { title: "Métricas TV", url: "/metricas-projetos-tv", icon: MonitorPlay, external: true },
@@ -488,8 +490,13 @@ const NewProjectsContent = () => {
               <SidebarMenu>
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      {(item as any).external ? (
+                    <SidebarMenuButton asChild={!(item as any).action} onClick={(item as any).action}>
+                      {(item as any).action ? (
+                        <>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </>
+                      ) : (item as any).external ? (
                         <a href={item.url} target="_blank" rel="noopener noreferrer">
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -535,13 +542,12 @@ const NewProjectsContent = () => {
             </Button>
           </SidebarTrigger>
           <div className="ml-auto text-right hidden sm:block">
-            <p className="text-sm font-medium">{profile?.full_name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
+            <p className="text-sm font-medium">Admin</p>
           </div>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 overflow-auto min-w-0">
-          <Tabs defaultValue="projetos" className="w-full">
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList>
               <TabsTrigger value="projetos">Projetos</TabsTrigger>
               <TabsTrigger value="admin">Administração</TabsTrigger>
@@ -639,7 +645,7 @@ const NewProjectsContent = () => {
                               <div className="flex justify-between items-start gap-2 mb-1">
                                 <p className="text-sm font-semibold leading-snug">{t.titulo}</p>
                                 {t.pts ? (
-                                  <Badge variant="outline" className="shrink-0 text-[10px]">{t.pts} pts</Badge>
+                                  <Badge variant="outline" className="shrink-0 text-[10px]">{t.pts} tarefas</Badge>
                                 ) : null}
                               </div>
                               {t.desc && <p className="text-xs text-muted-foreground mb-2">{t.desc}</p>}
@@ -746,7 +752,7 @@ const NewProjectsContent = () => {
 
               <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
                 <KpiCard label="Tarefas" value={`${adminKpis.done}/${adminKpis.total}`} sub="concluídas / total" tone="text-primary" />
-                <KpiCard label="Story points" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
+                <KpiCard label="Tarefas (peso)" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
                 <KpiCard label="Entregas no prazo" value={`${adminKpis.pct}%`} tone={adminKpis.pct >= 70 ? "text-primary" : "text-destructive"} />
                 <KpiCard label="Lead time médio" value={`${adminKpis.leadAvg} dias`} />
                 <KpiCard
@@ -787,7 +793,7 @@ const NewProjectsContent = () => {
                   <CardContent className="p-5">
                     <h3 className="font-semibold">Burndown da sprint</h3>
                     <p className="text-xs text-muted-foreground mb-4">
-                      {sprintSel ? "Story points restantes · ideal vs. real" : "Selecione uma sprint específica"}
+                      {sprintSel ? "Tarefas restantes · ideal vs. real" : "Selecione uma sprint específica"}
                     </p>
                     <div className="h-[280px]">
                       {burndown.length ? (
@@ -825,7 +831,7 @@ const NewProjectsContent = () => {
                           <div className="flex justify-between text-sm mb-1">
                             <span className="font-medium">{r.nome}</span>
                             <span className="text-xs text-muted-foreground">
-                              {r.total ? `${r.done}/${r.total} pts · ${pct}%` : "sem tarefas"}
+                              {r.total ? `${r.done}/${r.total} tarefas · ${pct}%` : "sem tarefas"}
                             </span>
                           </div>
                           <div className="flex h-2 rounded-full overflow-hidden bg-muted">
@@ -844,12 +850,12 @@ const NewProjectsContent = () => {
                     <span>
                       Equipe:{" "}
                       <strong className="text-foreground">
-                        {teamTotals.done}/{teamTotals.total} pts entregues (
+                        {teamTotals.done}/{teamTotals.total} tarefas entregues (
                         {teamTotals.total ? Math.round((teamTotals.done / teamTotals.total) * 100) : 0}%)
                       </strong>
                     </span>
                     {teamTotals.late ? (
-                      <span className="text-destructive">{teamTotals.late} pts em atraso</span>
+                      <span className="text-destructive">{teamTotals.late} tarefas em atraso</span>
                     ) : (
                       <span className="text-primary">Nenhuma tarefa em atraso</span>
                     )}
@@ -936,7 +942,7 @@ const NewProjectsContent = () => {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>Story points</Label>
+                <Label>Tarefas</Label>
                 <Input
                   type="number" min={1} max={21}
                   value={form.pts ?? ""}
