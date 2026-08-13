@@ -639,7 +639,7 @@ const NewProjectsContent = () => {
                               <div className="flex justify-between items-start gap-2 mb-1">
                                 <p className="text-sm font-semibold leading-snug">{t.titulo}</p>
                                 {t.pts ? (
-                                  <Badge variant="outline" className="shrink-0 text-[10px]">{t.pts} pts</Badge>
+                                  <Badge variant="outline" className="shrink-0 text-[10px]">{t.pts} tarefas</Badge>
                                 ) : null}
                               </div>
                               {t.desc && <p className="text-xs text-muted-foreground mb-2">{t.desc}</p>}
@@ -746,7 +746,7 @@ const NewProjectsContent = () => {
 
               <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
                 <KpiCard label="Tarefas" value={`${adminKpis.done}/${adminKpis.total}`} sub="concluídas / total" tone="text-primary" />
-                <KpiCard label="Story points" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
+                <KpiCard label="Tarefas (peso)" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
                 <KpiCard label="Entregas no prazo" value={`${adminKpis.pct}%`} tone={adminKpis.pct >= 70 ? "text-primary" : "text-destructive"} />
                 <KpiCard label="Lead time médio" value={`${adminKpis.leadAvg} dias`} />
                 <KpiCard
@@ -787,7 +787,7 @@ const NewProjectsContent = () => {
                   <CardContent className="p-5">
                     <h3 className="font-semibold">Burndown da sprint</h3>
                     <p className="text-xs text-muted-foreground mb-4">
-                      {sprintSel ? "Story points restantes · ideal vs. real" : "Selecione uma sprint específica"}
+                      {sprintSel ? "Tarefas restantes · ideal vs. real" : "Selecione uma sprint específica"}
                     </p>
                     <div className="h-[280px]">
                       {burndown.length ? (
@@ -825,7 +825,7 @@ const NewProjectsContent = () => {
                           <div className="flex justify-between text-sm mb-1">
                             <span className="font-medium">{r.nome}</span>
                             <span className="text-xs text-muted-foreground">
-                              {r.total ? `${r.done}/${r.total} pts · ${pct}%` : "sem tarefas"}
+                              {r.total ? `${r.done}/${r.total} tarefas · ${pct}%` : "sem tarefas"}
                             </span>
                           </div>
                           <div className="flex h-2 rounded-full overflow-hidden bg-muted">
@@ -844,12 +844,12 @@ const NewProjectsContent = () => {
                     <span>
                       Equipe:{" "}
                       <strong className="text-foreground">
-                        {teamTotals.done}/{teamTotals.total} pts entregues (
+                        {teamTotals.done}/{teamTotals.total} tarefas entregues (
                         {teamTotals.total ? Math.round((teamTotals.done / teamTotals.total) * 100) : 0}%)
                       </strong>
                     </span>
                     {teamTotals.late ? (
-                      <span className="text-destructive">{teamTotals.late} pts em atraso</span>
+                      <span className="text-destructive">{teamTotals.late} tarefas em atraso</span>
                     ) : (
                       <span className="text-primary">Nenhuma tarefa em atraso</span>
                     )}
@@ -936,7 +936,7 @@ const NewProjectsContent = () => {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>Story points</Label>
+                <Label>Tarefas</Label>
                 <Input
                   type="number" min={1} max={21}
                   value={form.pts ?? ""}
