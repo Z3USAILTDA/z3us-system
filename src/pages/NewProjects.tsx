@@ -170,6 +170,7 @@ const NewProjectsContent = () => {
   const [sprintModal, setSprintModal] = useState(false);
   const [sprintForm, setSprintForm] = useState({ id: "", nome: "", inicio: "", fim: "" });
   const [dragId, setDragId] = useState<string | null>(null);
+  const [tab, setTab] = useState("projetos");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
@@ -463,6 +464,7 @@ const NewProjectsContent = () => {
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
     { title: "Novos Projetos", url: "/dashboard/novos-projetos", icon: Sparkles },
+    { title: "Administração", action: () => setTab("admin"), icon: BarChart3 },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
     { title: "Resumo da Semana", url: "/dashboard/weekly-summary", icon: BarChart3 },
     { title: "Métricas TV", url: "/metricas-projetos-tv", icon: MonitorPlay, external: true },
@@ -488,8 +490,13 @@ const NewProjectsContent = () => {
               <SidebarMenu>
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      {(item as any).external ? (
+                    <SidebarMenuButton asChild={!(item as any).action} onClick={(item as any).action}>
+                      {(item as any).action ? (
+                        <>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </>
+                      ) : (item as any).external ? (
                         <a href={item.url} target="_blank" rel="noopener noreferrer">
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -535,13 +542,12 @@ const NewProjectsContent = () => {
             </Button>
           </SidebarTrigger>
           <div className="ml-auto text-right hidden sm:block">
-            <p className="text-sm font-medium">{profile?.full_name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
+            <p className="text-sm font-medium">Admin</p>
           </div>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 overflow-auto min-w-0">
-          <Tabs defaultValue="projetos" className="w-full">
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList>
               <TabsTrigger value="projetos">Projetos</TabsTrigger>
               <TabsTrigger value="admin">Administração</TabsTrigger>
