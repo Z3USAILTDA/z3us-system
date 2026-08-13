@@ -167,6 +167,7 @@ const NewProjectsContent = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Tarefa, "id">>(emptyForm());
+  const [formNames, setFormNames] = useState({ cliente: "", projeto: "", sprint: "" });
   const [sprintModal, setSprintModal] = useState(false);
   const [sprintForm, setSprintForm] = useState({ id: "", nome: "", inicio: "", fim: "" });
   const [dragId, setDragId] = useState<string | null>(null);
@@ -258,12 +259,25 @@ const NewProjectsContent = () => {
       if (!t) return;
       const { id: _omit, ...rest } = t;
       setForm(rest);
+      const p = projById(t.projetoId);
+      setFormNames({
+        cliente: p ? db.clientes.find((c) => c.id === p.clienteId)?.nome || "" : "",
+        projeto: p?.nome || "",
+        sprint: sprintById(t.sprintId)?.nome || "",
+      });
       setEditingId(id);
     } else {
-      setForm({
-        ...emptyForm(),
-        projetoId: filterProjeto !== "all" ? filterProjeto : projetosFiltrados[0]?.id || "",
-        sprintId: currentSprintId !== "all" ? currentSprintId : "",
+      const preProj = filterProjeto !== "all" ? projById(filterProjeto) : undefined;
+      setForm({ ...emptyForm() });
+      setFormNames({
+        cliente:
+          filterCliente !== "all"
+            ? db.clientes.find((c) => c.id === filterCliente)?.nome || ""
+            : preProj
+              ? db.clientes.find((c) => c.id === preProj.clienteId)?.nome || ""
+              : "",
+        projeto: preProj?.nome || "",
+        sprint: currentSprintId !== "all" ? sprintById(currentSprintId)?.nome || "" : "",
       });
       setEditingId(null);
     }
@@ -272,22 +286,76 @@ const NewProjectsContent = () => {
 
   const saveTarefa = () => {
     if (!form.titulo.trim()) return toast.error("Informe o título da tarefa");
-    if (!form.projetoId) return toast.error("Selecione o projeto");
+    const nomeCliente = formNames.cliente.trim();
+    const nomeProjeto = formNames.projeto.trim();
+    const nomeSprint = formNames.sprint.trim();
+    if (!nomeProjeto) return toast.error("Informe o projeto");
     if (form.iniPrev && form.fimPrev && form.fimPrev < form.iniPrev)
       return toast.error("Término previsto não pode ser antes do início");
     if (form.iniReal && form.fimReal && form.fimReal < form.iniReal)
       return toast.error("Término real não pode ser antes do início real");
 
-    setDb((prev) => ({
-      ...prev,
-      tarefas: editingId
-        ? prev.tarefas.map((t) => (t.id === editingId ? { ...t, ...form } : t))
-        : [...prev.tarefas, { id: uid(), ...form }],
-    }));
+    setDb((prev) => {
+      const eq = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+      let clientes = prev.clientes;
+      let projetos = prev.projetos;
+      let sprints = prev.sprints;
+      let seqSprint = prev.seqSprint;
+
+      let clienteId = "";
+      if (nomeCliente) {
+        const c = clientes.find((x) => eq(x.nome, nomeCliente));
+        if (c) clienteId = c.id;
+        else {
+          clienteId = uid();
+          clientes = [...clientes, { id: clienteId, nome: nomeCliente }];
+        }
+      }
+
+      const projExistente = projetos.find(
+        (p) => eq(p.nome, nomeProjeto) && (!clienteId || p.clienteId === clienteId)
+      );
+      let projetoId: string;
+      if (projExistente) {
+        projetoId = projExistente.id;
+        if (clienteId && projExistente.clienteId !== clienteId) {
+          projetos = projetos.map((p) => (p.id === projetoId ? { ...p, clienteId } : p));
+        }
+      } else {
+        projetoId = uid();
+        projetos = [...projetos, { id: projetoId, nome: nomeProjeto, clienteId, desc: "" }];
+      }
+
+      let sprintId = "";
+      if (nomeSprint) {
+        const s = sprints.find((x) => eq(x.nome, nomeSprint));
+        if (s) sprintId = s.id;
+        else {
+          sprintId = `s${seqSprint}`;
+          seqSprint += 1;
+          const inicio = form.iniPrev || todayISO();
+          const fim = form.fimPrev || inicio;
+          sprints = [...sprints, { id: sprintId, nome: nomeSprint, inicio, fim }];
+        }
+      }
+
+      const dados = { ...form, projetoId, sprintId };
+      return {
+        ...prev,
+        clientes,
+        projetos,
+        sprints,
+        seqSprint,
+        tarefas: editingId
+          ? prev.tarefas.map((t) => (t.id === editingId ? { ...t, ...dados } : t))
+          : [...prev.tarefas, { id: uid(), ...dados }],
+      };
+    });
     toast.success(editingId ? "Tarefa atualizada" : "Tarefa criada");
     setModalOpen(false);
     setEditingId(null);
   };
+
 
   const deleteTarefa = () => {
     if (!editingId) return;
@@ -876,17 +944,32 @@ const NewProjectsContent = () => {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
+                <Label>Cliente</Label>
+                <Input
+                  list="lista-clientes"
+                  value={formNames.cliente}
+                  onChange={(e) => setFormNames({ ...formNames, cliente: e.target.value })}
+                  placeholder="Digite o cliente"
+                />
+                <datalist id="lista-clientes">
+                  {db.clientes.map((c) => (
+                    <option key={c.id} value={c.nome} />
+                  ))}
+                </datalist>
+              </div>
+              <div>
                 <Label>Projeto</Label>
-                <Select value={form.projetoId} onValueChange={(v) => setForm({ ...form, projetoId: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {db.projetos.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.nome} · {clienteNome(p.clienteId)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  list="lista-projetos"
+                  value={formNames.projeto}
+                  onChange={(e) => setFormNames({ ...formNames, projeto: e.target.value })}
+                  placeholder="Digite o projeto"
+                />
+                <datalist id="lista-projetos">
+                  {db.projetos.map((p) => (
+                    <option key={p.id} value={p.nome} />
+                  ))}
+                </datalist>
               </div>
               <div>
                 <Label>Responsável</Label>
@@ -915,18 +998,17 @@ const NewProjectsContent = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Sprint</Label>
-                <Select
-                  value={form.sprintId || NONE}
-                  onValueChange={(v) => setForm({ ...form, sprintId: v === NONE ? "" : v })}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>— Sem sprint —</SelectItem>
-                    {db.sprints.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  list="lista-sprints"
+                  value={formNames.sprint}
+                  onChange={(e) => setFormNames({ ...formNames, sprint: e.target.value })}
+                  placeholder="Digite a sprint"
+                />
+                <datalist id="lista-sprints">
+                  {db.sprints.map((s) => (
+                    <option key={s.id} value={s.nome} />
+                  ))}
+                </datalist>
               </div>
               <div>
                 <Label>Fase</Label>
