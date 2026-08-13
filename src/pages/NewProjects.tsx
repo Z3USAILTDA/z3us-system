@@ -998,18 +998,17 @@ const NewProjectsContent = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Sprint</Label>
-                <Select
-                  value={form.sprintId || NONE}
-                  onValueChange={(v) => setForm({ ...form, sprintId: v === NONE ? "" : v })}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>— Sem sprint —</SelectItem>
-                    {db.sprints.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  list="lista-sprints"
+                  value={formNames.sprint}
+                  onChange={(e) => setFormNames({ ...formNames, sprint: e.target.value })}
+                  placeholder="Digite a sprint"
+                />
+                <datalist id="lista-sprints">
+                  {db.sprints.map((s) => (
+                    <option key={s.id} value={s.nome} />
+                  ))}
+                </datalist>
               </div>
               <div>
                 <Label>Fase</Label>
