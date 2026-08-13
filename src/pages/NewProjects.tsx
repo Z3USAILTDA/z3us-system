@@ -944,17 +944,32 @@ const NewProjectsContent = () => {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
+                <Label>Cliente</Label>
+                <Input
+                  list="lista-clientes"
+                  value={formNames.cliente}
+                  onChange={(e) => setFormNames({ ...formNames, cliente: e.target.value })}
+                  placeholder="Digite o cliente"
+                />
+                <datalist id="lista-clientes">
+                  {db.clientes.map((c) => (
+                    <option key={c.id} value={c.nome} />
+                  ))}
+                </datalist>
+              </div>
+              <div>
                 <Label>Projeto</Label>
-                <Select value={form.projetoId} onValueChange={(v) => setForm({ ...form, projetoId: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {db.projetos.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.nome} · {clienteNome(p.clienteId)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  list="lista-projetos"
+                  value={formNames.projeto}
+                  onChange={(e) => setFormNames({ ...formNames, projeto: e.target.value })}
+                  placeholder="Digite o projeto"
+                />
+                <datalist id="lista-projetos">
+                  {db.projetos.map((p) => (
+                    <option key={p.id} value={p.nome} />
+                  ))}
+                </datalist>
               </div>
               <div>
                 <Label>Responsável</Label>
