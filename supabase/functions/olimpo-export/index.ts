@@ -16,6 +16,15 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
+async function sha256Prefix(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 8);
+}
+
 const CLIENT_FIELDS =
   "id, company_name, cnpj, contact_name, email, status, created_at, updated_at";
 const PROJECT_FIELDS =
@@ -37,7 +46,21 @@ Deno.serve(async (req) => {
     const expected = Deno.env.get("OLIMPO_EXPORT_TOKEN") ?? "";
     const provided = req.headers.get("x-olimpo-token") ?? "";
     if (!expected || !provided || !safeEqual(provided, expected)) {
-      return new Response(JSON.stringify({ erro: "nao_autorizado" }), {
+      const [esperadoSha8, recebidoSha8] = await Promise.all([
+        sha256Prefix(expected),
+        sha256Prefix(provided),
+      ]);
+      return new Response(JSON.stringify({
+        erro: "nao_autorizado",
+        diag: {
+          esperado_definido: expected.length > 0,
+          esperado_len: expected.length,
+          recebido_len: provided.length,
+          esperado_sha8: esperadoSha8,
+          recebido_sha8: recebidoSha8,
+          headers_recebidos: Array.from(req.headers.keys()).map((name) => name.toLowerCase()),
+        },
+      }), {
         status: 401,
         headers: jsonHeaders,
       });
