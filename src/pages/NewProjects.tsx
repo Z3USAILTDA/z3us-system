@@ -656,13 +656,22 @@ const NewProjectsContent = () => {
     filterSprint === "all" ? db.tarefas : db.tarefas.filter((t) => t.sprintId === filterSprint);
 
   const adminKpis = useMemo(() => {
+    const hoje = todayISO();
     const done = adminTarefas.filter((t) => t.fimReal);
     const totalPts = adminTarefas.reduce((a, t) => a + (t.pts || 0), 0);
     const donePts = done.reduce((a, t) => a + (t.pts || 0), 0);
-    const leads = done.filter((t) => t.iniReal).map((t) => diffDays(t.fimReal, t.iniReal));
+    const leads = done
+      .map((t) => {
+        const ini = t.iniReal || t.iniPrev;
+        return ini ? diffDays(t.fimReal, ini) : null;
+      })
+      .filter((n): n is number => n !== null && n >= 0);
     const leadAvg = leads.length ? (leads.reduce((a, b) => a + b, 0) / leads.length).toFixed(1) : "—";
+    // atividades em aberto já com prazo estourado contam como fora do prazo
+    const atrasadasAbertas = adminTarefas.filter((t) => !t.fimReal && t.fimPrev && t.fimPrev < hoje);
     const onTime = done.filter((t) => !t.fimPrev || t.fimReal <= t.fimPrev).length;
-    const pct = done.length ? Math.round((onTime / done.length) * 100) : 0;
+    const baseAvaliada = done.length + atrasadasAbertas.length;
+    const pct = baseAvaliada ? Math.round((onTime / baseAvaliada) * 100) : 0;
     let diasRest: string | number = "—";
     if (sprintSel) {
       const d = diffDays(sprintSel.fim, todayISO());
@@ -670,6 +679,7 @@ const NewProjectsContent = () => {
     }
     return { done: done.length, total: adminTarefas.length, donePts, totalPts, leadAvg, pct, diasRest };
   }, [adminTarefas, sprintSel]);
+
 
   const fasesData = STAGES.map((st) => ({
     name: st.label,
