@@ -486,6 +486,22 @@ const NewProjectsContent = () => {
     return "backlog";
   };
 
+  const parseEsforco = (v: any): number | null => {
+    if (v === undefined || v === null || v === "") return null;
+    const s = String(v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const num = s.match(/\d+/);
+    if (num) {
+      const n = Number(num[0]);
+      const exact = EFFORT_LEVELS.find((e) => e.value === n);
+      if (exact) return exact.value;
+      return Number.isFinite(n) ? n : null;
+    }
+    const byLabel = EFFORT_LEVELS.find((e) =>
+      e.label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(s)
+    );
+    return byLabel ? byLabel.value : null;
+  };
+
   const pick = (row: Record<string, any>, keys: string[]) => {
     for (const k of Object.keys(row)) {
       const norm = k
