@@ -69,6 +69,17 @@ import {
 
 type Stage = "backlog" | "todo" | "dev" | "homolog" | "done";
 
+const EFFORT_LEVELS = [
+  { value: 1, label: "Muito fácil - 1-3 horas" },
+  { value: 2, label: "Fácil - 4-8 horas" },
+  { value: 3, label: "Normal - 9 - 16 horas" },
+  { value: 5, label: "Complexo - 17-26 horas" },
+  { value: 8, label: "Muito complexo - 27-40 horas" },
+  { value: 13, label: "Extremamente complexo - mais de 40 horas" },
+  { value: 21, label: "Muito grande - Épico" },
+];
+
+
 interface Tarefa {
   id: string;
   projetoId: string;
@@ -869,7 +880,7 @@ const NewProjectsContent = () => {
                               <div className="flex justify-between items-start gap-2 mb-1">
                                 <p className="text-sm font-semibold leading-snug">{t.titulo}</p>
                                 {t.pts ? (
-                                  <Badge variant="outline" className="shrink-0 text-[10px]">{t.pts} tarefas</Badge>
+                                  <Badge variant="outline" className="shrink-0 text-[10px]">Esforço {t.pts}</Badge>
                                 ) : null}
                               </div>
                               {t.desc && <p className="text-xs text-muted-foreground mb-2">{t.desc}</p>}
@@ -976,7 +987,7 @@ const NewProjectsContent = () => {
 
               <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
                 <KpiCard label="Tarefas" value={`${adminKpis.done}/${adminKpis.total}`} sub="concluídas / total" tone="text-primary" />
-                <KpiCard label="Tarefas (peso)" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
+                <KpiCard label="Nível de Esforço" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
                 <KpiCard label="Entregas no prazo" value={`${adminKpis.pct}%`} tone={adminKpis.pct >= 70 ? "text-primary" : "text-destructive"} />
                 <KpiCard label="Lead time médio" value={`${adminKpis.leadAvg} dias`} />
                 <KpiCard
@@ -1181,13 +1192,24 @@ const NewProjectsContent = () => {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>Tarefas</Label>
-                <Input
-                  type="number" min={1} max={21}
-                  value={form.pts ?? ""}
-                  onChange={(e) => setForm({ ...form, pts: e.target.value ? Number(e.target.value) : null })}
-                />
+                <Label>Nível de Esforço</Label>
+                <Select
+                  value={form.pts != null ? String(form.pts) : ""}
+                  onValueChange={(v) => setForm({ ...form, pts: v ? Number(v) : null })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o nível" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EFFORT_LEVELS.map((l) => (
+                      <SelectItem key={l.value} value={String(l.value)}>
+                        {l.value} - {l.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
             </div>
             <p className="text-xs uppercase tracking-wide text-primary border-b border-border/60 pb-1">Planejamento</p>
             <div className="grid gap-4 sm:grid-cols-2">
