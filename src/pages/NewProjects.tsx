@@ -1396,6 +1396,58 @@ const NewProjectsContent = () => {
         </DialogContent>
       </Dialog>
 
+      {/* --------------------- conferência do lead time -------------------- */}
+      <Dialog open={leadModal} onOpenChange={setLeadModal}>
+        <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Conferência do lead time</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Dias = término real − início (real, ou previsto quando não há real), contando o dia inicial e o final.
+            Média = soma dos dias ÷ atividades consideradas.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground border-b border-border/60">
+                  <th className="py-2 pr-2">Atividade</th>
+                  <th className="py-2 pr-2">Início</th>
+                  <th className="py-2 pr-2">Término real</th>
+                  <th className="py-2 pr-2 text-right">Dias</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminKpis.leadDetalhe.length === 0 && (
+                  <tr><td colSpan={4} className="py-3 text-muted-foreground">Nenhuma atividade concluída.</td></tr>
+                )}
+                {adminKpis.leadDetalhe.map((l) => (
+                  <tr key={l.id} className="border-b border-border/40">
+                    <td className="py-2 pr-2">{l.titulo}</td>
+                    <td className="py-2 pr-2">
+                      {l.inicio ? fmt(l.inicio) : "—"}
+                      {l.base === "previsto" && <span className="ml-1 text-[10px] text-muted-foreground">(previsto)</span>}
+                    </td>
+                    <td className="py-2 pr-2">{fmt(l.fim)}</td>
+                    <td className="py-2 pr-2 text-right">
+                      {l.dias ?? <span className="text-xs text-muted-foreground">{l.motivo || "—"}</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="font-semibold">
+                  <td className="py-2 pr-2" colSpan={3}>
+                    Média ({adminKpis.leadConsiderados} atividade{adminKpis.leadConsiderados === 1 ? "" : "s"} considerada{adminKpis.leadConsiderados === 1 ? "" : "s"})
+                  </td>
+                  <td className="py-2 pr-2 text-right">{adminKpis.leadAvg} dias</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       {/* ------------------------------ modal sprints ---------------------------- */}
       <Dialog open={sprintModal} onOpenChange={setSprintModal}>
         <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto">
