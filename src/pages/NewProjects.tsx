@@ -94,7 +94,9 @@ interface Tarefa {
   fimPrev: string;
   iniReal: string;
   fimReal: string;
+  hist?: { stage: Stage; at: string }[];
 }
+
 
 interface Sprint {
   id: string;
