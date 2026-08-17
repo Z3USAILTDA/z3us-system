@@ -265,6 +265,7 @@ const NewProjectsContent = () => {
           stage,
           iniReal: stage === "dev" && !t.iniReal ? hoje : t.iniReal,
           fimReal: stage === "done" ? t.fimReal || hoje : "",
+          hist: [...(t.hist || []), { stage, at: new Date().toISOString() }],
         };
       }),
     }));
