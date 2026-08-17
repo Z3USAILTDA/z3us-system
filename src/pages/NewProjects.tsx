@@ -669,12 +669,22 @@ const NewProjectsContent = () => {
     const done = adminTarefas.filter((t) => t.fimReal);
     const totalPts = adminTarefas.reduce((a, t) => a + (t.pts || 0), 0);
     const donePts = done.reduce((a, t) => a + (t.pts || 0), 0);
-    const leads = done
-      .map((t) => {
-        const ini = t.iniReal || t.iniPrev;
-        return ini ? diffDays(t.fimReal, ini) : null;
-      })
-      .filter((n): n is number => n !== null && n >= 0);
+    // detalhamento do lead time: 1 linha por atividade concluída
+    const leadDetalhe = done.map((t) => {
+      const ini = t.iniReal || t.iniPrev;
+      const base: "real" | "previsto" | "" = t.iniReal ? "real" : t.iniPrev ? "previsto" : "";
+      const dias = ini ? diffDays(t.fimReal, ini) + 1 : null; // conta o dia de início e o de término
+      return {
+        id: t.id,
+        titulo: t.titulo,
+        inicio: ini,
+        base,
+        fim: t.fimReal,
+        dias: dias !== null && dias >= 1 ? dias : null,
+        motivo: !ini ? "sem data de início" : dias !== null && dias < 1 ? "término anterior ao início" : "",
+      };
+    });
+    const leads = leadDetalhe.map((l) => l.dias).filter((n): n is number => n !== null);
     const leadAvg = leads.length ? (leads.reduce((a, b) => a + b, 0) / leads.length).toFixed(1) : "—";
     // atividades em aberto já com prazo estourado contam como fora do prazo
     const atrasadasAbertas = adminTarefas.filter((t) => !t.fimReal && t.fimPrev && t.fimPrev < hoje);
@@ -686,7 +696,17 @@ const NewProjectsContent = () => {
       const d = diffDays(sprintSel.fim, todayISO());
       diasRest = d < 0 ? "Encerrada" : d;
     }
-    return { done: done.length, total: adminTarefas.length, donePts, totalPts, leadAvg, pct, diasRest };
+    return {
+      done: done.length,
+      total: adminTarefas.length,
+      donePts,
+      totalPts,
+      leadAvg,
+      leadDetalhe,
+      leadConsiderados: leads.length,
+      pct,
+      diasRest,
+    };
   }, [adminTarefas, sprintSel]);
 
 
