@@ -281,7 +281,7 @@ const NewProjectsContent = () => {
               ? db.clientes.find((c) => c.id === preProj.clienteId)?.nome || ""
               : "",
         projeto: preProj?.nome || "",
-        sprint: currentSprintId !== "all" ? sprintNum(sprintById(currentSprintId)?.nome) : "",
+        sprint: "",
       });
       setEditingId(null);
     }
