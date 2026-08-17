@@ -44,6 +44,8 @@ import {
   Sparkles,
   Plus,
   Download,
+  Upload,
+
   Pencil,
   ChevronLeft,
   ChevronRight,
@@ -424,6 +426,137 @@ const NewProjectsContent = () => {
     toast.success("CSV exportado");
   };
 
+  /* -------------------------------- importar ------------------------------- */
+
+  const parseDateCell = (v: any): string => {
+    if (v === undefined || v === null || v === "") return "";
+    if (v instanceof Date) {
+      const p = (n: number) => String(n).padStart(2, "0");
+      return `${v.getFullYear()}-${p(v.getMonth() + 1)}-${p(v.getDate())}`;
+    }
+    const s = String(v).trim();
+    const br = s.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
+    if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+    const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    return "";
+  };
+
+  const parseStage = (v: any): Stage => {
+    const s = String(v ?? "").toLowerCase().trim();
+    const found = STAGES.find((st) => st.id === s || st.label.toLowerCase() === s);
+    if (found) return found.id;
+    if (s.includes("produ") || s.includes("conclu")) return "done";
+    if (s.includes("homolog")) return "homolog";
+    if (s.includes("desenvolv")) return "dev";
+    if (s.includes("fazer")) return "todo";
+    return "backlog";
+  };
+
+  const pick = (row: Record<string, any>, keys: string[]) => {
+    for (const k of Object.keys(row)) {
+      const norm = k
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+      if (keys.includes(norm)) return row[k];
+    }
+    return "";
+  };
+
+  const handleImportFile = async (file: File) => {
+    try {
+      const XLSX = await import("xlsx");
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array", cellDates: true });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: "" });
+      if (!rows.length) return toast.error("Planilha vazia");
+
+      let criadas = 0;
+      setDb((prev) => {
+        const eq = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+        let clientes = [...prev.clientes];
+        let projetos = [...prev.projetos];
+        let sprints = [...prev.sprints];
+        let seqSprint = prev.seqSprint;
+        const tarefas = [...prev.tarefas];
+
+        rows.forEach((row) => {
+          const titulo = String(pick(row, ["tarefa", "titulo", "title", "demanda", "atividade"]) || "").trim();
+          if (!titulo) return;
+          const nomeCliente = String(pick(row, ["cliente", "client"]) || "").trim();
+          const nomeProjeto = String(pick(row, ["projeto", "project"]) || "").trim();
+          const nomeSprint = String(pick(row, ["sprint"]) || "").trim();
+          const dev = String(pick(row, ["responsavel", "dev", "responsible"]) || "").trim();
+          const desc = String(pick(row, ["descricao", "desc", "observacao"]) || "").trim();
+
+          let clienteId = "";
+          if (nomeCliente) {
+            const c = clientes.find((x) => eq(x.nome, nomeCliente));
+            if (c) clienteId = c.id;
+            else {
+              clienteId = uid();
+              clientes.push({ id: clienteId, nome: nomeCliente });
+            }
+          }
+
+          let projetoId = "";
+          if (nomeProjeto) {
+            const p = projetos.find((x) => eq(x.nome, nomeProjeto) && (!clienteId || x.clienteId === clienteId));
+            if (p) projetoId = p.id;
+            else {
+              projetoId = uid();
+              projetos.push({ id: projetoId, nome: nomeProjeto, clienteId, desc: "" });
+            }
+          }
+
+          const iniPrev = parseDateCell(pick(row, ["inicio previsto", "inicio", "data inicio", "start"]));
+          const fimPrev = parseDateCell(pick(row, ["termino previsto", "fim previsto", "termino", "fim", "prazo", "end"]));
+          const iniReal = parseDateCell(pick(row, ["inicio real"]));
+          const fimReal = parseDateCell(pick(row, ["termino real", "fim real"]));
+
+          let sprintId = "";
+          if (nomeSprint) {
+            const s = sprints.find((x) => eq(x.nome, nomeSprint));
+            if (s) sprintId = s.id;
+            else {
+              sprintId = `s${seqSprint++}`;
+              const inicio = iniPrev || todayISO();
+              sprints.push({ id: sprintId, nome: nomeSprint, inicio, fim: fimPrev || inicio });
+            }
+          }
+
+          tarefas.push({
+            id: uid(),
+            projetoId,
+            sprintId,
+            dev,
+            titulo,
+            desc,
+            stage: parseStage(pick(row, ["fase", "status", "stage"])),
+            pts: null,
+            iniPrev,
+            fimPrev,
+            iniReal,
+            fimReal,
+          });
+          criadas += 1;
+        });
+
+        return { ...prev, clientes, projetos, sprints, seqSprint, tarefas };
+      });
+
+      if (criadas) toast.success(`${criadas} tarefa(s) importada(s)`);
+      else toast.error("Nenhuma linha válida encontrada (coluna 'Tarefa' obrigatória)");
+    } catch (e) {
+      toast.error("Não foi possível ler o arquivo");
+    }
+  };
+
+
+
   /* --------------------------------- KPIs --------------------------------- */
 
   const kpis = useMemo(() => {
@@ -660,6 +793,26 @@ const NewProjectsContent = () => {
                   <Button variant="outline" size="sm" className="h-9" onClick={() => exportCSV()}>
                     <Download className="h-4 w-4 mr-2" /> Exportar
                   </Button>
+                  <input
+                    id="import-tarefas-input"
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleImportFile(f);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9"
+                    onClick={() => document.getElementById("import-tarefas-input")?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" /> Importar
+                  </Button>
+
                   <Button size="sm" className="h-9" onClick={() => openModal()}>
                     <Plus className="h-4 w-4 mr-2" /> Nova Tarefa
                   </Button>
