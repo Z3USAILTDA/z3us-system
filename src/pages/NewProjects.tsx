@@ -569,7 +569,17 @@ const NewProjectsContent = () => {
             titulo,
             desc,
             stage: parseStage(pick(row, ["fase", "status", "stage"])),
-            pts: null,
+            pts: parseEsforco(
+              pick(row, [
+                "nivel de esforco",
+                "nivel esforco",
+                "esforco",
+                "nivel de esforço",
+                "pontos",
+                "pts",
+                "story points",
+              ])
+            ),
             iniPrev,
             fimPrev,
             iniReal,
