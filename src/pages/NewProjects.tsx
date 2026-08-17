@@ -951,9 +951,18 @@ const NewProjectsContent = () => {
                                     <ChevronRight className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
-                                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openModal(t.id)}>
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
+                                 <div className="flex gap-1">
+                                   <Button
+                                     variant="outline" size="icon" className="h-7 w-7"
+                                     title="Histórico de movimentações"
+                                     onClick={() => setHistId(t.id)}
+                                   >
+                                     <History className="h-3.5 w-3.5" />
+                                   </Button>
+                                   <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openModal(t.id)}>
+                                     <Pencil className="h-3.5 w-3.5" />
+                                   </Button>
+                                 </div>
                               </div>
                             </div>
                           );
