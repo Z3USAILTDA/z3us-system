@@ -1385,9 +1385,11 @@ const NewProjectsContent = () => {
               </Button>
             ) : <span />}
             <div className="flex gap-2">
+              <Button variant="outline" onClick={limparSprintsVazias}>Limpar sprints vazias</Button>
               <Button variant="outline" onClick={() => setSprintModal(false)}>Fechar</Button>
               <Button onClick={saveSprint}>{sprintForm.id ? "Salvar alterações" : "Adicionar sprint"}</Button>
             </div>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
