@@ -857,7 +857,7 @@ const NewProjectsContent = () => {
               </p>
 
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard label="Projetos visíveis" value={kpis.projetos} />
+                <KpiCard label="Atividades visíveis" value={kpis.projetos} />
                 <KpiCard label="Atividades concluídas" value={`${kpis.done}/${kpis.total}`} tone="text-primary" />
                 <KpiCard label="Em desenvolvimento" value={kpis.dev} />
                 <KpiCard label="Em atraso" value={kpis.late} tone={kpis.late ? "text-destructive" : ""} />
