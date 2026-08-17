@@ -995,7 +995,12 @@ const NewProjectsContent = () => {
                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-400/15 text-violet-300">
                                     {t.dev}
                                   </span>
-                                )}
+                                 )}
+                                 {t.pts != null && (
+                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300">
+                                     {t.pts} · {EFFORT_LEVELS.find((e) => e.value === t.pts)?.label || "Esforço"}
+                                   </span>
+                                 )}
                               </div>
                               <div className="grid grid-cols-2 gap-2 border-t border-border/60 pt-2 mb-2">
                                 {[
