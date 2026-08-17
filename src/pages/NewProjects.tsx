@@ -186,6 +186,7 @@ const NewProjectsContent = () => {
   const [form, setForm] = useState<Omit<Tarefa, "id">>(emptyForm());
   const [formNames, setFormNames] = useState({ cliente: "", projeto: "", sprint: "" });
   const [sprintModal, setSprintModal] = useState(false);
+  const [leadModal, setLeadModal] = useState(false);
   const [sprintForm, setSprintForm] = useState({ id: "", nome: "", inicio: "", fim: "" });
   const [dragId, setDragId] = useState<string | null>(null);
   const [tab, setTab] = useState("projetos");
