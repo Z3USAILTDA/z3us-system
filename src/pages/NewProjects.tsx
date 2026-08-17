@@ -478,15 +478,24 @@ const NewProjectsContent = () => {
 
   const parseDateCell = (v: any): string => {
     if (v === undefined || v === null || v === "") return "";
+    const p = (n: number) => String(n).padStart(2, "0");
     if (v instanceof Date) {
-      const p = (n: number) => String(n).padStart(2, "0");
       return `${v.getFullYear()}-${p(v.getMonth() + 1)}-${p(v.getDate())}`;
     }
+    // serial do Excel (dias desde 30/12/1899)
+    if (typeof v === "number" && isFinite(v) && v > 20000 && v < 60000) {
+      const d = new Date(Math.round((v - 25569) * 86400000));
+      return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`;
+    }
     const s = String(v).trim();
-    const br = s.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
-    if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+    const br = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+    if (br) {
+      const ano = br[3].length === 2 ? `20${br[3]}` : br[3];
+      return `${ano}-${p(Number(br[2]))}-${p(Number(br[1]))}`;
+    }
     const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    if (/^\d{5}$/.test(s)) return parseDateCell(Number(s));
     return "";
   };
 
