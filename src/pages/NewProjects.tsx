@@ -69,6 +69,17 @@ import {
 
 type Stage = "backlog" | "todo" | "dev" | "homolog" | "done";
 
+const EFFORT_LEVELS = [
+  { value: 1, label: "Muito fácil - 1-3 horas" },
+  { value: 2, label: "Fácil - 4-8 horas" },
+  { value: 3, label: "Normal - 9 - 16 horas" },
+  { value: 5, label: "Complexo - 17-26 horas" },
+  { value: 8, label: "Muito complexo - 27-40 horas" },
+  { value: 13, label: "Extremamente complexo - mais de 40 horas" },
+  { value: 21, label: "Muito grande - Épico" },
+];
+
+
 interface Tarefa {
   id: string;
   projetoId: string;
