@@ -879,9 +879,9 @@ const NewProjectsContent = () => {
                             >
                               <div className="flex justify-between items-start gap-2 mb-1">
                                 <p className="text-sm font-semibold leading-snug">{t.titulo}</p>
-                                {t.pts ? (
-                                  <Badge variant="outline" className="shrink-0 text-[10px]">Esforço {t.pts}</Badge>
-                                ) : null}
+                                 {sprintById(t.sprintId)?.nome ? (
+                                   <Badge variant="outline" className="shrink-0 text-[10px]">Sprint {sprintNum(sprintById(t.sprintId)?.nome)}</Badge>
+                                 ) : null}
                               </div>
                               {t.desc && <p className="text-xs text-muted-foreground mb-2">{t.desc}</p>}
                               <div className="flex flex-wrap gap-1.5 mb-3">
