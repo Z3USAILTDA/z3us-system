@@ -888,9 +888,14 @@ const NewProjectsContent = () => {
                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary">
                                   {p?.nome || "—"}
                                 </span>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                                  {p ? clienteNome(p.clienteId) : "—"}
-                                </span>
+                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                   {p ? clienteNome(p.clienteId) : "—"}
+                                 </span>
+                                 {sprintById(t.sprintId)?.nome && (
+                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-400/15 text-sky-300">
+                                     Sprint {sprintNum(sprintById(t.sprintId)?.nome)}
+                                   </span>
+                                 )}
                                 {t.dev && (
                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-400/15 text-violet-300">
                                     {t.dev}
