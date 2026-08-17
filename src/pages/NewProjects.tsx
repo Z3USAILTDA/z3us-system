@@ -265,7 +265,7 @@ const NewProjectsContent = () => {
         };
       }),
     }));
-    toast.success(`Tarefa movida para ${STAGES.find((s) => s.id === stage)?.label}`);
+    toast.success(`Atividade movida para ${STAGES.find((s) => s.id === stage)?.label}`);
   };
 
   const openModal = (id?: string) => {
@@ -300,7 +300,7 @@ const NewProjectsContent = () => {
   };
 
   const saveTarefa = () => {
-    if (!form.titulo.trim()) return toast.error("Informe o título da tarefa");
+    if (!form.titulo.trim()) return toast.error("Informe o título da atividade");
     const nomeCliente = formNames.cliente.trim();
     const nomeProjeto = formNames.projeto.trim();
     const nomeSprint = sprintNum(formNames.sprint);
@@ -366,7 +366,7 @@ const NewProjectsContent = () => {
           : [...prev.tarefas, { id: uid(), ...dados }],
       };
     });
-    toast.success(editingId ? "Tarefa atualizada" : "Tarefa criada");
+    toast.success(editingId ? "Atividade atualizada" : "Atividade criada");
     setModalOpen(false);
     setEditingId(null);
   };
@@ -375,7 +375,7 @@ const NewProjectsContent = () => {
   const deleteTarefa = () => {
     if (!editingId) return;
     setDb((prev) => ({ ...prev, tarefas: prev.tarefas.filter((t) => t.id !== editingId) }));
-    toast.success("Tarefa excluída");
+    toast.success("Atividade excluída");
     setModalOpen(false);
     setEditingId(null);
   };
@@ -413,7 +413,7 @@ const NewProjectsContent = () => {
   const exportCSV = (all?: boolean) => {
     const rows = all ? db.tarefas : visibleTarefas;
     const head = [
-      "Projeto", "Cliente", "Tarefa", "Responsavel", "Sprint", "Fase", "Pontos",
+      "Projeto", "Cliente", "Atividade", "Responsavel", "Sprint", "Fase", "Pontos",
       "Inicio Previsto", "Termino Previsto", "Inicio Real", "Termino Real",
     ];
     const lines = [head.join(";")];
@@ -562,8 +562,8 @@ const NewProjectsContent = () => {
         return { ...prev, clientes, projetos, sprints, seqSprint, tarefas };
       });
 
-      if (criadas) toast.success(`${criadas} tarefa(s) importada(s)`);
-      else toast.error("Nenhuma linha válida encontrada (coluna 'Tarefa' obrigatória)");
+      if (criadas) toast.success(`${criadas} atividade(s) importada(s)`);
+      else toast.error("Nenhuma linha válida encontrada (coluna 'Atividade' obrigatória)");
     } catch (e) {
       toast.error("Não foi possível ler o arquivo");
     }
@@ -655,12 +655,12 @@ const NewProjectsContent = () => {
       const total = done + run + late + todo;
       const doneCount = list.filter((t) => t.fimReal).length;
       const note = !list.length
-        ? "Sem tarefas nesta seleção"
+        ? "Sem atividades nesta seleção"
         : lateCount
-        ? `${lateCount} tarefa(s) em atraso`
+        ? `${lateCount} atividade(s) em atraso`
         : doneCount === list.length
-        ? `Todas as ${list.length} tarefas entregues`
-        : `${doneCount} de ${list.length} tarefas entregues`;
+        ? `Todas as ${list.length} atividades entregues`
+        : `${doneCount} de ${list.length} atividades entregues`;
       return { nome, done, run, late, todo, total, note, hasLate: lateCount > 0 };
     });
   }, [adminTarefas]);
@@ -773,7 +773,7 @@ const NewProjectsContent = () => {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <h1 className="text-2xl sm:text-3xl font-bold">Gerenciar Projetos</h1>
-                  <p className="text-sm text-muted-foreground">Acompanhe clientes, projetos e tarefas</p>
+                  <p className="text-sm text-muted-foreground">Acompanhe clientes, projetos e atividades</p>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
                   <Select
@@ -828,18 +828,18 @@ const NewProjectsContent = () => {
                   </Button>
 
                   <Button size="sm" className="h-9" onClick={() => openModal()}>
-                    <Plus className="h-4 w-4 mr-2" /> Nova Tarefa
+                    <Plus className="h-4 w-4 mr-2" /> Nova Atividade
                   </Button>
                 </div>
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Arraste os cards entre as colunas ou use as setas para mover a tarefa de fase
+                Arraste os cards entre as colunas ou use as setas para mover a atividade de fase
               </p>
 
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <KpiCard label="Projetos visíveis" value={kpis.projetos} />
-                <KpiCard label="Tarefas concluídas" value={`${kpis.done}/${kpis.total}`} tone="text-primary" />
+                <KpiCard label="Atividades concluídas" value={`${kpis.done}/${kpis.total}`} tone="text-primary" />
                 <KpiCard label="Em desenvolvimento" value={kpis.dev} />
                 <KpiCard label="Em atraso" value={kpis.late} tone={kpis.late ? "text-destructive" : ""} />
               </div>
@@ -981,7 +981,7 @@ const NewProjectsContent = () => {
               </div>
 
               <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-                <KpiCard label="Tarefas" value={`${adminKpis.done}/${adminKpis.total}`} sub="concluídas / total" tone="text-primary" />
+                <KpiCard label="Atividades" value={`${adminKpis.done}/${adminKpis.total}`} sub="concluídas / total" tone="text-primary" />
                 <KpiCard label="Nível de Esforço" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
                 <KpiCard label="Entregas no prazo" value={`${adminKpis.pct}%`} tone={adminKpis.pct >= 70 ? "text-primary" : "text-destructive"} />
                 <KpiCard label="Lead time médio" value={`${adminKpis.leadAvg} dias`} />
@@ -997,7 +997,7 @@ const NewProjectsContent = () => {
                   <CardContent className="p-5">
                     <h3 className="font-semibold">Distribuição por fase</h3>
                     <p className="text-xs text-muted-foreground mb-4">
-                      {sprintSel ? `Tarefas da ${sprintSel.nome}` : "Todas as tarefas"}
+                      {sprintSel ? `Atividades da ${sprintSel.nome}` : "Todas as atividades"}
                     </p>
                     <div className="h-[280px]">
                       {fasesData.length ? (
@@ -1013,7 +1013,7 @@ const NewProjectsContent = () => {
                           </PieChart>
                         </ResponsiveContainer>
                       ) : (
-                        <p className="text-sm text-muted-foreground text-center pt-24">Sem tarefas nesta sprint</p>
+                        <p className="text-sm text-muted-foreground text-center pt-24">Sem atividades nesta sprint</p>
                       )}
                     </div>
                   </CardContent>
@@ -1023,7 +1023,7 @@ const NewProjectsContent = () => {
                   <CardContent className="p-5">
                     <h3 className="font-semibold">Burndown da sprint</h3>
                     <p className="text-xs text-muted-foreground mb-4">
-                      {sprintSel ? "Tarefas restantes · ideal vs. real" : "Selecione uma sprint específica"}
+                      {sprintSel ? "Atividades restantes · ideal vs. real" : "Selecione uma sprint específica"}
                     </p>
                     <div className="h-[280px]">
                       {burndown.length ? (
@@ -1061,7 +1061,7 @@ const NewProjectsContent = () => {
                           <div className="flex justify-between text-sm mb-1">
                             <span className="font-medium">{r.nome}</span>
                             <span className="text-xs text-muted-foreground">
-                              {r.total ? `${r.done}/${r.total} tarefas · ${pct}%` : "sem tarefas"}
+                              {r.total ? `${r.done}/${r.total} atividades · ${pct}%` : "sem atividades"}
                             </span>
                           </div>
                           <div className="flex h-2 rounded-full overflow-hidden bg-muted">
@@ -1080,14 +1080,14 @@ const NewProjectsContent = () => {
                     <span>
                       Equipe:{" "}
                       <strong className="text-foreground">
-                        {teamTotals.done}/{teamTotals.total} tarefas entregues (
+                        {teamTotals.done}/{teamTotals.total} atividades entregues (
                         {teamTotals.total ? Math.round((teamTotals.done / teamTotals.total) * 100) : 0}%)
                       </strong>
                     </span>
                     {teamTotals.late ? (
-                      <span className="text-destructive">{teamTotals.late} tarefas em atraso</span>
+                      <span className="text-destructive">{teamTotals.late} atividades em atraso</span>
                     ) : (
-                      <span className="text-primary">Nenhuma tarefa em atraso</span>
+                      <span className="text-primary">Nenhuma atividade em atraso</span>
                     )}
                   </div>
                 </CardContent>
@@ -1101,7 +1101,7 @@ const NewProjectsContent = () => {
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
+            <DialogTitle>{editingId ? "Editar Atividade" : "Nova Atividade"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -1150,8 +1150,8 @@ const NewProjectsContent = () => {
               </div>
             </div>
             <div>
-              <Label>Título da tarefa</Label>
-              <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Descreva a tarefa" />
+              <Label>Título da atividade</Label>
+              <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} placeholder="Descreva a atividade" />
             </div>
             <div>
               <Label>Descrição / critérios de aceite</Label>
@@ -1257,7 +1257,7 @@ const NewProjectsContent = () => {
                     <p className="text-xs text-muted-foreground">{fmt(s.inicio)} a {fmt(s.fim)}</p>
                   </div>
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                    {db.tarefas.filter((t) => t.sprintId === s.id).length} tarefas
+                    {db.tarefas.filter((t) => t.sprintId === s.id).length} atividades
                   </span>
                   <Button variant="outline" size="sm" onClick={() => setSprintForm({ ...s })}>Editar</Button>
                   <Button variant="ghost" size="sm" className="text-destructive" onClick={() => deleteSprint(s.id)}>
