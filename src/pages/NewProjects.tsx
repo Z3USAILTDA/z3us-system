@@ -1093,7 +1093,12 @@ const NewProjectsContent = () => {
                 <KpiCard label="Atividades" value={`${adminKpis.done}/${adminKpis.total}`} sub="concluídas / total" tone="text-primary" />
                 <KpiCard label="Nível de Esforço" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
                 <KpiCard label="Entregas no prazo" value={`${adminKpis.pct}%`} tone={adminKpis.pct >= 70 ? "text-primary" : "text-destructive"} />
-                <KpiCard label="Lead time médio" value={`${adminKpis.leadAvg} dias`} />
+                <KpiCard
+                  label="Lead time médio"
+                  value={`${adminKpis.leadAvg} dias`}
+                  sub={`${adminKpis.leadConsiderados} de ${adminKpis.done} concluídas · ver conferência`}
+                  onClick={() => setLeadModal(true)}
+                />
                 <KpiCard
                   label="Dias restantes"
                   value={adminKpis.diasRest}
