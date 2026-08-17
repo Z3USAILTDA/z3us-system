@@ -44,6 +44,8 @@ import {
   Sparkles,
   Plus,
   Download,
+  Upload,
+
   Pencil,
   ChevronLeft,
   ChevronRight,
