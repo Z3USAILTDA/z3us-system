@@ -880,7 +880,7 @@ const NewProjectsContent = () => {
                               <div className="flex justify-between items-start gap-2 mb-1">
                                 <p className="text-sm font-semibold leading-snug">{t.titulo}</p>
                                 {t.pts ? (
-                                  <Badge variant="outline" className="shrink-0 text-[10px]">{t.pts} tarefas</Badge>
+                                  <Badge variant="outline" className="shrink-0 text-[10px]">Esforço {t.pts}</Badge>
                                 ) : null}
                               </div>
                               {t.desc && <p className="text-xs text-muted-foreground mb-2">{t.desc}</p>}
@@ -987,7 +987,7 @@ const NewProjectsContent = () => {
 
               <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
                 <KpiCard label="Tarefas" value={`${adminKpis.done}/${adminKpis.total}`} sub="concluídas / total" tone="text-primary" />
-                <KpiCard label="Tarefas (peso)" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
+                <KpiCard label="Nível de Esforço" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
                 <KpiCard label="Entregas no prazo" value={`${adminKpis.pct}%`} tone={adminKpis.pct >= 70 ? "text-primary" : "text-destructive"} />
                 <KpiCard label="Lead time médio" value={`${adminKpis.leadAvg} dias`} />
                 <KpiCard
