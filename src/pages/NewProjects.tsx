@@ -432,7 +432,7 @@ const NewProjectsContent = () => {
   const exportCSV = (all?: boolean) => {
     const rows = all ? db.tarefas : visibleTarefas;
     const head = [
-      "Projeto", "Cliente", "Atividade", "Responsavel", "Sprint", "Fase", "Pontos",
+      "Projeto", "Cliente", "Atividade", "Responsavel", "Sprint", "Fase", "Nivel de Esforco",
       "Inicio Previsto", "Termino Previsto", "Inicio Real", "Termino Real",
     ];
     const lines = [head.join(";")];
