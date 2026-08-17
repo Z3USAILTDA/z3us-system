@@ -426,8 +426,23 @@ const NewProjectsContent = () => {
       sprints: prev.sprints.filter((x) => x.id !== id),
       tarefas: prev.tarefas.map((t) => (t.sprintId === id ? { ...t, sprintId: "" } : t)),
     }));
-    toast.success(`${s.nome} excluída`);
+    toast.success(`Sprint ${sprintNum(s.nome)} excluída`);
   };
+
+  const limparSprintsVazias = () => {
+    setDb((prev) => {
+      const usadas = new Set(prev.tarefas.map((t) => t.sprintId));
+      const restantes = prev.sprints.filter((s) => usadas.has(s.id));
+      const removidas = prev.sprints.length - restantes.length;
+      if (!removidas) {
+        toast.info("Nenhuma sprint vazia encontrada");
+        return prev;
+      }
+      toast.success(`${removidas} sprint(s) vazia(s) removida(s)`);
+      return { ...prev, sprints: restantes };
+    });
+  };
+
 
   const exportCSV = (all?: boolean) => {
     const rows = all ? db.tarefas : visibleTarefas;
@@ -1348,7 +1363,7 @@ const NewProjectsContent = () => {
               .map((s) => (
                 <div key={s.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">{s.nome}</p>
+                    <p className="text-sm font-semibold">Sprint {sprintNum(s.nome)}</p>
                     <p className="text-xs text-muted-foreground">{fmt(s.inicio)} a {fmt(s.fim)}</p>
                   </div>
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
@@ -1385,9 +1400,11 @@ const NewProjectsContent = () => {
               </Button>
             ) : <span />}
             <div className="flex gap-2">
+              <Button variant="outline" onClick={limparSprintsVazias}>Limpar sprints vazias</Button>
               <Button variant="outline" onClick={() => setSprintModal(false)}>Fechar</Button>
               <Button onClick={saveSprint}>{sprintForm.id ? "Salvar alterações" : "Adicionar sprint"}</Button>
             </div>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
