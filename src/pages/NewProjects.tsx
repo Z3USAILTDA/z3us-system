@@ -186,6 +186,7 @@ const NewProjectsContent = () => {
   const [form, setForm] = useState<Omit<Tarefa, "id">>(emptyForm());
   const [formNames, setFormNames] = useState({ cliente: "", projeto: "", sprint: "" });
   const [sprintModal, setSprintModal] = useState(false);
+  const [leadModal, setLeadModal] = useState(false);
   const [sprintForm, setSprintForm] = useState({ id: "", nome: "", inicio: "", fim: "" });
   const [dragId, setDragId] = useState<string | null>(null);
   const [tab, setTab] = useState("projetos");
@@ -478,15 +479,24 @@ const NewProjectsContent = () => {
 
   const parseDateCell = (v: any): string => {
     if (v === undefined || v === null || v === "") return "";
+    const p = (n: number) => String(n).padStart(2, "0");
     if (v instanceof Date) {
-      const p = (n: number) => String(n).padStart(2, "0");
       return `${v.getFullYear()}-${p(v.getMonth() + 1)}-${p(v.getDate())}`;
     }
+    // serial do Excel (dias desde 30/12/1899)
+    if (typeof v === "number" && isFinite(v) && v > 20000 && v < 60000) {
+      const d = new Date(Math.round((v - 25569) * 86400000));
+      return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`;
+    }
     const s = String(v).trim();
-    const br = s.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
-    if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+    const br = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+    if (br) {
+      const ano = br[3].length === 2 ? `20${br[3]}` : br[3];
+      return `${ano}-${p(Number(br[2]))}-${p(Number(br[1]))}`;
+    }
     const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    if (/^\d{5}$/.test(s)) return parseDateCell(Number(s));
     return "";
   };
 
@@ -660,12 +670,22 @@ const NewProjectsContent = () => {
     const done = adminTarefas.filter((t) => t.fimReal);
     const totalPts = adminTarefas.reduce((a, t) => a + (t.pts || 0), 0);
     const donePts = done.reduce((a, t) => a + (t.pts || 0), 0);
-    const leads = done
-      .map((t) => {
-        const ini = t.iniReal || t.iniPrev;
-        return ini ? diffDays(t.fimReal, ini) : null;
-      })
-      .filter((n): n is number => n !== null && n >= 0);
+    // detalhamento do lead time: 1 linha por atividade concluída
+    const leadDetalhe = done.map((t) => {
+      const ini = t.iniReal || t.iniPrev;
+      const base: "real" | "previsto" | "" = t.iniReal ? "real" : t.iniPrev ? "previsto" : "";
+      const dias = ini ? diffDays(t.fimReal, ini) + 1 : null; // conta o dia de início e o de término
+      return {
+        id: t.id,
+        titulo: t.titulo,
+        inicio: ini,
+        base,
+        fim: t.fimReal,
+        dias: dias !== null && dias >= 1 ? dias : null,
+        motivo: !ini ? "sem data de início" : dias !== null && dias < 1 ? "término anterior ao início" : "",
+      };
+    });
+    const leads = leadDetalhe.map((l) => l.dias).filter((n): n is number => n !== null);
     const leadAvg = leads.length ? (leads.reduce((a, b) => a + b, 0) / leads.length).toFixed(1) : "—";
     // atividades em aberto já com prazo estourado contam como fora do prazo
     const atrasadasAbertas = adminTarefas.filter((t) => !t.fimReal && t.fimPrev && t.fimPrev < hoje);
@@ -677,7 +697,17 @@ const NewProjectsContent = () => {
       const d = diffDays(sprintSel.fim, todayISO());
       diasRest = d < 0 ? "Encerrada" : d;
     }
-    return { done: done.length, total: adminTarefas.length, donePts, totalPts, leadAvg, pct, diasRest };
+    return {
+      done: done.length,
+      total: adminTarefas.length,
+      donePts,
+      totalPts,
+      leadAvg,
+      leadDetalhe,
+      leadConsiderados: leads.length,
+      pct,
+      diasRest,
+    };
   }, [adminTarefas, sprintSel]);
 
 
@@ -755,8 +785,8 @@ const NewProjectsContent = () => {
     { title: "Métricas TV", url: "/metricas-projetos-tv", icon: MonitorPlay, external: true },
   ];
 
-  const KpiCard = ({ label, value, sub, tone }: { label: string; value: any; sub?: string; tone?: string }) => (
-    <Card className="bg-card/60 border-border/60">
+  const KpiCard = ({ label, value, sub, tone, onClick }: { label: string; value: any; sub?: string; tone?: string; onClick?: () => void }) => (
+    <Card className={`bg-card/60 border-border/60 ${onClick ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}`} onClick={onClick}>
       <CardContent className="p-5">
         <p className="text-xs text-muted-foreground mb-2">{label}</p>
         <p className={`text-3xl font-bold ${tone || ""}`}>{value}</p>
@@ -1063,7 +1093,12 @@ const NewProjectsContent = () => {
                 <KpiCard label="Atividades" value={`${adminKpis.done}/${adminKpis.total}`} sub="concluídas / total" tone="text-primary" />
                 <KpiCard label="Nível de Esforço" value={`${adminKpis.donePts}/${adminKpis.totalPts}`} sub="entregues / planejados" />
                 <KpiCard label="Entregas no prazo" value={`${adminKpis.pct}%`} tone={adminKpis.pct >= 70 ? "text-primary" : "text-destructive"} />
-                <KpiCard label="Lead time médio" value={`${adminKpis.leadAvg} dias`} />
+                <KpiCard
+                  label="Lead time médio"
+                  value={`${adminKpis.leadAvg} dias`}
+                  sub={`${adminKpis.leadConsiderados} de ${adminKpis.done} concluídas · ver conferência`}
+                  onClick={() => setLeadModal(true)}
+                />
                 <KpiCard
                   label="Dias restantes"
                   value={adminKpis.diasRest}
@@ -1360,6 +1395,58 @@ const NewProjectsContent = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* --------------------- conferência do lead time -------------------- */}
+      <Dialog open={leadModal} onOpenChange={setLeadModal}>
+        <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Conferência do lead time</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Dias = término real − início (real, ou previsto quando não há real), contando o dia inicial e o final.
+            Média = soma dos dias ÷ atividades consideradas.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground border-b border-border/60">
+                  <th className="py-2 pr-2">Atividade</th>
+                  <th className="py-2 pr-2">Início</th>
+                  <th className="py-2 pr-2">Término real</th>
+                  <th className="py-2 pr-2 text-right">Dias</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminKpis.leadDetalhe.length === 0 && (
+                  <tr><td colSpan={4} className="py-3 text-muted-foreground">Nenhuma atividade concluída.</td></tr>
+                )}
+                {adminKpis.leadDetalhe.map((l) => (
+                  <tr key={l.id} className="border-b border-border/40">
+                    <td className="py-2 pr-2">{l.titulo}</td>
+                    <td className="py-2 pr-2">
+                      {l.inicio ? fmt(l.inicio) : "—"}
+                      {l.base === "previsto" && <span className="ml-1 text-[10px] text-muted-foreground">(previsto)</span>}
+                    </td>
+                    <td className="py-2 pr-2">{fmt(l.fim)}</td>
+                    <td className="py-2 pr-2 text-right">
+                      {l.dias ?? <span className="text-xs text-muted-foreground">{l.motivo || "—"}</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="font-semibold">
+                  <td className="py-2 pr-2" colSpan={3}>
+                    Média ({adminKpis.leadConsiderados} atividade{adminKpis.leadConsiderados === 1 ? "" : "s"} considerada{adminKpis.leadConsiderados === 1 ? "" : "s"})
+                  </td>
+                  <td className="py-2 pr-2 text-right">{adminKpis.leadAvg} dias</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* ------------------------------ modal sprints ---------------------------- */}
       <Dialog open={sprintModal} onOpenChange={setSprintModal}>
