@@ -1125,6 +1125,47 @@ const NewProjectsContent = () => {
         </main>
       </div>
 
+      {/* --------------------------- modal histórico ---------------------------- */}
+      <Dialog open={!!histId} onOpenChange={(o) => !o && setHistId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Histórico de movimentações</DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const t = db.tarefas.find((x) => x.id === histId);
+            if (!t) return null;
+            const hist = t.hist || [];
+            return (
+              <div className="space-y-3">
+                <p className="text-sm font-semibold">{t.titulo}</p>
+                {hist.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma movimentação registrada para esta atividade.
+                  </p>
+                ) : (
+                  <ul className="space-y-2 max-h-72 overflow-y-auto">
+                    {[...hist].reverse().map((h, i) => {
+                      const d = new Date(h.at);
+                      const pad = (n: number) => String(n).padStart(2, "0");
+                      const quando = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} às ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                      const st = STAGES.find((s) => s.id === h.stage);
+                      return (
+                        <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2">
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full ${st?.badge || ""}`}>
+                            {st?.label || h.stage}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{quando}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
       {/* ------------------------------ modal tarefa ----------------------------- */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
