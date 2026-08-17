@@ -426,8 +426,23 @@ const NewProjectsContent = () => {
       sprints: prev.sprints.filter((x) => x.id !== id),
       tarefas: prev.tarefas.map((t) => (t.sprintId === id ? { ...t, sprintId: "" } : t)),
     }));
-    toast.success(`${s.nome} excluída`);
+    toast.success(`Sprint ${sprintNum(s.nome)} excluída`);
   };
+
+  const limparSprintsVazias = () => {
+    setDb((prev) => {
+      const usadas = new Set(prev.tarefas.map((t) => t.sprintId));
+      const restantes = prev.sprints.filter((s) => usadas.has(s.id));
+      const removidas = prev.sprints.length - restantes.length;
+      if (!removidas) {
+        toast.info("Nenhuma sprint vazia encontrada");
+        return prev;
+      }
+      toast.success(`${removidas} sprint(s) vazia(s) removida(s)`);
+      return { ...prev, sprints: restantes };
+    });
+  };
+
 
   const exportCSV = (all?: boolean) => {
     const rows = all ? db.tarefas : visibleTarefas;
