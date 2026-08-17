@@ -784,8 +784,8 @@ const NewProjectsContent = () => {
     { title: "Métricas TV", url: "/metricas-projetos-tv", icon: MonitorPlay, external: true },
   ];
 
-  const KpiCard = ({ label, value, sub, tone }: { label: string; value: any; sub?: string; tone?: string }) => (
-    <Card className="bg-card/60 border-border/60">
+  const KpiCard = ({ label, value, sub, tone, onClick }: { label: string; value: any; sub?: string; tone?: string; onClick?: () => void }) => (
+    <Card className={`bg-card/60 border-border/60 ${onClick ? "cursor-pointer hover:border-primary/50 transition-colors" : ""}`} onClick={onClick}>
       <CardContent className="p-5">
         <p className="text-xs text-muted-foreground mb-2">{label}</p>
         <p className={`text-3xl font-bold ${tone || ""}`}>{value}</p>
