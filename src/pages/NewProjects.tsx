@@ -47,6 +47,7 @@ import {
   Upload,
 
   Pencil,
+  History,
   ChevronLeft,
   ChevronRight,
   CalendarRange,
