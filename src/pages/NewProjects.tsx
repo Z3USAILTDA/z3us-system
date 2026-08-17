@@ -1348,7 +1348,7 @@ const NewProjectsContent = () => {
               .map((s) => (
                 <div key={s.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">{s.nome}</p>
+                    <p className="text-sm font-semibold">Sprint {sprintNum(s.nome)}</p>
                     <p className="text-xs text-muted-foreground">{fmt(s.inicio)} a {fmt(s.fim)}</p>
                   </div>
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
