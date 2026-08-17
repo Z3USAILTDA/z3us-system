@@ -791,6 +791,26 @@ const NewProjectsContent = () => {
                   <Button variant="outline" size="sm" className="h-9" onClick={() => exportCSV()}>
                     <Download className="h-4 w-4 mr-2" /> Exportar
                   </Button>
+                  <input
+                    id="import-tarefas-input"
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleImportFile(f);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9"
+                    onClick={() => document.getElementById("import-tarefas-input")?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" /> Importar
+                  </Button>
+
                   <Button size="sm" className="h-9" onClick={() => openModal()}>
                     <Plus className="h-4 w-4 mr-2" /> Nova Tarefa
                   </Button>
