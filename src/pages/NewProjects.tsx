@@ -1254,8 +1254,8 @@ const NewProjectsContent = () => {
           </p>
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
-              <Label>Nome</Label>
-              <Input value={sprintForm.nome} onChange={(e) => setSprintForm({ ...sprintForm, nome: e.target.value })} placeholder="ex.: Sprint 18" />
+              <Label>Número</Label>
+              <Input inputMode="numeric" value={sprintForm.nome} onChange={(e) => setSprintForm({ ...sprintForm, nome: e.target.value.replace(/[^0-9]/g, "") })} placeholder="ex.: 18" />
             </div>
             <div>
               <Label>Início</Label>
