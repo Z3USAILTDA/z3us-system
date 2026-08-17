@@ -678,7 +678,7 @@ const NewProjectsContent = () => {
     { title: "Equipes", url: "/dashboard/teams", icon: UsersIcon },
     { title: "Clientes", url: "/dashboard/clients", icon: Building2 },
     { title: "Projetos", url: "/dashboard/projects", icon: FolderKanban },
-    { title: "Novos Projetos", url: "/dashboard/novos-projetos", icon: Sparkles },
+    { title: "Gestão de Sprints", url: "/dashboard/novos-projetos", icon: Sparkles },
     { title: "Administração", action: () => setTab("admin"), icon: BarChart3 },
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
     { title: "Resumo da Semana", url: "/dashboard/weekly-summary", icon: BarChart3 },
