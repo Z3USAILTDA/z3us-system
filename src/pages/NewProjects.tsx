@@ -432,7 +432,7 @@ const NewProjectsContent = () => {
   const exportCSV = (all?: boolean) => {
     const rows = all ? db.tarefas : visibleTarefas;
     const head = [
-      "Projeto", "Cliente", "Atividade", "Responsavel", "Sprint", "Fase", "Pontos",
+      "Projeto", "Cliente", "Atividade", "Responsavel", "Sprint", "Fase", "Nivel de Esforco",
       "Inicio Previsto", "Termino Previsto", "Inicio Real", "Termino Real",
     ];
     const lines = [head.join(";")];
@@ -484,6 +484,22 @@ const NewProjectsContent = () => {
     if (s.includes("desenvolv")) return "dev";
     if (s.includes("fazer")) return "todo";
     return "backlog";
+  };
+
+  const parseEsforco = (v: any): number | null => {
+    if (v === undefined || v === null || v === "") return null;
+    const s = String(v).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const num = s.match(/\d+/);
+    if (num) {
+      const n = Number(num[0]);
+      const exact = EFFORT_LEVELS.find((e) => e.value === n);
+      if (exact) return exact.value;
+      return Number.isFinite(n) ? n : null;
+    }
+    const byLabel = EFFORT_LEVELS.find((e) =>
+      e.label.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(s)
+    );
+    return byLabel ? byLabel.value : null;
   };
 
   const pick = (row: Record<string, any>, keys: string[]) => {
@@ -569,7 +585,17 @@ const NewProjectsContent = () => {
             titulo,
             desc,
             stage: parseStage(pick(row, ["fase", "status", "stage"])),
-            pts: null,
+            pts: parseEsforco(
+              pick(row, [
+                "nivel de esforco",
+                "nivel esforco",
+                "esforco",
+                "nivel de esforço",
+                "pontos",
+                "pts",
+                "story points",
+              ])
+            ),
             iniPrev,
             fimPrev,
             iniReal,
