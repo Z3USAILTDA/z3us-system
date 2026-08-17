@@ -210,6 +210,8 @@ const NewProjectsContent = () => {
   const projById = (id: string) => db.projetos.find((p) => p.id === id);
   const clienteNome = (id: string) => db.clientes.find((c) => c.id === id)?.nome || "—";
   const sprintById = (id: string) => db.sprints.find((s) => s.id === id);
+  // sprints são identificadas apenas pelo número (ex.: "17")
+  const sprintNum = (nome?: string) => (nome || "").replace(/sprint/gi, "").trim();
 
   const projetosFiltrados = db.projetos.filter(
     (p) => filterCliente === "all" || p.clienteId === filterCliente
