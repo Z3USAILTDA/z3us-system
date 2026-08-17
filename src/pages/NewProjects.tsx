@@ -107,7 +107,7 @@ const STAGES: { id: Stage; label: string; color: string; badge: string }[] = [
   { id: "done", label: "Produção", color: "#34d399", badge: "bg-emerald-400/15 text-emerald-300" },
 ];
 
-const DEVS = ["Ana", "Amanda", "Larissa", "Paulo", "Roberto", "Thayná"];
+const DEVS = ["Ana", "Patrick", "Larissa", "Paulo", "Roberto", "Thayná"];
 
 const STORAGE_KEY = "z3us-novos-projetos-v2";
 
