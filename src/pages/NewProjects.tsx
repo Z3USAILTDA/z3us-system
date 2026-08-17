@@ -366,8 +366,22 @@ const NewProjectsContent = () => {
         sprints,
         seqSprint,
         tarefas: editingId
-          ? prev.tarefas.map((t) => (t.id === editingId ? { ...t, ...dados } : t))
-          : [...prev.tarefas, { id: uid(), ...dados }],
+          ? prev.tarefas.map((t) =>
+              t.id === editingId
+                ? {
+                    ...t,
+                    ...dados,
+                    hist:
+                      t.stage !== dados.stage
+                        ? [...(t.hist || []), { stage: dados.stage, at: new Date().toISOString() }]
+                        : t.hist,
+                  }
+                : t
+            )
+          : [
+              ...prev.tarefas,
+              { id: uid(), ...dados, hist: [{ stage: dados.stage, at: new Date().toISOString() }] },
+            ],
       };
     });
     toast.success(editingId ? "Atividade atualizada" : "Atividade criada");
