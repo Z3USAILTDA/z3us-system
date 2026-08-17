@@ -896,11 +896,6 @@ const NewProjectsContent = () => {
                                     {t.dev}
                                   </span>
                                 )}
-                                {spr && (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-400/15 text-blue-300">
-                                    {spr.nome}
-                                  </span>
-                                )}
                               </div>
                               <div className="grid grid-cols-2 gap-2 border-t border-border/60 pt-2 mb-2">
                                 {[
