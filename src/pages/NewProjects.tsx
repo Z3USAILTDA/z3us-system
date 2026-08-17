@@ -47,6 +47,7 @@ import {
   Upload,
 
   Pencil,
+  History,
   ChevronLeft,
   ChevronRight,
   CalendarRange,
@@ -93,7 +94,9 @@ interface Tarefa {
   fimPrev: string;
   iniReal: string;
   fimReal: string;
+  hist?: { stage: Stage; at: string }[];
 }
+
 
 interface Sprint {
   id: string;
@@ -179,6 +182,7 @@ const NewProjectsContent = () => {
   const [filterSprint, setFilterSprint] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [histId, setHistId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Tarefa, "id">>(emptyForm());
   const [formNames, setFormNames] = useState({ cliente: "", projeto: "", sprint: "" });
   const [sprintModal, setSprintModal] = useState(false);
@@ -262,6 +266,7 @@ const NewProjectsContent = () => {
           stage,
           iniReal: stage === "dev" && !t.iniReal ? hoje : t.iniReal,
           fimReal: stage === "done" ? t.fimReal || hoje : "",
+          hist: [...(t.hist || []), { stage, at: new Date().toISOString() }],
         };
       }),
     }));
@@ -362,8 +367,22 @@ const NewProjectsContent = () => {
         sprints,
         seqSprint,
         tarefas: editingId
-          ? prev.tarefas.map((t) => (t.id === editingId ? { ...t, ...dados } : t))
-          : [...prev.tarefas, { id: uid(), ...dados }],
+          ? prev.tarefas.map((t) =>
+              t.id === editingId
+                ? {
+                    ...t,
+                    ...dados,
+                    hist:
+                      t.stage !== dados.stage
+                        ? [...(t.hist || []), { stage: dados.stage, at: new Date().toISOString() }]
+                        : t.hist,
+                  }
+                : t
+            )
+          : [
+              ...prev.tarefas,
+              { id: uid(), ...dados, hist: [{ stage: dados.stage, at: new Date().toISOString() }] },
+            ],
       };
     });
     toast.success(editingId ? "Atividade atualizada" : "Atividade criada");
@@ -932,9 +951,18 @@ const NewProjectsContent = () => {
                                     <ChevronRight className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
-                                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openModal(t.id)}>
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
+                                 <div className="flex gap-1">
+                                   <Button
+                                     variant="outline" size="icon" className="h-7 w-7"
+                                     title="Histórico de movimentações"
+                                     onClick={() => setHistId(t.id)}
+                                   >
+                                     <History className="h-3.5 w-3.5" />
+                                   </Button>
+                                   <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openModal(t.id)}>
+                                     <Pencil className="h-3.5 w-3.5" />
+                                   </Button>
+                                 </div>
                               </div>
                             </div>
                           );
@@ -1096,6 +1124,47 @@ const NewProjectsContent = () => {
           </Tabs>
         </main>
       </div>
+
+      {/* --------------------------- modal histórico ---------------------------- */}
+      <Dialog open={!!histId} onOpenChange={(o) => !o && setHistId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Histórico de movimentações</DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const t = db.tarefas.find((x) => x.id === histId);
+            if (!t) return null;
+            const hist = t.hist || [];
+            return (
+              <div className="space-y-3">
+                <p className="text-sm font-semibold">{t.titulo}</p>
+                {hist.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma movimentação registrada para esta atividade.
+                  </p>
+                ) : (
+                  <ul className="space-y-2 max-h-72 overflow-y-auto">
+                    {[...hist].reverse().map((h, i) => {
+                      const d = new Date(h.at);
+                      const pad = (n: number) => String(n).padStart(2, "0");
+                      const quando = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} às ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                      const st = STAGES.find((s) => s.id === h.stage);
+                      return (
+                        <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2">
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full ${st?.badge || ""}`}>
+                            {st?.label || h.stage}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{quando}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* ------------------------------ modal tarefa ----------------------------- */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
