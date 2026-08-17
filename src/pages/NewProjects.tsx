@@ -182,6 +182,7 @@ const NewProjectsContent = () => {
   const [filterSprint, setFilterSprint] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [histId, setHistId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<Tarefa, "id">>(emptyForm());
   const [formNames, setFormNames] = useState({ cliente: "", projeto: "", sprint: "" });
   const [sprintModal, setSprintModal] = useState(false);
