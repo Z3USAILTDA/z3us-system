@@ -1181,13 +1181,24 @@ const NewProjectsContent = () => {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label>Tarefas</Label>
-                <Input
-                  type="number" min={1} max={21}
-                  value={form.pts ?? ""}
-                  onChange={(e) => setForm({ ...form, pts: e.target.value ? Number(e.target.value) : null })}
-                />
+                <Label>Nível de Esforço</Label>
+                <Select
+                  value={form.pts != null ? String(form.pts) : ""}
+                  onValueChange={(v) => setForm({ ...form, pts: v ? Number(v) : null })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o nível" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EFFORT_LEVELS.map((l) => (
+                      <SelectItem key={l.value} value={String(l.value)}>
+                        {l.value} - {l.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
             </div>
             <p className="text-xs uppercase tracking-wide text-primary border-b border-border/60 pb-1">Planejamento</p>
             <div className="grid gap-4 sm:grid-cols-2">
