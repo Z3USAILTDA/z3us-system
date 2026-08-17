@@ -879,9 +879,9 @@ const NewProjectsContent = () => {
                             >
                               <div className="flex justify-between items-start gap-2 mb-1">
                                 <p className="text-sm font-semibold leading-snug">{t.titulo}</p>
-                                {t.pts ? (
-                                  <Badge variant="outline" className="shrink-0 text-[10px]">Esforço {t.pts}</Badge>
-                                ) : null}
+                                 {sprintById(t.sprintId)?.nome ? (
+                                   <Badge variant="outline" className="shrink-0 text-[10px]">Sprint {sprintNum(sprintById(t.sprintId)?.nome)}</Badge>
+                                 ) : null}
                               </div>
                               {t.desc && <p className="text-xs text-muted-foreground mb-2">{t.desc}</p>}
                               <div className="flex flex-wrap gap-1.5 mb-3">
@@ -891,11 +891,6 @@ const NewProjectsContent = () => {
                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                                    {p ? clienteNome(p.clienteId) : "—"}
                                  </span>
-                                 {sprintById(t.sprintId)?.nome && (
-                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-400/15 text-sky-300">
-                                     Sprint {sprintNum(sprintById(t.sprintId)?.nome)}
-                                   </span>
-                                 )}
                                 {t.dev && (
                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-400/15 text-violet-300">
                                     {t.dev}
