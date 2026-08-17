@@ -210,6 +210,8 @@ const NewProjectsContent = () => {
   const projById = (id: string) => db.projetos.find((p) => p.id === id);
   const clienteNome = (id: string) => db.clientes.find((c) => c.id === id)?.nome || "—";
   const sprintById = (id: string) => db.sprints.find((s) => s.id === id);
+  // sprints são identificadas apenas pelo número (ex.: "17")
+  const sprintNum = (nome?: string) => (nome || "").replace(/sprint/gi, "").trim();
 
   const projetosFiltrados = db.projetos.filter(
     (p) => filterCliente === "all" || p.clienteId === filterCliente
@@ -265,7 +267,7 @@ const NewProjectsContent = () => {
       setFormNames({
         cliente: p ? db.clientes.find((c) => c.id === p.clienteId)?.nome || "" : "",
         projeto: p?.nome || "",
-        sprint: sprintById(t.sprintId)?.nome || "",
+        sprint: sprintNum(sprintById(t.sprintId)?.nome),
       });
       setEditingId(id);
     } else {
@@ -279,7 +281,7 @@ const NewProjectsContent = () => {
               ? db.clientes.find((c) => c.id === preProj.clienteId)?.nome || ""
               : "",
         projeto: preProj?.nome || "",
-        sprint: currentSprintId !== "all" ? sprintById(currentSprintId)?.nome || "" : "",
+        sprint: currentSprintId !== "all" ? sprintNum(sprintById(currentSprintId)?.nome) : "",
       });
       setEditingId(null);
     }
@@ -290,7 +292,7 @@ const NewProjectsContent = () => {
     if (!form.titulo.trim()) return toast.error("Informe o título da tarefa");
     const nomeCliente = formNames.cliente.trim();
     const nomeProjeto = formNames.projeto.trim();
-    const nomeSprint = formNames.sprint.trim();
+    const nomeSprint = sprintNum(formNames.sprint);
     if (!nomeProjeto) return toast.error("Informe o projeto");
     if (form.iniPrev && form.fimPrev && form.fimPrev < form.iniPrev)
       return toast.error("Término previsto não pode ser antes do início");
@@ -368,8 +370,9 @@ const NewProjectsContent = () => {
   };
 
   const saveSprint = () => {
-    const { id, nome, inicio, fim } = sprintForm;
-    if (!nome.trim()) return toast.error("Informe o nome da sprint");
+    const { id, inicio, fim } = sprintForm;
+    const nome = sprintNum(sprintForm.nome);
+    if (!nome) return toast.error("Informe o número da sprint");
     if (!inicio || !fim) return toast.error("Informe as datas de início e fim");
     if (fim < inicio) return toast.error("O fim da sprint não pode ser antes do início");
     setDb((prev) =>
@@ -956,7 +959,7 @@ const NewProjectsContent = () => {
                         .sort((a, b) => (a.inicio < b.inicio ? -1 : 1))
                         .map((s) => (
                           <SelectItem key={s.id} value={s.id}>
-                            {s.nome} · {fmt(s.inicio)} a {fmt(s.fim)}
+                            Sprint {sprintNum(s.nome)} · {fmt(s.inicio)} a {fmt(s.fim)}
                           </SelectItem>
                         ))}
                       <SelectItem value="all">Todas as sprints</SelectItem>
@@ -1153,13 +1156,14 @@ const NewProjectsContent = () => {
                 <Label>Sprint</Label>
                 <Input
                   list="lista-sprints"
+                  inputMode="numeric"
                   value={formNames.sprint}
-                  onChange={(e) => setFormNames({ ...formNames, sprint: e.target.value })}
-                  placeholder="Digite a sprint"
+                  onChange={(e) => setFormNames({ ...formNames, sprint: e.target.value.replace(/[^0-9]/g, "") })}
+                  placeholder="Ex.: 17"
                 />
                 <datalist id="lista-sprints">
                   {db.sprints.map((s) => (
-                    <option key={s.id} value={s.nome} />
+                    <option key={s.id} value={sprintNum(s.nome)} />
                   ))}
                 </datalist>
               </div>
@@ -1250,8 +1254,8 @@ const NewProjectsContent = () => {
           </p>
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
-              <Label>Nome</Label>
-              <Input value={sprintForm.nome} onChange={(e) => setSprintForm({ ...sprintForm, nome: e.target.value })} placeholder="ex.: Sprint 18" />
+              <Label>Número</Label>
+              <Input inputMode="numeric" value={sprintForm.nome} onChange={(e) => setSprintForm({ ...sprintForm, nome: e.target.value.replace(/[^0-9]/g, "") })} placeholder="ex.: 18" />
             </div>
             <div>
               <Label>Início</Label>
