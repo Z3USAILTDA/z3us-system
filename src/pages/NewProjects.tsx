@@ -51,6 +51,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarRange,
+  CheckCircle2,
 } from "lucide-react";
 import {
   PieChart,
