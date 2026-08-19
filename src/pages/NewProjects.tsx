@@ -1549,13 +1549,20 @@ const NewProjectsContent = () => {
               .map((s) => (
                 <div key={s.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">Sprint {sprintNum(s.nome)}</p>
+                    <p className="text-sm font-semibold">
+                      Sprint {sprintNum(s.nome)}
+                      {s.encerrada && (
+                        <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300">
+                          encerrada
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">{fmt(s.inicio)} a {fmt(s.fim)}</p>
                   </div>
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                     {db.tarefas.filter((t) => t.sprintId === s.id).length} atividades
                   </span>
-                  <Button variant="outline" size="sm" onClick={() => setSprintForm({ ...s })}>Editar</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSprintForm({ id: s.id, nome: s.nome, inicio: s.inicio, fim: s.fim })}>Editar</Button>
                   <Button variant="ghost" size="sm" className="text-destructive" onClick={() => deleteSprint(s.id)}>
                     Excluir
                   </Button>
