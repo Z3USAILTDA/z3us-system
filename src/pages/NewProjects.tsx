@@ -182,6 +182,8 @@ const NewProjectsContent = () => {
   const [filterCliente, setFilterCliente] = useState("all");
   const [filterProjeto, setFilterProjeto] = useState("all");
   const [filterSprint, setFilterSprint] = useState<string>("");
+  const [boardSprint, setBoardSprint] = useState<string>("ativa");
+  const [encerrarModal, setEncerrarModal] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [histId, setHistId] = useState<string | null>(null);
