@@ -103,6 +103,8 @@ interface Sprint {
   nome: string;
   inicio: string;
   fim: string;
+  encerrada?: boolean;
+  encerradaEm?: string;
 }
 
 interface DB {
