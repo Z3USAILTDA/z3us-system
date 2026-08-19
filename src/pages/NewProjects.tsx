@@ -970,15 +970,55 @@ const NewProjectsContent = () => {
                     <Upload className="h-4 w-4 mr-2" /> Importar
                   </Button>
 
-                  <Button size="sm" className="h-9" onClick={() => openModal()}>
+                  <Select value={boardSprint} onValueChange={setBoardSprint}>
+                    <SelectTrigger className="h-9 w-[210px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ativa">Sprint em andamento</SelectItem>
+                      {sprintsEncerradas.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          Histórico · Sprint {sprintNum(s.nome)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9"
+                    disabled={viewingClosed || !sprintAtiva}
+                    onClick={() => setEncerrarModal(true)}
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" /> Encerrar sprint
+                  </Button>
+
+                  <Button size="sm" className="h-9" disabled={viewingClosed} onClick={() => openModal()}>
                     <Plus className="h-4 w-4 mr-2" /> Nova Atividade
                   </Button>
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                Arraste os cards entre as colunas ou use as setas para mover a atividade de fase
-              </p>
+              {viewingClosed ? (
+                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2">
+                  <p className="text-xs text-amber-300">
+                    Visualizando o histórico da Sprint {sprintNum(sprintById(boardSprint)?.nome)} (encerrada
+                    {sprintById(boardSprint)?.encerradaEm ? ` em ${fmt(sprintById(boardSprint)!.encerradaEm!)}` : ""}) ·
+                    modo somente leitura
+                  </p>
+                  <Button variant="outline" size="sm" className="h-7" onClick={() => setBoardSprint("ativa")}>
+                    Voltar à sprint atual
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7" onClick={() => reabrirSprint(boardSprint)}>
+                    Reabrir sprint
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Arraste os cards entre as colunas ou use as setas para mover a atividade de fase
+                </p>
+              )}
 
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <KpiCard label="Atividades visíveis" value={kpis.projetos} />
