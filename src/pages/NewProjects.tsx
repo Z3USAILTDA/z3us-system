@@ -460,6 +460,34 @@ const NewProjectsContent = () => {
   };
 
 
+  const encerrarSprint = () => {
+    if (!sprintAtiva) {
+      toast.error("Nenhuma sprint aberta para encerrar");
+      return;
+    }
+    const id = sprintAtiva.id;
+    setDb((prev) => ({
+      ...prev,
+      sprints: prev.sprints.map((s) =>
+        s.id === id ? { ...s, encerrada: true, encerradaEm: todayISO() } : s
+      ),
+    }));
+    setBoardSprint("ativa");
+    setEncerrarModal(false);
+    toast.success(`Sprint ${sprintNum(sprintAtiva.nome)} encerrada · quadro liberado para a próxima sprint`);
+  };
+
+  const reabrirSprint = (id: string) => {
+    setDb((prev) => ({
+      ...prev,
+      sprints: prev.sprints.map((s) =>
+        s.id === id ? { ...s, encerrada: false, encerradaEm: undefined } : s
+      ),
+    }));
+    setBoardSprint("ativa");
+    toast.success("Sprint reaberta");
+  };
+
   const exportCSV = (all?: boolean) => {
     const rows = all ? db.tarefas : visibleTarefas;
     const head = [
