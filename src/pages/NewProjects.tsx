@@ -237,12 +237,23 @@ const NewProjectsContent = () => {
     (p) => filterCliente === "all" || p.clienteId === filterCliente
   );
 
+  const sprintsEncerradas = [...db.sprints]
+    .filter((s) => s.encerrada)
+    .sort((a, b) => (b.encerradaEm || b.fim).localeCompare(a.encerradaEm || a.fim));
+  const sprintsAbertas = db.sprints.filter((s) => !s.encerrada);
+  // sprint em andamento = a aberta com maior número
+  const sprintAtiva = [...sprintsAbertas].sort(
+    (a, b) => Number(sprintNum(b.nome) || 0) - Number(sprintNum(a.nome) || 0)
+  )[0];
+  const viewingClosed = boardSprint !== "ativa";
+
   const visibleTarefas = db.tarefas.filter((t) => {
     const p = projById(t.projetoId);
     if (!p) return false;
     if (filterCliente !== "all" && p.clienteId !== filterCliente) return false;
     if (filterProjeto !== "all" && t.projetoId !== filterProjeto) return false;
-    return true;
+    if (viewingClosed) return t.sprintId === boardSprint;
+    return !sprintById(t.sprintId)?.encerrada;
   });
 
   const tarefaStatus = (t: Tarefa) => {
