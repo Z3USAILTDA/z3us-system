@@ -51,6 +51,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarRange,
+  CheckCircle2,
 } from "lucide-react";
 import {
   PieChart,
@@ -103,6 +104,8 @@ interface Sprint {
   nome: string;
   inicio: string;
   fim: string;
+  encerrada?: boolean;
+  encerradaEm?: string;
 }
 
 interface DB {
@@ -180,6 +183,8 @@ const NewProjectsContent = () => {
   const [filterCliente, setFilterCliente] = useState("all");
   const [filterProjeto, setFilterProjeto] = useState("all");
   const [filterSprint, setFilterSprint] = useState<string>("");
+  const [boardSprint, setBoardSprint] = useState<string>("ativa");
+  const [encerrarModal, setEncerrarModal] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [histId, setHistId] = useState<string | null>(null);
@@ -233,12 +238,23 @@ const NewProjectsContent = () => {
     (p) => filterCliente === "all" || p.clienteId === filterCliente
   );
 
+  const sprintsEncerradas = [...db.sprints]
+    .filter((s) => s.encerrada)
+    .sort((a, b) => (b.encerradaEm || b.fim).localeCompare(a.encerradaEm || a.fim));
+  const sprintsAbertas = db.sprints.filter((s) => !s.encerrada);
+  // sprint em andamento = a aberta com maior número
+  const sprintAtiva = [...sprintsAbertas].sort(
+    (a, b) => Number(sprintNum(b.nome) || 0) - Number(sprintNum(a.nome) || 0)
+  )[0];
+  const viewingClosed = boardSprint !== "ativa";
+
   const visibleTarefas = db.tarefas.filter((t) => {
     const p = projById(t.projetoId);
     if (!p) return false;
     if (filterCliente !== "all" && p.clienteId !== filterCliente) return false;
     if (filterProjeto !== "all" && t.projetoId !== filterProjeto) return false;
-    return true;
+    if (viewingClosed) return t.sprintId === boardSprint;
+    return !sprintById(t.sprintId)?.encerrada;
   });
 
   const tarefaStatus = (t: Tarefa) => {
@@ -444,6 +460,34 @@ const NewProjectsContent = () => {
     });
   };
 
+
+  const encerrarSprint = () => {
+    if (!sprintAtiva) {
+      toast.error("Nenhuma sprint aberta para encerrar");
+      return;
+    }
+    const id = sprintAtiva.id;
+    setDb((prev) => ({
+      ...prev,
+      sprints: prev.sprints.map((s) =>
+        s.id === id ? { ...s, encerrada: true, encerradaEm: todayISO() } : s
+      ),
+    }));
+    setBoardSprint("ativa");
+    setEncerrarModal(false);
+    toast.success(`Sprint ${sprintNum(sprintAtiva.nome)} encerrada · quadro liberado para a próxima sprint`);
+  };
+
+  const reabrirSprint = (id: string) => {
+    setDb((prev) => ({
+      ...prev,
+      sprints: prev.sprints.map((s) =>
+        s.id === id ? { ...s, encerrada: false, encerradaEm: undefined } : s
+      ),
+    }));
+    setBoardSprint("ativa");
+    toast.success("Sprint reaberta");
+  };
 
   const exportCSV = (all?: boolean) => {
     const rows = all ? db.tarefas : visibleTarefas;
@@ -927,15 +971,55 @@ const NewProjectsContent = () => {
                     <Upload className="h-4 w-4 mr-2" /> Importar
                   </Button>
 
-                  <Button size="sm" className="h-9" onClick={() => openModal()}>
+                  <Select value={boardSprint} onValueChange={setBoardSprint}>
+                    <SelectTrigger className="h-9 w-[210px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ativa">Sprint em andamento</SelectItem>
+                      {sprintsEncerradas.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          Histórico · Sprint {sprintNum(s.nome)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9"
+                    disabled={viewingClosed || !sprintAtiva}
+                    onClick={() => setEncerrarModal(true)}
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" /> Encerrar sprint
+                  </Button>
+
+                  <Button size="sm" className="h-9" disabled={viewingClosed} onClick={() => openModal()}>
                     <Plus className="h-4 w-4 mr-2" /> Nova Atividade
                   </Button>
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                Arraste os cards entre as colunas ou use as setas para mover a atividade de fase
-              </p>
+              {viewingClosed ? (
+                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2">
+                  <p className="text-xs text-amber-300">
+                    Visualizando o histórico da Sprint {sprintNum(sprintById(boardSprint)?.nome)} (encerrada
+                    {sprintById(boardSprint)?.encerradaEm ? ` em ${fmt(sprintById(boardSprint)!.encerradaEm!)}` : ""}) ·
+                    modo somente leitura
+                  </p>
+                  <Button variant="outline" size="sm" className="h-7" onClick={() => setBoardSprint("ativa")}>
+                    Voltar à sprint atual
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7" onClick={() => reabrirSprint(boardSprint)}>
+                    Reabrir sprint
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Arraste os cards entre as colunas ou use as setas para mover a atividade de fase
+                </p>
+              )}
 
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <KpiCard label="Atividades visíveis" value={kpis.projetos} />
@@ -952,7 +1036,7 @@ const NewProjectsContent = () => {
                       <div
                         key={st.id}
                         onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => dragId && moveTarefa(dragId, st.id)}
+                        onDrop={() => !viewingClosed && dragId && moveTarefa(dragId, st.id)}
                         className="w-[290px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-3 min-h-[220px]"
                       >
                         <div className="flex items-center justify-between mb-3 px-1">
@@ -971,10 +1055,10 @@ const NewProjectsContent = () => {
                           return (
                             <div
                               key={t.id}
-                              draggable
+                              draggable={!viewingClosed}
                               onDragStart={() => setDragId(t.id)}
                               onDragEnd={() => setDragId(null)}
-                              onDoubleClick={() => openModal(t.id)}
+                              onDoubleClick={() => !viewingClosed && openModal(t.id)}
                               className="mb-3 rounded-xl border border-border bg-card p-4 cursor-grab hover:border-primary/40 transition-colors"
                             >
                               <div className="flex justify-between items-start gap-2 mb-1">
@@ -1024,14 +1108,14 @@ const NewProjectsContent = () => {
                                 <div className="flex gap-1">
                                   <Button
                                     variant="outline" size="icon" className="h-7 w-7"
-                                    disabled={idx === 0}
+                                    disabled={viewingClosed || idx === 0}
                                     onClick={() => moveTarefa(t.id, STAGES[idx - 1].id)}
                                   >
                                     <ChevronLeft className="h-3.5 w-3.5" />
                                   </Button>
                                   <Button
                                     variant="outline" size="icon" className="h-7 w-7"
-                                    disabled={idx === STAGES.length - 1}
+                                    disabled={viewingClosed || idx === STAGES.length - 1}
                                     onClick={() => moveTarefa(t.id, STAGES[idx + 1].id)}
                                   >
                                     <ChevronRight className="h-3.5 w-3.5" />
@@ -1045,7 +1129,7 @@ const NewProjectsContent = () => {
                                    >
                                      <History className="h-3.5 w-3.5" />
                                    </Button>
-                                   <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openModal(t.id)}>
+                                   <Button variant="outline" size="icon" className="h-7 w-7" disabled={viewingClosed} onClick={() => openModal(t.id)}>
                                      <Pencil className="h-3.5 w-3.5" />
                                    </Button>
                                  </div>
@@ -1465,13 +1549,20 @@ const NewProjectsContent = () => {
               .map((s) => (
                 <div key={s.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">Sprint {sprintNum(s.nome)}</p>
+                    <p className="text-sm font-semibold">
+                      Sprint {sprintNum(s.nome)}
+                      {s.encerrada && (
+                        <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300">
+                          encerrada
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">{fmt(s.inicio)} a {fmt(s.fim)}</p>
                   </div>
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                     {db.tarefas.filter((t) => t.sprintId === s.id).length} atividades
                   </span>
-                  <Button variant="outline" size="sm" onClick={() => setSprintForm({ ...s })}>Editar</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSprintForm({ id: s.id, nome: s.nome, inicio: s.inicio, fim: s.fim })}>Editar</Button>
                   <Button variant="ghost" size="sm" className="text-destructive" onClick={() => deleteSprint(s.id)}>
                     Excluir
                   </Button>
@@ -1507,6 +1598,26 @@ const NewProjectsContent = () => {
               <Button onClick={saveSprint}>{sprintForm.id ? "Salvar alterações" : "Adicionar sprint"}</Button>
             </div>
 
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* --------------------------- encerrar sprint --------------------------- */}
+      <Dialog open={encerrarModal} onOpenChange={setEncerrarModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Encerrar Sprint {sprintAtiva ? sprintNum(sprintAtiva.nome) : ""}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              As {sprintAtiva ? db.tarefas.filter((t) => t.sprintId === sprintAtiva.id).length : 0} atividades desta
+              sprint serão arquivadas e o quadro ficará vazio para a próxima sprint.
+            </p>
+            <p>Você poderá consultar tudo depois pelo filtro "Histórico · Sprint {sprintAtiva ? sprintNum(sprintAtiva.nome) : ""}".</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEncerrarModal(false)}>Cancelar</Button>
+            <Button onClick={encerrarSprint}>Encerrar sprint</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
