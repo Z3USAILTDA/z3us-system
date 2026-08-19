@@ -1036,7 +1036,7 @@ const NewProjectsContent = () => {
                       <div
                         key={st.id}
                         onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => dragId && moveTarefa(dragId, st.id)}
+                        onDrop={() => !viewingClosed && dragId && moveTarefa(dragId, st.id)}
                         className="w-[290px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-3 min-h-[220px]"
                       >
                         <div className="flex items-center justify-between mb-3 px-1">
@@ -1055,10 +1055,10 @@ const NewProjectsContent = () => {
                           return (
                             <div
                               key={t.id}
-                              draggable
+                              draggable={!viewingClosed}
                               onDragStart={() => setDragId(t.id)}
                               onDragEnd={() => setDragId(null)}
-                              onDoubleClick={() => openModal(t.id)}
+                              onDoubleClick={() => !viewingClosed && openModal(t.id)}
                               className="mb-3 rounded-xl border border-border bg-card p-4 cursor-grab hover:border-primary/40 transition-colors"
                             >
                               <div className="flex justify-between items-start gap-2 mb-1">
@@ -1108,14 +1108,14 @@ const NewProjectsContent = () => {
                                 <div className="flex gap-1">
                                   <Button
                                     variant="outline" size="icon" className="h-7 w-7"
-                                    disabled={idx === 0}
+                                    disabled={viewingClosed || idx === 0}
                                     onClick={() => moveTarefa(t.id, STAGES[idx - 1].id)}
                                   >
                                     <ChevronLeft className="h-3.5 w-3.5" />
                                   </Button>
                                   <Button
                                     variant="outline" size="icon" className="h-7 w-7"
-                                    disabled={idx === STAGES.length - 1}
+                                    disabled={viewingClosed || idx === STAGES.length - 1}
                                     onClick={() => moveTarefa(t.id, STAGES[idx + 1].id)}
                                   >
                                     <ChevronRight className="h-3.5 w-3.5" />
@@ -1129,7 +1129,7 @@ const NewProjectsContent = () => {
                                    >
                                      <History className="h-3.5 w-3.5" />
                                    </Button>
-                                   <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openModal(t.id)}>
+                                   <Button variant="outline" size="icon" className="h-7 w-7" disabled={viewingClosed} onClick={() => openModal(t.id)}>
                                      <Pencil className="h-3.5 w-3.5" />
                                    </Button>
                                  </div>
