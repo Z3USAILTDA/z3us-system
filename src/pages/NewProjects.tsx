@@ -1601,6 +1601,26 @@ const NewProjectsContent = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* --------------------------- encerrar sprint --------------------------- */}
+      <Dialog open={encerrarModal} onOpenChange={setEncerrarModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Encerrar Sprint {sprintAtiva ? sprintNum(sprintAtiva.nome) : ""}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              As {sprintAtiva ? db.tarefas.filter((t) => t.sprintId === sprintAtiva.id).length : 0} atividades desta
+              sprint serão arquivadas e o quadro ficará vazio para a próxima sprint.
+            </p>
+            <p>Você poderá consultar tudo depois pelo filtro "Histórico · Sprint {sprintAtiva ? sprintNum(sprintAtiva.nome) : ""}".</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEncerrarModal(false)}>Cancelar</Button>
+            <Button onClick={encerrarSprint}>Encerrar sprint</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
