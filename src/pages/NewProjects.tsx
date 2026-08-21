@@ -170,15 +170,9 @@ const NONE = "__none__";
 const NewProjectsContent = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
-  const [db, setDb] = useState<DB>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw) as DB;
-    } catch {
-      /* ignore */
-    }
-    return seed();
-  });
+  const [db, setDb] = useState<DB>(seed());
+  const [boardLoaded, setBoardLoaded] = useState(false);
+  const lastSyncedRef = useRef<string>("");
 
   const [filterCliente, setFilterCliente] = useState("all");
   const [filterProjeto, setFilterProjeto] = useState("all");
@@ -196,9 +190,118 @@ const NewProjectsContent = () => {
   const [dragId, setDragId] = useState<string | null>(null);
   const [tab, setTab] = useState("projetos");
 
+  /* ------- carga inicial do quadro compartilhado (banco de dados) --------- */
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-  }, [db]);
+    let cancelled = false;
+
+    const localDb = (): DB | null => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as DB;
+        return parsed && Array.isArray(parsed.tarefas) ? parsed : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const isEmpty = (d?: DB | null) =>
+      !d ||
+      ((d.tarefas?.length || 0) === 0 &&
+        (d.projetos?.length || 0) === 0 &&
+        (d.clientes?.length || 0) === 0 &&
+        (d.sprints?.length || 0) === 0);
+
+    const load = async () => {
+      const { data, error } = await (supabase as any)
+        .from("sprint_board")
+        .select("data")
+        .eq("id", "main")
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error) {
+        toast.error("Não foi possível carregar o quadro compartilhado.");
+        setBoardLoaded(true);
+        return;
+      }
+
+      const remote = (data?.data as DB) || null;
+      const local = localDb();
+
+      // primeira execução: sobe o que já existia no navegador
+      if (isEmpty(remote) && !isEmpty(local)) {
+        const merged = { ...seed(), ...(local as DB) };
+        setDb(merged);
+        lastSyncedRef.current = "";
+        setBoardLoaded(true);
+        toast.success("Dados locais enviados para o quadro compartilhado.");
+        return;
+      }
+
+      const next = { ...seed(), ...(remote || {}) } as DB;
+      lastSyncedRef.current = JSON.stringify(next);
+      setDb(next);
+      setBoardLoaded(true);
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* --------- salva no banco (compartilhado) sempre que o quadro muda ------ */
+  useEffect(() => {
+    if (!boardLoaded) return;
+    const payload = JSON.stringify(db);
+    if (payload === lastSyncedRef.current) return;
+
+    const timer = setTimeout(async () => {
+      lastSyncedRef.current = payload;
+      const { error } = await (supabase as any)
+        .from("sprint_board")
+        .upsert({ id: "main", data: db }, { onConflict: "id" });
+      if (error) {
+        lastSyncedRef.current = "";
+        toast.error("Erro ao salvar no quadro compartilhado: " + error.message);
+        return;
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, payload);
+      } catch {
+        /* ignore */
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [db, boardLoaded]);
+
+  /* ------------------ atualização em tempo real entre usuários ------------ */
+  useEffect(() => {
+    if (!boardLoaded) return;
+    const channel = supabase
+      .channel("sprint-board-sync")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "sprint_board", filter: "id=eq.main" },
+        (payload: any) => {
+          const incoming = payload.new?.data as DB | undefined;
+          if (!incoming) return;
+          const str = JSON.stringify({ ...seed(), ...incoming });
+          if (str === lastSyncedRef.current) return;
+          lastSyncedRef.current = str;
+          setDb(JSON.parse(str) as DB);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [boardLoaded]);
+
 
   useEffect(() => {
     const load = async () => {
