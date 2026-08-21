@@ -127,6 +127,7 @@ const STAGES: { id: Stage; label: string; color: string; badge: string }[] = [
 const DEVS = ["Ana", "Patrick", "Larissa", "Paulo", "Roberto", "Thayná"];
 
 const STORAGE_KEY = "z3us-novos-projetos-v2";
+const MIGRATED_KEY = "z3us-novos-projetos-migrado-cloud";
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
