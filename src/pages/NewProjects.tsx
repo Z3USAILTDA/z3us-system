@@ -305,21 +305,43 @@ const NewProjectsContent = () => {
 
       const remote = (data?.data as DB) || null;
       const local = localDb();
+      const base = { ...seed(), ...(remote || {}) } as DB;
 
-      // primeira execução: sobe o que já existia no navegador
-      if (isEmpty(remote) && !isEmpty(local)) {
-        const merged = { ...seed(), ...(local as DB) };
+      const jaMigrado = (() => {
+        try {
+          return localStorage.getItem(MIGRATED_KEY) === "1";
+        } catch {
+          return false;
+        }
+      })();
+
+      // mescla automática dos dados antigos do navegador, sem duplicar
+      if (!isEmpty(local) && !jaMigrado) {
+        const { db: merged, added } = mergeDb(base, { ...seed(), ...(local as DB) });
+        const mergedStr = JSON.stringify(merged);
+        const mudou = mergedStr !== JSON.stringify(base);
         setDb(merged);
-        lastSyncedRef.current = "";
+        lastSyncedRef.current = mudou ? "" : mergedStr; // "" força o salvamento no banco
         setBoardLoaded(true);
-        toast.success("Dados locais enviados para o quadro compartilhado.");
+        try {
+          localStorage.setItem(MIGRATED_KEY, "1");
+        } catch {
+          /* ignore */
+        }
+        if (mudou) {
+          toast.success(
+            added > 0
+              ? `${added} atividade(s) antiga(s) importada(s) para o quadro compartilhado.`
+              : "Dados antigos deste navegador foram mesclados ao quadro compartilhado."
+          );
+        }
         return;
       }
 
-      const next = { ...seed(), ...(remote || {}) } as DB;
-      lastSyncedRef.current = JSON.stringify(next);
-      setDb(next);
+      lastSyncedRef.current = JSON.stringify(base);
+      setDb(base);
       setBoardLoaded(true);
+
     };
 
     load();
