@@ -166,6 +166,81 @@ const emptyForm = (): Omit<Tarefa, "id"> => ({
 
 const NONE = "__none__";
 
+/* ------- mescla dados antigos (localStorage) com o quadro do banco -------- */
+const norm = (s: any) => String(s ?? "").trim().toLowerCase();
+
+const mergeDb = (remote: DB, local: DB): { db: DB; added: number } => {
+  const out: DB = {
+    clientes: [...(remote.clientes || [])],
+    projetos: [...(remote.projetos || [])],
+    sprints: [...(remote.sprints || [])],
+    tarefas: [...(remote.tarefas || [])],
+    seqSprint: remote.seqSprint || 1,
+  };
+  let added = 0;
+
+  // clientes: dedupe por id ou nome
+  const cliMap = new Map<string, string>(); // localId -> finalId
+  for (const c of local.clientes || []) {
+    const hit =
+      out.clientes.find((x) => x.id === c.id) ||
+      out.clientes.find((x) => norm(x.nome) === norm(c.nome));
+    if (hit) cliMap.set(c.id, hit.id);
+    else {
+      out.clientes.push(c);
+      cliMap.set(c.id, c.id);
+    }
+  }
+
+  // projetos: dedupe por id ou (nome + cliente)
+  const projMap = new Map<string, string>();
+  for (const p of local.projetos || []) {
+    const clienteId = cliMap.get(p.clienteId) || p.clienteId;
+    const hit =
+      out.projetos.find((x) => x.id === p.id) ||
+      out.projetos.find((x) => norm(x.nome) === norm(p.nome) && x.clienteId === clienteId);
+    if (hit) projMap.set(p.id, hit.id);
+    else {
+      out.projetos.push({ ...p, clienteId });
+      projMap.set(p.id, p.id);
+    }
+  }
+
+  // sprints: dedupe por id ou nome
+  const sprMap = new Map<string, string>();
+  for (const s of local.sprints || []) {
+    const hit =
+      out.sprints.find((x) => x.id === s.id) ||
+      out.sprints.find((x) => norm(x.nome) === norm(s.nome));
+    if (hit) sprMap.set(s.id, hit.id);
+    else {
+      out.sprints.push(s);
+      sprMap.set(s.id, s.id);
+    }
+  }
+  out.seqSprint = Math.max(out.seqSprint || 1, local.seqSprint || 1);
+
+  // atividades: dedupe por id ou (título + projeto + sprint)
+  const sig = (t: any) => [norm(t.titulo), t.projetoId || "", t.sprintId || ""].join("|");
+  const ids = new Set(out.tarefas.map((t) => t.id));
+  const sigs = new Set(out.tarefas.map(sig));
+  for (const t of local.tarefas || []) {
+    const mapped = {
+      ...t,
+      projetoId: projMap.get(t.projetoId) || t.projetoId,
+      sprintId: sprMap.get(t.sprintId) || t.sprintId,
+    };
+    if (ids.has(mapped.id) || sigs.has(sig(mapped))) continue;
+    ids.add(mapped.id);
+    sigs.add(sig(mapped));
+    out.tarefas.push(mapped);
+    added++;
+  }
+
+  return { db: out, added };
+};
+
+
 /* ------------------------------- componente ------------------------------- */
 
 const NewProjectsContent = () => {
