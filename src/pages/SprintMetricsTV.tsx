@@ -69,17 +69,6 @@ const fmtBR = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "—
 
 const sprintNum = (nome?: string) => (nome || "").replace(/sprint/gi, "").trim();
 
-function KpiCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <Card className="bg-card/60 border-border/60">
-      <CardContent className="p-5">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-4xl font-bold text-primary mt-1">{value}</p>
-        {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function SprintMetricsTV() {
   const navigate = useNavigate();
