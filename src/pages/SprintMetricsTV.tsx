@@ -256,7 +256,7 @@ export default function SprintMetricsTV() {
             <p className="text-xs text-muted-foreground mb-4">
               {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
             </p>
-            <div className="h-[260px]">
+            <div className="h-[200px]">
               {fasesData.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
