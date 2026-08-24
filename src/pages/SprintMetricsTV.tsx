@@ -69,17 +69,6 @@ const fmtBR = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "—
 
 const sprintNum = (nome?: string) => (nome || "").replace(/sprint/gi, "").trim();
 
-function KpiCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <Card className="bg-card/60 border-border/60">
-      <CardContent className="p-5">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="text-4xl font-bold text-primary mt-1">{value}</p>
-        {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function SprintMetricsTV() {
   const navigate = useNavigate();
@@ -248,30 +237,15 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-        <KpiCard label="Atividades" value={`${kpis.done}/${kpis.total}`} sub="concluídas / total" />
-        <KpiCard label="Nível de Esforço" value={`${kpis.donePts}/${kpis.totalPts}`} sub="entregues / planejados" />
-        <KpiCard label="Entregas no prazo" value={`${kpis.pct}%`} />
-        <KpiCard
-          label="Lead time médio"
-          value={`${kpis.leadAvg} dias`}
-          sub={`${kpis.leadConsiderados} de ${kpis.done} concluídas`}
-        />
-        <KpiCard
-          label="Dias restantes"
-          value={kpis.diasRest}
-          sub={sprintAtual ? `${fmtBR(sprintAtual.inicio)} a ${fmtBR(sprintAtual.fim)}` : undefined}
-        />
-      </div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_1fr_240px]">
 
-      <div className="grid gap-4 lg:grid-cols-2">
         <Card className="bg-card/60 border-border/60">
           <CardContent className="p-4">
             <h2 className="font-semibold">Distribuição por fase</h2>
             <p className="text-xs text-muted-foreground mb-4">
               {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
             </p>
-            <div className="h-[260px]">
+            <div className="h-[200px]">
               {fasesData.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -304,7 +278,7 @@ export default function SprintMetricsTV() {
           <CardContent className="p-4">
             <h2 className="font-semibold">Burndown da sprint</h2>
             <p className="text-xs text-muted-foreground mb-4">Atividades restantes · ideal vs. real</p>
-            <div className="h-[260px]">
+            <div className="h-[200px]">
               {burndown.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={burndown}>
@@ -317,14 +291,32 @@ export default function SprintMetricsTV() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-muted-foreground text-center pt-24">
+                <p className="text-sm text-muted-foreground text-center pt-20">
                   {loaded ? "Sem sprint em andamento" : "Carregando..."}
                 </p>
               )}
             </div>
           </CardContent>
         </Card>
+
+        <div className="grid gap-4 content-start">
+          <Card className="bg-card/60 border-border/60">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Atividades</p>
+              <p className="text-2xl font-bold text-primary mt-1">{`${kpis.done}/${kpis.total}`}</p>
+              <p className="text-[11px] text-muted-foreground">concluídas / total</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/60 border-border/60">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Nível de Esforço</p>
+              <p className="text-2xl font-bold text-primary mt-1">{`${kpis.donePts}/${kpis.totalPts}`}</p>
+              <p className="text-[11px] text-muted-foreground">entregues / planejados</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
 
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max">
