@@ -238,22 +238,23 @@ export default function SprintMetricsTV() {
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[340px_1fr_460px]">
-        <div className="grid grid-cols-2 gap-4 content-start order-first">
-          <Card className="bg-card/60 border-border/60">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Atividades</p>
-              <p className="text-2xl font-bold text-primary mt-1">{`${kpis.done}/${kpis.total}`}</p>
-              <p className="text-[11px] text-muted-foreground">concluídas / total</p>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 content-start order-first">
+          <Card className="bg-card/60 border-border/60 min-w-0">
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Atividades</p>
+              <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.done}/${kpis.total}`}</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">concluídas / total</p>
             </CardContent>
           </Card>
-          <Card className="bg-card/60 border-border/60">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Nível de Esforço</p>
-              <p className="text-2xl font-bold text-primary mt-1">{`${kpis.donePts}/${kpis.totalPts}`}</p>
-              <p className="text-[11px] text-muted-foreground">entregues / planejados</p>
+          <Card className="bg-card/60 border-border/60 min-w-0">
+            <CardContent className="p-3 sm:p-4">
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Nível de Esforço</p>
+              <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.donePts}/${kpis.totalPts}`}</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">entregues / planejados</p>
             </CardContent>
           </Card>
         </div>
+
 
 
         <Card className="bg-card/60 border-border/60">
