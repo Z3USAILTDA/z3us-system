@@ -238,17 +238,17 @@ export default function SprintMetricsTV() {
       </header>
 
       <div className="overflow-x-auto pb-1">
-      <div className="flex gap-4 items-stretch min-w-max">
-        <div className="grid grid-cols-2 gap-3 order-first w-[340px] shrink-0">
+      <div className="flex gap-4 items-start min-w-max">
+        <div className="grid grid-cols-2 gap-3 content-start order-first w-[340px] shrink-0">
 
-          <Card className="bg-card/60 border-border/60 min-w-0 h-full flex flex-col justify-center">
+          <Card className="bg-card/60 border-border/60 min-w-0">
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Atividades</p>
               <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.done}/${kpis.total}`}</p>
               <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">concluídas / total</p>
             </CardContent>
           </Card>
-          <Card className="bg-card/60 border-border/60 min-w-0 h-full flex flex-col justify-center">
+          <Card className="bg-card/60 border-border/60 min-w-0">
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Nível de Esforço</p>
               <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.donePts}/${kpis.totalPts}`}</p>
@@ -265,7 +265,7 @@ export default function SprintMetricsTV() {
             <p className="text-xs text-muted-foreground mb-2">
               {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
             </p>
-            <div className="h-[160px]">
+            <div className="h-[120px]">
               {fasesData.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -298,7 +298,7 @@ export default function SprintMetricsTV() {
           <CardContent className="p-3">
             <h2 className="font-semibold">Burndown da sprint</h2>
             <p className="text-xs text-muted-foreground mb-2">Atividades restantes · ideal vs. real</p>
-            <div className="h-[160px]">
+            <div className="h-[120px]">
               {burndown.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={burndown}>
@@ -322,7 +322,7 @@ export default function SprintMetricsTV() {
       </div>
       </div>
 
-      <div className="overflow-x-auto pb-2">
+      <div className="overflow-x-auto pb-2 -mt-2">
         <div className="flex gap-4 min-w-max">
           {colunas.map(({ stage, total, grupos }) => (
             <div
