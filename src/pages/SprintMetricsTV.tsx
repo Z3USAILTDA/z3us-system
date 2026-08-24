@@ -3,7 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getStoredAuthSession } from "@/lib/authSession";
 import { Card, CardContent } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RTooltip, Legend } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip as RTooltip,
+  Legend,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 type Stage = "backlog" | "todo" | "dev" | "homolog" | "done";
 
@@ -21,6 +33,9 @@ interface Tarefa {
   sprintId: string;
   titulo: string;
   stage: Stage;
+  pts?: number | null;
+  iniPrev?: string;
+  iniReal?: string;
   fimPrev?: string;
   fimReal?: string;
 }
@@ -44,12 +59,27 @@ const todayISO = () => {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 };
-
-// pendente = fora de Produção · urgente = prazo previsto vencido ou hoje
-const isUrgentePendente = (t: Tarefa) =>
-  t.stage !== "done" && !t.fimReal && !!t.fimPrev && t.fimPrev <= todayISO();
+const diffDays = (a?: string, b?: string) => {
+  if (!a || !b) return 0;
+  return Math.round(
+    (new Date(a + "T00:00:00").getTime() - new Date(b + "T00:00:00").getTime()) / 86400000
+  );
+};
+const fmtBR = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "—");
 
 const sprintNum = (nome?: string) => (nome || "").replace(/sprint/gi, "").trim();
+
+function KpiCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
+  return (
+    <Card className="bg-card/60 border-border/60">
+      <CardContent className="p-5">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-4xl font-bold text-primary mt-1">{value}</p>
+        {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function SprintMetricsTV() {
   const navigate = useNavigate();
@@ -104,30 +134,92 @@ export default function SprintMetricsTV() {
     [db.tarefas, sprintAtual]
   );
 
+  const kpis = useMemo(() => {
+    const hoje = todayISO();
+    const done = tarefas.filter((t) => t.fimReal);
+    const totalPts = tarefas.reduce((a, t) => a + (t.pts || 0), 0);
+    const donePts = done.reduce((a, t) => a + (t.pts || 0), 0);
+    const leads = done
+      .map((t) => {
+        const ini = t.iniReal || t.iniPrev;
+        if (!ini) return null;
+        const d = diffDays(t.fimReal, ini) + 1;
+        return d >= 1 ? d : null;
+      })
+      .filter((n): n is number => n !== null);
+    const leadAvg = leads.length ? (leads.reduce((a, b) => a + b, 0) / leads.length).toFixed(1) : "—";
+    const atrasadasAbertas = tarefas.filter((t) => !t.fimReal && t.fimPrev && t.fimPrev < hoje);
+    const onTime = done.filter((t) => !t.fimPrev || (t.fimReal as string) <= t.fimPrev).length;
+    const baseAvaliada = done.length + atrasadasAbertas.length;
+    const pct = baseAvaliada ? Math.round((onTime / baseAvaliada) * 100) : 0;
+    let diasRest: string | number = "—";
+    if (sprintAtual) {
+      const d = diffDays(sprintAtual.fim, hoje);
+      diasRest = d < 0 ? "Encerrada" : d;
+    }
+    return {
+      done: done.length,
+      total: tarefas.length,
+      donePts,
+      totalPts,
+      leadAvg,
+      leadConsiderados: leads.length,
+      pct,
+      diasRest,
+    };
+  }, [tarefas, sprintAtual]);
+
   const fasesData = STAGES.map((st) => ({
     name: st.label,
     value: tarefas.filter((t) => t.stage === st.id).length,
     color: st.color,
   })).filter((d) => d.value > 0);
 
-  const clienteDoTarefa = (t: Tarefa) => {
+  const burndown = useMemo(() => {
+    if (!sprintAtual) return [];
+    const totalPts = tarefas.reduce((a, t) => a + (t.pts || 0), 0);
+    const days: string[] = [];
+    const d = new Date(sprintAtual.inicio + "T00:00:00");
+    const end = new Date(sprintAtual.fim + "T00:00:00");
+    while (d <= end) {
+      const p = (n: number) => String(n).padStart(2, "0");
+      days.push(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`);
+      d.setDate(d.getDate() + 1);
+    }
+    const hoje = todayISO();
+    return days.map((day, i) => ({
+      dia: day.split("-").slice(1).reverse().join("/"),
+      ideal: +(totalPts * (1 - i / (days.length - 1 || 1))).toFixed(1),
+      real:
+        day > hoje
+          ? null
+          : totalPts -
+            tarefas
+              .filter((t) => t.fimReal && (t.fimReal as string) <= day)
+              .reduce((a, t) => a + (t.pts || 0), 0),
+    }));
+  }, [sprintAtual, tarefas]);
+
+  const grupoDaTarefa = (t: Tarefa) => {
     const p = db.projetos.find((x) => x.id === t.projetoId);
     const c = p ? db.clientes.find((x) => x.id === p.clienteId) : undefined;
-    return c?.nome || "Sem cliente";
+    return { cliente: c?.nome || "Sem cliente", produto: p?.nome || "Sem produto" };
   };
 
   const colunas = STAGES.map((st) => {
     const list = tarefas.filter((t) => t.stage === st.id);
-    const grupos = new Map<string, Tarefa[]>();
+    const grupos = new Map<string, { cliente: string; produto: string; itens: Tarefa[] }>();
     list.forEach((t) => {
-      const nome = clienteDoTarefa(t);
-      grupos.set(nome, [...(grupos.get(nome) || []), t]);
+      const { cliente, produto } = grupoDaTarefa(t);
+      const key = `${cliente}||${produto}`;
+      const cur = grupos.get(key) || { cliente, produto, itens: [] };
+      cur.itens.push(t);
+      grupos.set(key, cur);
     });
     return {
       stage: st,
       total: list.length,
-      urgentes: list.filter(isUrgentePendente).length,
-      grupos: [...grupos.entries()].sort((a, b) => b[1].length - a[1].length),
+      grupos: [...grupos.values()].sort((a, b) => b.itens.length - a.itens.length),
     };
   });
 
@@ -144,44 +236,87 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <Card className="bg-card/60 border-border/60 mx-auto w-full max-w-md">
-        <CardContent className="p-4">
-          <h2 className="font-semibold">Distribuição por fase</h2>
-          <p className="text-xs text-muted-foreground mb-4">
-            {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
-          </p>
-          <div className="h-[200px]">
-            {fasesData.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={fasesData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius="55%"
-                    outerRadius="80%"
-                    paddingAngle={2}
-                  >
-                    {fasesData.map((d) => (
-                      <Cell key={d.name} fill={d.color} stroke="transparent" />
-                    ))}
-                  </Pie>
-                  <RTooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center pt-20">
-                {loaded ? "Sem atividades nesta sprint" : "Carregando..."}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+        <KpiCard label="Atividades" value={`${kpis.done}/${kpis.total}`} sub="concluídas / total" />
+        <KpiCard label="Nível de Esforço" value={`${kpis.donePts}/${kpis.totalPts}`} sub="entregues / planejados" />
+        <KpiCard label="Entregas no prazo" value={`${kpis.pct}%`} />
+        <KpiCard
+          label="Lead time médio"
+          value={`${kpis.leadAvg} dias`}
+          sub={`${kpis.leadConsiderados} de ${kpis.done} concluídas`}
+        />
+        <KpiCard
+          label="Dias restantes"
+          value={kpis.diasRest}
+          sub={sprintAtual ? `${fmtBR(sprintAtual.inicio)} a ${fmtBR(sprintAtual.fim)}` : undefined}
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="bg-card/60 border-border/60">
+          <CardContent className="p-4">
+            <h2 className="font-semibold">Distribuição por fase</h2>
+            <p className="text-xs text-muted-foreground mb-4">
+              {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
+            </p>
+            <div className="h-[260px]">
+              {fasesData.length ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={fasesData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius="55%"
+                      outerRadius="80%"
+                      paddingAngle={2}
+                    >
+                      {fasesData.map((d) => (
+                        <Cell key={d.name} fill={d.color} stroke="transparent" />
+                      ))}
+                    </Pie>
+                    <RTooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center pt-24">
+                  {loaded ? "Sem atividades nesta sprint" : "Carregando..."}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/60 border-border/60">
+          <CardContent className="p-4">
+            <h2 className="font-semibold">Burndown da sprint</h2>
+            <p className="text-xs text-muted-foreground mb-4">Atividades restantes · ideal vs. real</p>
+            <div className="h-[260px]">
+              {burndown.length ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={burndown}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <RTooltip />
+                    <Line type="monotone" dataKey="ideal" stroke="#94a3b8" strokeDasharray="6 5" dot={false} />
+                    <Line type="monotone" dataKey="real" stroke="#2dd4bf" strokeWidth={2} dot={false} connectNulls />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center pt-24">
+                  {loaded ? "Sem sprint em andamento" : "Carregando..."}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max">
-          {colunas.map(({ stage, total, urgentes, grupos }) => (
+          {colunas.map(({ stage, total, grupos }) => (
             <div
               key={stage.id}
               className="w-[340px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-4 min-h-[280px]"
@@ -190,48 +325,34 @@ export default function SprintMetricsTV() {
                 <span className={`text-sm font-semibold px-3 py-1 rounded-full ${stage.badge}`}>
                   {stage.label}
                 </span>
-                <span
-                  className={`text-sm font-semibold ${urgentes > 0 ? "text-destructive" : "text-muted-foreground"}`}
-                  title={urgentes > 0 ? `${urgentes} pendente(s) em urgência` : undefined}
-                >
-                  {total}
-                </span>
+                <span className="text-2xl font-bold text-foreground">{total}</span>
               </div>
 
               {grupos.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-6">Sem atividades</p>
               )}
 
-              {grupos.map(([cliente, itens]) => {
-                const urg = itens.filter(isUrgentePendente).length;
-                return (
-                <div key={cliente} className="mb-3 rounded-lg border border-border bg-card p-3">
+              {grupos.map(({ cliente, produto, itens }) => (
+                <div
+                  key={`${cliente}-${produto}`}
+                  className="mb-3 rounded-lg border border-border bg-card p-3"
+                >
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-sm font-semibold text-primary truncate">{cliente}</span>
-                    <span
-                      className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        urg > 0 ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"
-                      }`}
-                      title={urg > 0 ? `${urg} pendente(s) em urgência` : undefined}
-                    >
-                      {itens.length}
-                    </span>
+                    <div className="min-w-0">
+                      <span className="block text-sm font-semibold text-primary truncate">{cliente}</span>
+                      <span className="block text-xs text-muted-foreground truncate">{produto}</span>
+                    </div>
+                    <span className="text-xl font-bold text-foreground shrink-0">{itens.length}</span>
                   </div>
                   <ul className="space-y-1">
                     {itens.map((t) => (
-                      <li
-                        key={t.id}
-                        className={`text-[13px] leading-snug ${
-                          isUrgentePendente(t) ? "text-destructive font-medium" : "text-muted-foreground"
-                        }`}
-                      >
+                      <li key={t.id} className="text-[13px] leading-snug text-muted-foreground">
                         • {t.titulo}
                       </li>
                     ))}
                   </ul>
                 </div>
-                );
-              })}
+              ))}
             </div>
           ))}
         </div>
