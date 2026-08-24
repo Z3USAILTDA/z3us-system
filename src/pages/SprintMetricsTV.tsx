@@ -237,8 +237,10 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-3 items-start">
-        <div className="grid grid-cols-2 gap-3 content-start order-first w-full sm:w-[300px] shrink-0">
+      <div className="overflow-x-auto pb-1">
+      <div className="flex gap-4 items-start min-w-max">
+        <div className="grid grid-cols-2 gap-3 content-start order-first w-[340px] shrink-0">
+
           <Card className="bg-card/60 border-border/60 min-w-0">
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Atividades</p>
