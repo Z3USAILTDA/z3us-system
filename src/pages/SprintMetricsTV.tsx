@@ -308,8 +308,9 @@ export default function SprintMetricsTV() {
                             data={fasesData}
                             dataKey="value"
                             nameKey="name"
-                            innerRadius="55%"
-                            outerRadius="82%"
+                            cx="62%"
+                            innerRadius="62%"
+                            outerRadius="98%"
                             paddingAngle={2}
                           >
                             {fasesData.map((d) => (
@@ -317,7 +318,13 @@ export default function SprintMetricsTV() {
                             ))}
                           </Pie>
                           <RTooltip />
-                          <Legend />
+                          <Legend
+                            layout="vertical"
+                            align="left"
+                            verticalAlign="middle"
+                            iconSize={8}
+                            wrapperStyle={{ fontSize: 10, lineHeight: "14px", paddingLeft: 4 }}
+                          />
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
