@@ -1189,7 +1189,9 @@ const NewProjectsContent = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ativa">Sprint em andamento</SelectItem>
+                      <SelectItem value="ativa">
+                        {sprintAtiva ? `Sprint em andamento · Sprint ${sprintNum(sprintAtiva.nome)}` : "Nenhuma sprint em andamento"}
+                      </SelectItem>
                       {sprintsEncerradas.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
                           Histórico · Sprint {sprintNum(s.nome)}
