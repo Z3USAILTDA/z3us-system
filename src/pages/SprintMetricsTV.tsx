@@ -237,7 +237,7 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[240px_1fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[220px_1fr_1fr]">
         <div className="grid gap-4 content-start order-first">
           <Card className="bg-card/60 border-border/60">
             <CardContent className="p-4">
@@ -295,7 +295,7 @@ export default function SprintMetricsTV() {
           <CardContent className="p-4">
             <h2 className="font-semibold">Burndown da sprint</h2>
             <p className="text-xs text-muted-foreground mb-4">Atividades restantes · ideal vs. real</p>
-            <div className="h-[110px]">
+            <div className="h-[180px]">
               {burndown.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={burndown}>
