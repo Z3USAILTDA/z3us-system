@@ -354,14 +354,14 @@ export default function SprintMetricsTV() {
                     )}
                   </div>
                 </CardContent>
-              </Card>
-            </div>
+            </Card>
+          </div>
 
-            <div className="flex gap-4 items-start">
-              {colunas.slice(1).map((c) => renderColuna(c))}
-            </div>
+          <div className="flex gap-4 items-start">
+            {colunas.map((c) => renderColuna(c))}
           </div>
         </div>
+
       </div>
     </div>
   );
