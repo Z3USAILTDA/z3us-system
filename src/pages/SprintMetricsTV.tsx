@@ -9,7 +9,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip as RTooltip,
-  Legend,
   LineChart,
   Line,
   CartesianGrid,
