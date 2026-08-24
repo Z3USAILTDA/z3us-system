@@ -237,7 +237,24 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_1fr_240px]">
+      <div className="grid gap-4 lg:grid-cols-[240px_1fr_1fr]">
+        <div className="grid gap-4 content-start order-first">
+          <Card className="bg-card/60 border-border/60">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Atividades</p>
+              <p className="text-2xl font-bold text-primary mt-1">{`${kpis.done}/${kpis.total}`}</p>
+              <p className="text-[11px] text-muted-foreground">concluídas / total</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/60 border-border/60">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Nível de Esforço</p>
+              <p className="text-2xl font-bold text-primary mt-1">{`${kpis.donePts}/${kpis.totalPts}`}</p>
+              <p className="text-[11px] text-muted-foreground">entregues / planejados</p>
+            </CardContent>
+          </Card>
+        </div>
+
 
         <Card className="bg-card/60 border-border/60">
           <CardContent className="p-4">
