@@ -311,8 +311,8 @@ export default function SprintMetricsTV() {
                             data={fasesData}
                             dataKey="value"
                             nameKey="name"
-                            innerRadius="58%"
-                            outerRadius="88%"
+                            innerRadius="72%"
+                            outerRadius="90%"
                             paddingAngle={2}
                           >
                             {fasesData.map((d) => (
