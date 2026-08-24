@@ -14,6 +14,7 @@ import Users from "./pages/Users";
 import Documentation from "./pages/Documentation";
 import WeeklySummary from "./pages/WeeklySummary";
 import MetricsTV from "./pages/MetricsTV";
+import SprintMetricsTV from "./pages/SprintMetricsTV";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/dashboard/documentation" element={<Documentation />} />
           <Route path="/dashboard/weekly-summary" element={<WeeklySummary />} />
           <Route path="/metricas-projetos-tv" element={<MetricsTV />} />
+          <Route path="/metricas-sprint-tv" element={<SprintMetricsTV />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

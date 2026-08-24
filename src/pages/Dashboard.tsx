@@ -78,6 +78,7 @@ const DashboardContent = () => {
     { title: "Documentação", url: "/dashboard/documentation", icon: FileText },
     { title: "Resumo da Semana", url: "/dashboard/weekly-summary", icon: BarChart3 },
     { title: "Métricas TV", url: "/metricas-projetos-tv", icon: MonitorPlay, external: true },
+    { title: "Métricas Sprint TV", url: "/metricas-sprint-tv", icon: MonitorPlay, external: true },
   ];
 
 
