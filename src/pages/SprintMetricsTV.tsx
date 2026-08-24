@@ -274,18 +274,18 @@ export default function SprintMetricsTV() {
       </header>
 
       <div className="overflow-x-auto pb-2">
-        <div className="flex gap-4 items-start min-w-max">
-          {/* Lane esquerda: KPIs + primeira coluna do kanban */}
-          <div className="w-[340px] shrink-0 flex flex-col gap-4">
-            <div className="grid grid-cols-1 gap-3">
-              <Card className="bg-card/60 border-border/60 min-w-0 h-fit">
+        <div className="flex flex-col gap-4 min-w-max">
+          {/* Linha superior: KPIs + gráficos */}
+          <div className="flex gap-4 items-stretch">
+            <div className="w-[340px] shrink-0 flex flex-col gap-3">
+              <Card className="bg-card/60 border-border/60 min-w-0 flex-1">
                 <CardContent className="p-4">
                   <p className="text-sm text-muted-foreground truncate">Atividades</p>
                   <p className="text-3xl font-bold text-primary mt-1 truncate">{`${kpis.done}/${kpis.total}`}</p>
                   <p className="text-xs text-muted-foreground truncate">concluídas / total</p>
                 </CardContent>
               </Card>
-              <Card className="bg-card/60 border-border/60 min-w-0 h-fit">
+              <Card className="bg-card/60 border-border/60 min-w-0 flex-1">
                 <CardContent className="p-4">
                   <p className="text-sm text-muted-foreground truncate">Nível de Esforço</p>
                   <p className="text-3xl font-bold text-primary mt-1 truncate">{`${kpis.donePts}/${kpis.totalPts}`}</p>
@@ -294,13 +294,6 @@ export default function SprintMetricsTV() {
               </Card>
             </div>
 
-
-            {colunas.slice(0, 1).map((c) => renderColuna(c))}
-          </div>
-
-          {/* Lane direita: gráficos + demais colunas */}
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-4 items-start">
               <Card className="bg-card/60 border-border/60 w-[696px] shrink-0">
                 <CardContent className="p-3">
                   <h2 className="font-semibold">Distribuição por fase</h2>
@@ -361,14 +354,14 @@ export default function SprintMetricsTV() {
                     )}
                   </div>
                 </CardContent>
-              </Card>
-            </div>
+            </Card>
+          </div>
 
-            <div className="flex gap-4 items-start">
-              {colunas.slice(1).map((c) => renderColuna(c))}
-            </div>
+          <div className="flex gap-4 items-start">
+            {colunas.map((c) => renderColuna(c))}
           </div>
         </div>
+
       </div>
     </div>
   );
