@@ -225,7 +225,7 @@ export default function SprintMetricsTV() {
   });
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 space-y-6">
+    <div className="min-h-screen bg-background p-4 sm:p-6 space-y-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Métricas Sprint TV</h1>
@@ -320,7 +320,7 @@ export default function SprintMetricsTV() {
 
 
 
-      <div className="overflow-x-auto pb-4">
+      <div className="overflow-x-auto pb-2 -mt-2">
         <div className="flex gap-4 min-w-max">
           {colunas.map(({ stage, total, grupos }) => (
             <div
