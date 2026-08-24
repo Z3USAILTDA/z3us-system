@@ -229,7 +229,11 @@ const mergeDb = (remote: DB, local: DB): { db: DB; added: number } => {
       sprMap.set(s.id, id);
     }
   }
-  out.seqSprint = Math.max(out.seqSprint || 1, local.seqSprint || 1, out.sprints.length + 1);
+  const maiorIdNumerico = out.sprints.reduce((maior, sprint) => {
+    const match = sprint.id.match(/^s(\d+)$/);
+    return match ? Math.max(maior, Number(match[1])) : maior;
+  }, 0);
+  out.seqSprint = Math.max(out.seqSprint || 1, local.seqSprint || 1, maiorIdNumerico + 1);
 
 
   // atividades: dedupe por id ou (título + projeto + sprint)
