@@ -262,7 +262,7 @@ export default function SprintMetricsTV() {
             <p className="text-xs text-muted-foreground mb-4">
               {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
             </p>
-            <div className="h-[150px]">
+            <div className="h-[180px]">
               {fasesData.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -295,7 +295,7 @@ export default function SprintMetricsTV() {
           <CardContent className="p-4">
             <h2 className="font-semibold">Burndown da sprint</h2>
             <p className="text-xs text-muted-foreground mb-4">Atividades restantes · ideal vs. real</p>
-            <div className="h-[130px]">
+            <div className="h-[110px]">
               {burndown.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={burndown}>
