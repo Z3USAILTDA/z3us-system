@@ -179,46 +179,58 @@ const mergeDb = (remote: DB, local: DB): { db: DB; added: number } => {
   };
   let added = 0;
 
-  // clientes: dedupe por id ou nome
+  // ids gerados localmente ("s1", "p2"...) se repetem entre navegadores e NÃO
+  // identificam a mesma entidade — a mesclagem é sempre feita pelo nome.
+  const newId = (prefix: string, taken: Set<string>) => {
+    let i = 1;
+    while (taken.has(`${prefix}${i}`)) i++;
+    taken.add(`${prefix}${i}`);
+    return `${prefix}${i}`;
+  };
+
+  // clientes: dedupe por nome
+  const cliIds = new Set(out.clientes.map((c) => c.id));
   const cliMap = new Map<string, string>(); // localId -> finalId
   for (const c of local.clientes || []) {
-    const hit =
-      out.clientes.find((x) => x.id === c.id) ||
-      out.clientes.find((x) => norm(x.nome) === norm(c.nome));
+    const hit = out.clientes.find((x) => norm(x.nome) === norm(c.nome));
     if (hit) cliMap.set(c.id, hit.id);
     else {
-      out.clientes.push(c);
-      cliMap.set(c.id, c.id);
+      const id = cliIds.has(c.id) ? newId("c", cliIds) : (cliIds.add(c.id), c.id);
+      out.clientes.push({ ...c, id });
+      cliMap.set(c.id, id);
     }
   }
 
-  // projetos: dedupe por id ou (nome + cliente)
+  // projetos: dedupe por (nome + cliente)
+  const projIds = new Set(out.projetos.map((p) => p.id));
   const projMap = new Map<string, string>();
   for (const p of local.projetos || []) {
     const clienteId = cliMap.get(p.clienteId) || p.clienteId;
-    const hit =
-      out.projetos.find((x) => x.id === p.id) ||
-      out.projetos.find((x) => norm(x.nome) === norm(p.nome) && x.clienteId === clienteId);
+    const hit = out.projetos.find(
+      (x) => norm(x.nome) === norm(p.nome) && x.clienteId === clienteId
+    );
     if (hit) projMap.set(p.id, hit.id);
     else {
-      out.projetos.push({ ...p, clienteId });
-      projMap.set(p.id, p.id);
+      const id = projIds.has(p.id) ? newId("p", projIds) : (projIds.add(p.id), p.id);
+      out.projetos.push({ ...p, id, clienteId });
+      projMap.set(p.id, id);
     }
   }
 
-  // sprints: dedupe por id ou nome
+  // sprints: dedupe pelo número da sprint (nome)
+  const sprIds = new Set(out.sprints.map((s) => s.id));
   const sprMap = new Map<string, string>();
   for (const s of local.sprints || []) {
-    const hit =
-      out.sprints.find((x) => x.id === s.id) ||
-      out.sprints.find((x) => norm(x.nome) === norm(s.nome));
+    const hit = out.sprints.find((x) => norm(x.nome) === norm(s.nome));
     if (hit) sprMap.set(s.id, hit.id);
     else {
-      out.sprints.push(s);
-      sprMap.set(s.id, s.id);
+      const id = sprIds.has(s.id) ? newId("s", sprIds) : (sprIds.add(s.id), s.id);
+      out.sprints.push({ ...s, id });
+      sprMap.set(s.id, id);
     }
   }
-  out.seqSprint = Math.max(out.seqSprint || 1, local.seqSprint || 1);
+  out.seqSprint = Math.max(out.seqSprint || 1, local.seqSprint || 1, out.sprints.length + 1);
+
 
   // atividades: dedupe por id ou (título + projeto + sprint)
   const sig = (t: any) => [norm(t.titulo), t.projetoId || "", t.sprintId || ""].join("|");
