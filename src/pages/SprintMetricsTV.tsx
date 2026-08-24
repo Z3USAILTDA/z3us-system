@@ -224,6 +224,42 @@ export default function SprintMetricsTV() {
     };
   });
 
+  const renderColuna = ({ stage, total, grupos }: (typeof colunas)[number]) => (
+    <div
+      key={stage.id}
+      className="w-[340px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-4 min-h-[240px]"
+    >
+      <div className="flex items-center justify-between mb-3 px-1">
+        <span className={`text-sm font-semibold px-3 py-1 rounded-full ${stage.badge}`}>{stage.label}</span>
+        <span className="text-2xl font-bold text-foreground">{total}</span>
+      </div>
+
+      {grupos.length === 0 && (
+        <p className="text-xs text-muted-foreground text-center py-6">Sem atividades</p>
+      )}
+
+      {grupos.map(({ cliente, produto, itens }) => (
+        <div key={`${cliente}-${produto}`} className="mb-3 rounded-lg border border-border bg-card p-3">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="min-w-0">
+              <span className="block text-sm font-semibold text-primary truncate">{cliente}</span>
+              <span className="block text-xs text-muted-foreground truncate">{produto}</span>
+            </div>
+            <span className="text-xl font-bold text-foreground shrink-0">{itens.length}</span>
+          </div>
+          <ul className="space-y-1">
+            {itens.map((t) => (
+              <li key={t.id} className="text-[13px] leading-snug text-muted-foreground">
+                • {t.titulo}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+
+
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 space-y-2">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -237,132 +273,97 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <div className="overflow-x-auto pb-1">
-      <div className="flex gap-4 items-start min-w-max">
-        <div className="grid grid-cols-2 gap-3 content-start order-first w-[340px] shrink-0">
-
-          <Card className="bg-card/60 border-border/60 min-w-0">
-            <CardContent className="p-3 sm:p-4">
-              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Atividades</p>
-              <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.done}/${kpis.total}`}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">concluídas / total</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-card/60 border-border/60 min-w-0">
-            <CardContent className="p-3 sm:p-4">
-              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Nível de Esforço</p>
-              <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.donePts}/${kpis.totalPts}`}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">entregues / planejados</p>
-            </CardContent>
-          </Card>
-        </div>
-
-
-
-        <Card className="bg-card/60 border-border/60 w-[1052px] shrink-0">
-          <CardContent className="p-3">
-            <h2 className="font-semibold">Distribuição por fase</h2>
-            <p className="text-xs text-muted-foreground mb-2">
-              {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
-            </p>
-            <div className="h-[120px]">
-              {fasesData.length ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={fasesData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius="55%"
-                      outerRadius="80%"
-                      paddingAngle={2}
-                    >
-                      {fasesData.map((d) => (
-                        <Cell key={d.name} fill={d.color} stroke="transparent" />
-                      ))}
-                    </Pie>
-                    <RTooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center pt-24">
-                  {loaded ? "Sem atividades nesta sprint" : "Carregando..."}
-                </p>
-              )}
+      <div className="overflow-x-auto pb-2">
+        <div className="flex gap-4 items-start min-w-max">
+          {/* Lane esquerda: KPIs + primeira coluna do kanban */}
+          <div className="w-[340px] shrink-0 flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="bg-card/60 border-border/60 min-w-0">
+                <CardContent className="p-3 sm:p-4">
+                  <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Atividades</p>
+                  <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.done}/${kpis.total}`}</p>
+                  <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">concluídas / total</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-card/60 border-border/60 min-w-0">
+                <CardContent className="p-3 sm:p-4">
+                  <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Nível de Esforço</p>
+                  <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.donePts}/${kpis.totalPts}`}</p>
+                  <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">entregues / planejados</p>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+            {colunas.slice(0, 1).map((c) => renderColuna(c))}
+          </div>
 
-        <Card className="bg-card/60 border-border/60 w-[340px] shrink-0">
-          <CardContent className="p-3">
-            <h2 className="font-semibold">Burndown da sprint</h2>
-            <p className="text-xs text-muted-foreground mb-2">Atividades restantes · ideal vs. real</p>
-            <div className="h-[120px]">
-              {burndown.length ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={burndown}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                    <RTooltip />
-                    <Line type="monotone" dataKey="ideal" stroke="#94a3b8" strokeDasharray="6 5" dot={false} />
-                    <Line type="monotone" dataKey="real" stroke="#2dd4bf" strokeWidth={2} dot={false} connectNulls />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center pt-20">
-                  {loaded ? "Sem sprint em andamento" : "Carregando..."}
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-      </div>
-      </div>
-
-      <div className="overflow-x-auto pb-2 -mt-2">
-        <div className="flex gap-4 min-w-max">
-          {colunas.map(({ stage, total, grupos }) => (
-            <div
-              key={stage.id}
-              className="w-[340px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-4 min-h-[240px]"
-            >
-              <div className="flex items-center justify-between mb-3 px-1">
-                <span className={`text-sm font-semibold px-3 py-1 rounded-full ${stage.badge}`}>
-                  {stage.label}
-                </span>
-                <span className="text-2xl font-bold text-foreground">{total}</span>
-              </div>
-
-              {grupos.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-6">Sem atividades</p>
-              )}
-
-              {grupos.map(({ cliente, produto, itens }) => (
-                <div
-                  key={`${cliente}-${produto}`}
-                  className="mb-3 rounded-lg border border-border bg-card p-3"
-                >
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="min-w-0">
-                      <span className="block text-sm font-semibold text-primary truncate">{cliente}</span>
-                      <span className="block text-xs text-muted-foreground truncate">{produto}</span>
-                    </div>
-                    <span className="text-xl font-bold text-foreground shrink-0">{itens.length}</span>
+          {/* Lane direita: gráficos + demais colunas */}
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-4 items-start">
+              <Card className="bg-card/60 border-border/60 w-[1052px] shrink-0">
+                <CardContent className="p-3">
+                  <h2 className="font-semibold">Distribuição por fase</h2>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
+                  </p>
+                  <div className="h-[120px]">
+                    {fasesData.length ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={fasesData}
+                            dataKey="value"
+                            nameKey="name"
+                            innerRadius="55%"
+                            outerRadius="80%"
+                            paddingAngle={2}
+                          >
+                            {fasesData.map((d) => (
+                              <Cell key={d.name} fill={d.color} stroke="transparent" />
+                            ))}
+                          </Pie>
+                          <RTooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center pt-16">
+                        {loaded ? "Sem atividades nesta sprint" : "Carregando..."}
+                      </p>
+                    )}
                   </div>
-                  <ul className="space-y-1">
-                    {itens.map((t) => (
-                      <li key={t.id} className="text-[13px] leading-snug text-muted-foreground">
-                        • {t.titulo}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/60 border-border/60 w-[340px] shrink-0">
+                <CardContent className="p-3">
+                  <h2 className="font-semibold">Burndown da sprint</h2>
+                  <p className="text-xs text-muted-foreground mb-2">Atividades restantes · ideal vs. real</p>
+                  <div className="h-[120px]">
+                    {burndown.length ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={burndown}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                          <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                          <RTooltip />
+                          <Line type="monotone" dataKey="ideal" stroke="#94a3b8" strokeDasharray="6 5" dot={false} />
+                          <Line type="monotone" dataKey="real" stroke="#2dd4bf" strokeWidth={2} dot={false} connectNulls />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center pt-12">
+                        {loaded ? "Sem sprint em andamento" : "Carregando..."}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          ))}
+
+            <div className="flex gap-4 items-start">
+              {colunas.slice(1).map((c) => renderColuna(c))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
