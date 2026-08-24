@@ -308,7 +308,7 @@ export default function SprintMetricsTV() {
                             data={fasesData}
                             dataKey="value"
                             nameKey="name"
-                            cx="62%"
+                            cx="50%"
                             innerRadius="62%"
                             outerRadius="98%"
                             paddingAngle={2}
