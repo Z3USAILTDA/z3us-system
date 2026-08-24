@@ -131,13 +131,13 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <Card className="bg-card/60 border-border/60">
-        <CardContent className="p-5">
+      <Card className="bg-card/60 border-border/60 mx-auto w-full max-w-md">
+        <CardContent className="p-4">
           <h2 className="font-semibold">Distribuição por fase</h2>
           <p className="text-xs text-muted-foreground mb-4">
             {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
           </p>
-          <div className="h-[320px]">
+          <div className="h-[200px]">
             {fasesData.length ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -158,7 +158,7 @@ export default function SprintMetricsTV() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-sm text-muted-foreground text-center pt-28">
+              <p className="text-sm text-muted-foreground text-center pt-20">
                 {loaded ? "Sem atividades nesta sprint" : "Carregando..."}
               </p>
             )}
@@ -171,13 +171,13 @@ export default function SprintMetricsTV() {
           {colunas.map(({ stage, total, grupos }) => (
             <div
               key={stage.id}
-              className="w-[260px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-3 min-h-[200px]"
+              className="w-[340px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-4 min-h-[280px]"
             >
               <div className="flex items-center justify-between mb-3 px-1">
-                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${stage.badge}`}>
+                <span className={`text-sm font-semibold px-3 py-1 rounded-full ${stage.badge}`}>
                   {stage.label}
                 </span>
-                <span className="text-xs text-muted-foreground">{total}</span>
+                <span className="text-sm font-semibold text-muted-foreground">{total}</span>
               </div>
 
               {grupos.length === 0 && (
@@ -187,14 +187,14 @@ export default function SprintMetricsTV() {
               {grupos.map(([cliente, itens]) => (
                 <div key={cliente} className="mb-3 rounded-lg border border-border bg-card p-3">
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-[11px] font-semibold text-primary truncate">{cliente}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    <span className="text-sm font-semibold text-primary truncate">{cliente}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                       {itens.length}
                     </span>
                   </div>
                   <ul className="space-y-1">
                     {itens.map((t) => (
-                      <li key={t.id} className="text-[11px] leading-snug text-muted-foreground truncate">
+                      <li key={t.id} className="text-[13px] leading-snug text-muted-foreground">
                         • {t.titulo}
                       </li>
                     ))}
