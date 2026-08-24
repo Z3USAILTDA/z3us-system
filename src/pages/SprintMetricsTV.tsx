@@ -21,6 +21,8 @@ interface Tarefa {
   sprintId: string;
   titulo: string;
   stage: Stage;
+  fimPrev?: string;
+  fimReal?: string;
 }
 interface Sprint {
   id: string;
@@ -37,6 +39,16 @@ interface DB {
 }
 
 const emptyDb: DB = { clientes: [], projetos: [], sprints: [], tarefas: [] };
+const todayISO = () => {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+};
+
+// pendente = fora de Produção · urgente = prazo previsto vencido ou hoje
+const isUrgentePendente = (t: Tarefa) =>
+  t.stage !== "done" && !t.fimReal && !!t.fimPrev && t.fimPrev <= todayISO();
+
 const sprintNum = (nome?: string) => (nome || "").replace(/sprint/gi, "").trim();
 
 export default function SprintMetricsTV() {
@@ -114,6 +126,7 @@ export default function SprintMetricsTV() {
     return {
       stage: st,
       total: list.length,
+      urgentes: list.filter(isUrgentePendente).length,
       grupos: [...grupos.entries()].sort((a, b) => b[1].length - a[1].length),
     };
   });
@@ -168,7 +181,7 @@ export default function SprintMetricsTV() {
 
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max">
-          {colunas.map(({ stage, total, grupos }) => (
+          {colunas.map(({ stage, total, urgentes, grupos }) => (
             <div
               key={stage.id}
               className="w-[340px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-4 min-h-[280px]"
@@ -177,30 +190,48 @@ export default function SprintMetricsTV() {
                 <span className={`text-sm font-semibold px-3 py-1 rounded-full ${stage.badge}`}>
                   {stage.label}
                 </span>
-                <span className="text-sm font-semibold text-muted-foreground">{total}</span>
+                <span
+                  className={`text-sm font-semibold ${urgentes > 0 ? "text-destructive" : "text-muted-foreground"}`}
+                  title={urgentes > 0 ? `${urgentes} pendente(s) em urgência` : undefined}
+                >
+                  {total}
+                </span>
               </div>
 
               {grupos.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-6">Sem atividades</p>
               )}
 
-              {grupos.map(([cliente, itens]) => (
+              {grupos.map(([cliente, itens]) => {
+                const urg = itens.filter(isUrgentePendente).length;
+                return (
                 <div key={cliente} className="mb-3 rounded-lg border border-border bg-card p-3">
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <span className="text-sm font-semibold text-primary truncate">{cliente}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    <span
+                      className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        urg > 0 ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"
+                      }`}
+                      title={urg > 0 ? `${urg} pendente(s) em urgência` : undefined}
+                    >
                       {itens.length}
                     </span>
                   </div>
                   <ul className="space-y-1">
                     {itens.map((t) => (
-                      <li key={t.id} className="text-[13px] leading-snug text-muted-foreground">
+                      <li
+                        key={t.id}
+                        className={`text-[13px] leading-snug ${
+                          isUrgentePendente(t) ? "text-destructive font-medium" : "text-muted-foreground"
+                        }`}
+                      >
                         • {t.titulo}
                       </li>
                     ))}
                   </ul>
                 </div>
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>
