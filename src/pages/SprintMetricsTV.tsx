@@ -116,11 +116,23 @@ export default function SprintMetricsTV() {
       )
       .subscribe();
 
+    // fallback: revalida periodicamente e ao voltar o foco (TV ligada por horas)
+    const interval = window.setInterval(load, 60000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
     return () => {
       cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
       supabase.removeChannel(channel);
     };
   }, []);
+
 
   const sprintAtual = useMemo(() => {
     const abertas = db.sprints.filter((s) => !s.encerrada);
