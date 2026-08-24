@@ -237,8 +237,8 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[220px_1fr_460px]">
-        <div className="grid gap-4 content-start order-first">
+      <div className="grid gap-4 lg:grid-cols-[340px_1fr_460px]">
+        <div className="grid grid-cols-2 gap-4 content-start order-first">
           <Card className="bg-card/60 border-border/60">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground">Atividades</p>
