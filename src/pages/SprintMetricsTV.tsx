@@ -303,7 +303,11 @@ export default function SprintMetricsTV() {
             <div className="flex gap-4 items-start">
               <Card className="bg-card/60 border-border/60 w-[696px] shrink-0">
                 <CardContent className="p-3">
-                  <div className="relative h-[192px]">
+                  <h2 className="font-semibold">Distribuição por fase</h2>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
+                  </p>
+                  <div className="h-[170px]">
                     {fasesData.length ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -311,8 +315,8 @@ export default function SprintMetricsTV() {
                             data={fasesData}
                             dataKey="value"
                             nameKey="name"
-                            innerRadius="72%"
-                            outerRadius="90%"
+                            innerRadius="55%"
+                            outerRadius="82%"
                             paddingAngle={2}
                           >
                             {fasesData.map((d) => (
@@ -328,14 +332,9 @@ export default function SprintMetricsTV() {
                         {loaded ? "Sem atividades nesta sprint" : "Carregando..."}
                       </p>
                     )}
-                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center -mt-4">
-                      <h2 className="font-semibold text-[11px] leading-tight text-center w-[90px]">Distribuição por fase</h2>
-                      <p className="text-[10px] text-muted-foreground leading-tight">
-                        {sprintAtual ? `Sprint ${sprintNum(sprintAtual.nome)}` : "Todas"}
-                      </p>
-                    </div>
                   </div>
                 </CardContent>
+
 
               </Card>
 
