@@ -277,15 +277,15 @@ export default function SprintMetricsTV() {
         <div className="flex gap-4 items-start min-w-max">
           {/* Lane esquerda: KPIs + primeira coluna do kanban */}
           <div className="w-[340px] shrink-0 flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="bg-card/60 border-border/60 min-w-0">
+            <div className="grid grid-cols-2 gap-3 h-[192px] content-start">
+              <Card className="bg-card/60 border-border/60 min-w-0 h-fit">
                 <CardContent className="p-3 sm:p-4">
                   <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Atividades</p>
                   <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.done}/${kpis.total}`}</p>
                   <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">concluídas / total</p>
                 </CardContent>
               </Card>
-              <Card className="bg-card/60 border-border/60 min-w-0">
+              <Card className="bg-card/60 border-border/60 min-w-0 h-fit">
                 <CardContent className="p-3 sm:p-4">
                   <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Nível de Esforço</p>
                   <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.donePts}/${kpis.totalPts}`}</p>
@@ -293,6 +293,7 @@ export default function SprintMetricsTV() {
                 </CardContent>
               </Card>
             </div>
+
             {colunas.slice(0, 1).map((c) => renderColuna(c))}
           </div>
 
