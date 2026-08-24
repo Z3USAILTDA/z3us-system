@@ -296,8 +296,8 @@ export default function SprintMetricsTV() {
 
               <Card className="bg-card/60 border-border/60 w-[696px] shrink-0">
                 <CardContent className="p-3">
-                  <h2 className="font-semibold">Distribuição por fase</h2>
-                  <p className="text-xs text-muted-foreground mb-2">
+                  <h2 className="font-semibold text-center">Distribuição por fase</h2>
+                  <p className="text-xs text-muted-foreground mb-2 text-center">
                     {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
                   </p>
                   <div className="h-[150px]">
@@ -333,8 +333,8 @@ export default function SprintMetricsTV() {
 
               <Card className="bg-card/60 border-border/60 w-[696px] shrink-0">
                 <CardContent className="p-3">
-                  <h2 className="font-semibold">Burndown da sprint</h2>
-                  <p className="text-xs text-muted-foreground mb-2">Atividades restantes · ideal vs. real</p>
+                  <h2 className="font-semibold text-center">Burndown da sprint</h2>
+                  <p className="text-xs text-muted-foreground mb-2 text-center">Atividades restantes · ideal vs. real</p>
                   <div className="h-[150px]">
                     {burndown.length ? (
                       <ResponsiveContainer width="100%" height="100%">
