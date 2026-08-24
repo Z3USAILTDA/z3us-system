@@ -9,7 +9,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip as RTooltip,
-  Legend,
   LineChart,
   Line,
   CartesianGrid,
@@ -300,41 +299,39 @@ export default function SprintMetricsTV() {
                   <p className="text-xs text-muted-foreground mb-2 text-center">
                     {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
                   </p>
-                  <div className="h-[150px]">
+                  <div className="relative h-[150px]">
                     {fasesData.length ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={fasesData}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            innerRadius="62%"
-                            outerRadius="98%"
-                            paddingAngle={2}
-                          >
-                            {fasesData.map((d) => (
-                              <Cell key={d.name} fill={d.color} stroke="transparent" />
-                            ))}
-                          </Pie>
-                          <RTooltip />
-                          <Legend
-                            layout="vertical"
-                            align="left"
-                            verticalAlign="middle"
-                            iconSize={8}
-                            wrapperStyle={{
-                              fontSize: 10,
-                              lineHeight: "14px",
-                              position: "absolute",
-                              left: 4,
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                              width: "auto",
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+                      <>
+                        <div className="absolute left-1 top-1/2 z-10 -translate-y-1/2 space-y-0.5 text-[10px] leading-[14px]">
+                          {fasesData.map((fase) => (
+                            <div key={fase.name} className="flex items-center gap-1.5 whitespace-nowrap">
+                              <span
+                                className="size-2 shrink-0 rounded-full"
+                                style={{ backgroundColor: fase.color }}
+                              />
+                              <span>{fase.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={fasesData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              innerRadius="62%"
+                              outerRadius="98%"
+                              paddingAngle={2}
+                            >
+                              {fasesData.map((d) => (
+                                <Cell key={d.name} fill={d.color} stroke="transparent" />
+                              ))}
+                            </Pie>
+                            <RTooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </>
                     ) : (
                       <p className="text-sm text-muted-foreground text-center pt-16">
                         {loaded ? "Sem atividades nesta sprint" : "Carregando..."}
