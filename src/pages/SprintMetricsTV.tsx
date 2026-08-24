@@ -248,23 +248,8 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-        <KpiCard label="Atividades" value={`${kpis.done}/${kpis.total}`} sub="concluídas / total" />
-        <KpiCard label="Nível de Esforço" value={`${kpis.donePts}/${kpis.totalPts}`} sub="entregues / planejados" />
-        <KpiCard label="Entregas no prazo" value={`${kpis.pct}%`} />
-        <KpiCard
-          label="Lead time médio"
-          value={`${kpis.leadAvg} dias`}
-          sub={`${kpis.leadConsiderados} de ${kpis.done} concluídas`}
-        />
-        <KpiCard
-          label="Dias restantes"
-          value={kpis.diasRest}
-          sub={sprintAtual ? `${fmtBR(sprintAtual.inicio)} a ${fmtBR(sprintAtual.fim)}` : undefined}
-        />
-      </div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_1fr_240px]">
 
-      <div className="grid gap-4 lg:grid-cols-2">
         <Card className="bg-card/60 border-border/60">
           <CardContent className="p-4">
             <h2 className="font-semibold">Distribuição por fase</h2>
