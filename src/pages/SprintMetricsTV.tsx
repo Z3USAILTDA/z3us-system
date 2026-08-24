@@ -225,7 +225,7 @@ export default function SprintMetricsTV() {
   });
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 space-y-3">
+    <div className="min-h-screen bg-background p-4 sm:p-6 space-y-2">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Métricas Sprint TV</h1>
@@ -238,17 +238,17 @@ export default function SprintMetricsTV() {
       </header>
 
       <div className="overflow-x-auto pb-1">
-      <div className="flex gap-4 items-start min-w-max">
-        <div className="grid grid-cols-2 gap-3 content-start order-first w-[340px] shrink-0">
+      <div className="flex gap-4 items-stretch min-w-max">
+        <div className="grid grid-cols-2 gap-3 order-first w-[340px] shrink-0">
 
-          <Card className="bg-card/60 border-border/60 min-w-0">
+          <Card className="bg-card/60 border-border/60 min-w-0 h-full flex flex-col justify-center">
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Atividades</p>
               <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.done}/${kpis.total}`}</p>
               <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">concluídas / total</p>
             </CardContent>
           </Card>
-          <Card className="bg-card/60 border-border/60 min-w-0">
+          <Card className="bg-card/60 border-border/60 min-w-0 h-full flex flex-col justify-center">
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Nível de Esforço</p>
               <p className="text-xl sm:text-2xl font-bold text-primary mt-1 truncate">{`${kpis.donePts}/${kpis.totalPts}`}</p>
