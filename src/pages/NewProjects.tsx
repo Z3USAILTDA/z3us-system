@@ -430,11 +430,11 @@ const NewProjectsContent = () => {
   }, [navigate]);
 
   const currentSprintId = useMemo(() => {
-    const t = todayISO();
-    const cur = db.sprints.find((s) => s.inicio <= t && t <= s.fim);
-    if (cur) return cur.id;
-    const past = db.sprints.filter((s) => s.fim < t).sort((a, b) => (a.fim < b.fim ? 1 : -1));
-    return past[0]?.id || db.sprints[0]?.id || "all";
+    const abertas = db.sprints.filter((s) => !s.encerrada);
+    const atual = [...abertas].sort(
+      (a, b) => Number((b.nome || "").replace(/sprint/gi, "").trim() || 0) - Number((a.nome || "").replace(/sprint/gi, "").trim() || 0)
+    )[0];
+    return atual?.id || "all";
   }, [db.sprints]);
 
   useEffect(() => {
@@ -467,7 +467,7 @@ const NewProjectsContent = () => {
     if (filterCliente !== "all" && p.clienteId !== filterCliente) return false;
     if (filterProjeto !== "all" && t.projetoId !== filterProjeto) return false;
     if (viewingClosed) return t.sprintId === boardSprint;
-    return !sprintById(t.sprintId)?.encerrada;
+    return Boolean(sprintAtiva) && t.sprintId === sprintAtiva.id;
   });
 
   const tarefaStatus = (t: Tarefa) => {
