@@ -323,7 +323,15 @@ export default function SprintMetricsTV() {
                             align="left"
                             verticalAlign="middle"
                             iconSize={8}
-                            wrapperStyle={{ fontSize: 10, lineHeight: "14px", paddingLeft: 4 }}
+                            wrapperStyle={{
+                              fontSize: 10,
+                              lineHeight: "14px",
+                              position: "absolute",
+                              left: 4,
+                              top: "50%",
+                              transform: "translateY(-50%)",
+                              width: "auto",
+                            }}
                           />
                         </PieChart>
                       </ResponsiveContainer>
