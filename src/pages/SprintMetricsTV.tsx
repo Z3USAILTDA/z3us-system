@@ -326,7 +326,7 @@ export default function SprintMetricsTV() {
                             wrapperStyle={{ fontSize: 10, lineHeight: "14px", paddingLeft: 4 }}
                           />
                         </PieChart>
-                      </ResponsiveContainer>)
+                      </ResponsiveContainer>
                     ) : (
                       <p className="text-sm text-muted-foreground text-center pt-16">
                         {loaded ? "Sem atividades nesta sprint" : "Carregando..."}
