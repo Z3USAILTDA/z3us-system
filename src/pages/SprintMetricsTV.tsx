@@ -300,7 +300,7 @@ export default function SprintMetricsTV() {
           {/* Lane direita: gráficos + demais colunas */}
           <div className="flex flex-col gap-4">
             <div className="flex gap-4 items-start">
-              <Card className="bg-card/60 border-border/60 w-[1052px] shrink-0">
+              <Card className="bg-card/60 border-border/60 w-[696px] shrink-0">
                 <CardContent className="p-3">
                   <h2 className="font-semibold">Distribuição por fase</h2>
                   <p className="text-xs text-muted-foreground mb-2">
@@ -335,7 +335,7 @@ export default function SprintMetricsTV() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/60 border-border/60 w-[340px] shrink-0">
+              <Card className="bg-card/60 border-border/60 w-[696px] shrink-0">
                 <CardContent className="p-3">
                   <h2 className="font-semibold">Burndown da sprint</h2>
                   <p className="text-xs text-muted-foreground mb-2">Atividades restantes · ideal vs. real</p>
