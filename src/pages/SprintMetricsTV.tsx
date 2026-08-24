@@ -277,7 +277,7 @@ export default function SprintMetricsTV() {
         <div className="flex gap-4 items-start min-w-max">
           {/* Lane esquerda: KPIs + primeira coluna do kanban */}
           <div className="w-[340px] shrink-0 flex flex-col gap-4">
-            <div className="grid grid-cols-1 gap-3 h-[192px] content-start">
+            <div className="grid grid-cols-1 gap-3">
               <Card className="bg-card/60 border-border/60 min-w-0 h-fit">
                 <CardContent className="p-4">
                   <p className="text-sm text-muted-foreground truncate">Atividades</p>
