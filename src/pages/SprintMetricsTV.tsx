@@ -225,7 +225,7 @@ export default function SprintMetricsTV() {
   });
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 space-y-4">
+    <div className="min-h-screen bg-background p-4 sm:p-6 space-y-3">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Métricas Sprint TV</h1>
@@ -296,7 +296,7 @@ export default function SprintMetricsTV() {
           <CardContent className="p-4">
             <h2 className="font-semibold">Burndown da sprint</h2>
             <p className="text-xs text-muted-foreground mb-4">Atividades restantes · ideal vs. real</p>
-            <div className="h-[180px]">
+            <div className="h-[160px]">
               {burndown.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={burndown}>
@@ -321,7 +321,7 @@ export default function SprintMetricsTV() {
 
 
 
-      <div className="overflow-x-auto pb-2 -mt-2">
+      <div className="overflow-x-auto pb-2 -mt-3">
         <div className="flex gap-4 min-w-max">
           {colunas.map(({ stage, total, grupos }) => (
             <div
