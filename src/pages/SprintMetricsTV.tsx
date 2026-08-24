@@ -337,7 +337,6 @@ export default function SprintMetricsTV() {
                   </div>
                 </CardContent>
 
-                </CardContent>
               </Card>
 
               <Card className="bg-card/60 border-border/60 w-[696px] shrink-0">
