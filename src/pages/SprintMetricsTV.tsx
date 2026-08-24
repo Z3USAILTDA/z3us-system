@@ -329,7 +329,7 @@ export default function SprintMetricsTV() {
                       </p>
                     )}
                     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center -mt-4">
-                      <h2 className="font-semibold text-sm leading-tight">Distribuição por fase</h2>
+                      <h2 className="font-semibold text-[11px] leading-tight text-center w-[90px]">Distribuição por fase</h2>
                       <p className="text-[10px] text-muted-foreground leading-tight">
                         {sprintAtual ? `Sprint ${sprintNum(sprintAtual.nome)}` : "Todas"}
                       </p>
