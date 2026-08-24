@@ -289,7 +289,7 @@ export default function SprintMetricsTV() {
           <CardContent className="p-4">
             <h2 className="font-semibold">Burndown da sprint</h2>
             <p className="text-xs text-muted-foreground mb-4">Atividades restantes · ideal vs. real</p>
-            <div className="h-[260px]">
+            <div className="h-[200px]">
               {burndown.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={burndown}>
@@ -302,14 +302,32 @@ export default function SprintMetricsTV() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-muted-foreground text-center pt-24">
+                <p className="text-sm text-muted-foreground text-center pt-20">
                   {loaded ? "Sem sprint em andamento" : "Carregando..."}
                 </p>
               )}
             </div>
           </CardContent>
         </Card>
+
+        <div className="grid gap-4 content-start">
+          <Card className="bg-card/60 border-border/60">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Atividades</p>
+              <p className="text-2xl font-bold text-primary mt-1">{`${kpis.done}/${kpis.total}`}</p>
+              <p className="text-[11px] text-muted-foreground">concluídas / total</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/60 border-border/60">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">Nível de Esforço</p>
+              <p className="text-2xl font-bold text-primary mt-1">{`${kpis.donePts}/${kpis.totalPts}`}</p>
+              <p className="text-[11px] text-muted-foreground">entregues / planejados</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
 
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-4 min-w-max">
