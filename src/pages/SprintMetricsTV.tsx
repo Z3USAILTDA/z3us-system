@@ -237,8 +237,8 @@ export default function SprintMetricsTV() {
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[340px_1fr_460px]">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 content-start order-first">
+      <div className="flex flex-wrap gap-3 items-start">
+        <div className="grid grid-cols-2 gap-3 content-start order-first w-full sm:w-[300px] shrink-0">
           <Card className="bg-card/60 border-border/60 min-w-0">
             <CardContent className="p-3 sm:p-4">
               <p className="text-[11px] sm:text-xs text-muted-foreground truncate">Atividades</p>
@@ -257,13 +257,13 @@ export default function SprintMetricsTV() {
 
 
 
-        <Card className="bg-card/60 border-border/60">
-          <CardContent className="p-4">
+        <Card className="bg-card/60 border-border/60 w-full sm:w-[420px] shrink-0">
+          <CardContent className="p-3">
             <h2 className="font-semibold">Distribuição por fase</h2>
-            <p className="text-xs text-muted-foreground mb-4">
+            <p className="text-xs text-muted-foreground mb-2">
               {sprintAtual ? `Atividades da Sprint ${sprintNum(sprintAtual.nome)}` : "Todas as atividades"}
             </p>
-            <div className="h-[180px]">
+            <div className="h-[160px]">
               {fasesData.length ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -292,10 +292,10 @@ export default function SprintMetricsTV() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card/60 border-border/60">
-          <CardContent className="p-4">
+        <Card className="bg-card/60 border-border/60 w-full sm:w-[460px] shrink-0">
+          <CardContent className="p-3">
             <h2 className="font-semibold">Burndown da sprint</h2>
-            <p className="text-xs text-muted-foreground mb-4">Atividades restantes · ideal vs. real</p>
+            <p className="text-xs text-muted-foreground mb-2">Atividades restantes · ideal vs. real</p>
             <div className="h-[160px]">
               {burndown.length ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -321,12 +321,12 @@ export default function SprintMetricsTV() {
 
 
 
-      <div className="overflow-x-auto pb-2 -mt-3">
+      <div className="overflow-x-auto pb-2">
         <div className="flex gap-4 min-w-max">
           {colunas.map(({ stage, total, grupos }) => (
             <div
               key={stage.id}
-              className="w-[340px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-4 min-h-[280px]"
+              className="w-[340px] shrink-0 rounded-xl border border-border/60 bg-card/40 p-4 min-h-[240px]"
             >
               <div className="flex items-center justify-between mb-3 px-1">
                 <span className={`text-sm font-semibold px-3 py-1 rounded-full ${stage.badge}`}>
