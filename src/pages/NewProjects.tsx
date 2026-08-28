@@ -650,6 +650,23 @@ const NewProjectsContent = () => {
             ],
       };
     });
+
+    const anterior = editingId ? db.tarefas.find((t) => t.id === editingId) : null;
+    void syncTarefaToProjeto({
+      titulo: form.titulo,
+      desc: form.desc,
+      cliente: nomeCliente,
+      projeto: nomeProjeto,
+      sprint: nomeSprint,
+      dev: form.dev,
+      stage: form.stage,
+      iniPrev: form.iniPrev,
+      fimPrev: form.fimPrev,
+      iniReal: form.iniReal,
+      fimReal: form.fimReal,
+      tituloAnterior: anterior?.titulo,
+    });
+
     toast.success(editingId ? "Atividade atualizada" : "Atividade criada");
     setModalOpen(false);
     setEditingId(null);
