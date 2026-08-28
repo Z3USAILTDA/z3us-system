@@ -72,7 +72,7 @@ export const syncTarefaToProjeto = async (t: SprintTaskSyncPayload): Promise<voi
     const { data: cli } = await supabase
       .from("clients")
       .select("id")
-      .ilike("company_name", nomeCliente)
+      .ilike("company_name", resolveCliente(nomeCliente))
       .limit(1)
       .maybeSingle();
     if (!cli?.id) return;
