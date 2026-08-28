@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getStoredAuthSession, revokeStoredSession } from "@/lib/authSession";
+import { syncTarefaToProjeto } from "@/lib/sprintProjectSync";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
