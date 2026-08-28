@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getStoredAuthSession, revokeStoredSession } from "@/lib/authSession";
+import { syncTarefaToProjeto } from "@/lib/sprintProjectSync";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -489,23 +491,52 @@ const NewProjectsContent = () => {
 
   /* --------------------------------- ações -------------------------------- */
 
+  /** monta o payload de espelhamento no módulo Projetos */
+  const syncPayload = (t: Tarefa, base: DB, tituloAnterior?: string) => {
+    const p = base.projetos.find((x) => x.id === t.projetoId);
+    return {
+      titulo: t.titulo,
+      desc: t.desc,
+      cliente: p ? base.clientes.find((c) => c.id === p.clienteId)?.nome || "" : "",
+      projeto: p?.nome || "",
+      sprint: (base.sprints.find((s) => s.id === t.sprintId)?.nome || "").replace(/sprint/gi, "").trim(),
+      dev: t.dev,
+      stage: t.stage,
+      iniPrev: t.iniPrev,
+      fimPrev: t.fimPrev,
+      iniReal: t.iniReal,
+      fimReal: t.fimReal,
+      tituloAnterior,
+    };
+  };
+
   const moveTarefa = (id: string, stage: Stage) => {
-    setDb((prev) => ({
-      ...prev,
-      tarefas: prev.tarefas.map((t) => {
-        if (t.id !== id || t.stage === stage) return t;
-        const hoje = todayISO();
-        return {
-          ...t,
-          stage,
-          iniReal: stage === "dev" && !t.iniReal ? hoje : t.iniReal,
-          fimReal: stage === "done" ? t.fimReal || hoje : "",
-          hist: [...(t.hist || []), { stage, at: new Date().toISOString() }],
-        };
-      }),
-    }));
+    let atualizada: Tarefa | null = null;
+    let snapshot: DB | null = null;
+    setDb((prev) => {
+      const next = {
+        ...prev,
+        tarefas: prev.tarefas.map((t) => {
+          if (t.id !== id || t.stage === stage) return t;
+          const hoje = todayISO();
+          const nova: Tarefa = {
+            ...t,
+            stage,
+            iniReal: stage === "dev" && !t.iniReal ? hoje : t.iniReal,
+            fimReal: stage === "done" ? t.fimReal || hoje : "",
+            hist: [...(t.hist || []), { stage, at: new Date().toISOString() }],
+          };
+          atualizada = nova;
+          return nova;
+        }),
+      };
+      snapshot = next;
+      return next;
+    });
+    if (atualizada && snapshot) void syncTarefaToProjeto(syncPayload(atualizada, snapshot));
     toast.success(`Atividade movida para ${STAGES.find((s) => s.id === stage)?.label}`);
   };
+
 
   const openModal = (id?: string) => {
     if (id) {
@@ -619,6 +650,23 @@ const NewProjectsContent = () => {
             ],
       };
     });
+
+    const anterior = editingId ? db.tarefas.find((t) => t.id === editingId) : null;
+    void syncTarefaToProjeto({
+      titulo: form.titulo,
+      desc: form.desc,
+      cliente: nomeCliente,
+      projeto: nomeProjeto,
+      sprint: nomeSprint,
+      dev: form.dev,
+      stage: form.stage,
+      iniPrev: form.iniPrev,
+      fimPrev: form.fimPrev,
+      iniReal: form.iniReal,
+      fimReal: form.fimReal,
+      tituloAnterior: anterior?.titulo,
+    });
+
     toast.success(editingId ? "Atividade atualizada" : "Atividade criada");
     setModalOpen(false);
     setEditingId(null);
