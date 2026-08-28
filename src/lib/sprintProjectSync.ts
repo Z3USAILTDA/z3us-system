@@ -48,6 +48,16 @@ export interface SprintTaskSyncPayload {
 
 const clean = (v?: string) => (v && v.trim() ? v.trim() : null);
 
+/** Nomes usados na Gestão de Sprints -> razão social cadastrada em Clientes */
+const CLIENTE_ALIAS: Record<string, string> = {
+  "ags global logistic": "AGS Global Logistics",
+  bewex: "Bewex Solutions Sistemas Ltda",
+  dascher: "Dachser",
+  z3us: "Z3US.ai",
+};
+
+const resolveCliente = (nome: string) => CLIENTE_ALIAS[nome.toLowerCase()] ?? nome;
+
 /**
  * Espelha uma atividade da Gestão de Sprints no módulo Projetos.
  * Nunca lança erro — falhas são apenas registradas no console.
