@@ -1171,6 +1171,7 @@ const NewProjectsContent = () => {
         // capacidade real da equipe = todos os desenvolvedores da equipe
         const capacidade = +(capDia * dias * DEVS.length).toFixed(1);
         return {
+          id: s.id,
           sprint: `Sprint ${sprintNum(s.nome) || s.nome}`,
           planejado: +planejado.toFixed(1),
           entregue: +entregue.toFixed(1),
@@ -1183,8 +1184,10 @@ const NewProjectsContent = () => {
           atividades: list.length,
         };
       })
-      .filter((s) => s.atividades > 0);
-  }, [db.sprints, db.tarefas]);
+      .filter((s) => s.atividades > 0)
+      .filter((s) => !sprintSel || s.id === sprintSel.id);
+  }, [db.sprints, db.tarefas, sprintSel]);
+
 
 
 
@@ -1633,10 +1636,6 @@ const NewProjectsContent = () => {
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
                       <h3 className="font-semibold">Horas por sprint</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Planejado x entregue x capacidade real da equipe ({DEVS.length} devs ×{" "}
-                        {fmtH(CAPACIDADE_DIA_PADRAO)}h/dia) · desvio = entregue − capacidade
-                      </p>
                     </div>
                   </div>
 
@@ -1703,16 +1702,6 @@ const NewProjectsContent = () => {
                       <p className="text-xs text-muted-foreground">
                         {fmtH(capacidadeDia)}h/dia × {diasSprint.length || 1} dias = {fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade
                       </p>
-                    </div>
-                    <div className="text-right text-xs text-muted-foreground">
-                      <p>
-                        Equipe:{" "}
-                        <strong className="text-foreground">
-                          {fmtH(capacidadeEquipe.horas)}h / {fmtH(capacidadeEquipe.capacidade)}h
-                        </strong>{" "}
-                        ({capacidadeEquipe.atividades} atividades)
-                      </p>
-                      <p>{fmtH(capacidadeEquipe.feitas)}h já entregues</p>
                     </div>
                   </div>
 
