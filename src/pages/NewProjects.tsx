@@ -1569,51 +1569,74 @@ const NewProjectsContent = () => {
 
               <Card className="bg-card/60 border-border/60">
                 <CardContent className="p-5">
-                  <h3 className="font-semibold">Acompanhamento de entregas</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Progresso de cada desenvolvedor em story points
-                  </p>
-                  <div className="space-y-3">
-                    {devRows.map((r) => {
-                      const pct = r.total ? Math.round((r.done / r.total) * 100) : 0;
-                      const seg = (v: number, color: string) =>
-                        r.total ? <i style={{ width: `${(v / r.total) * 100}%`, background: color }} className="block h-full" /> : null;
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                      <h3 className="font-semibold">Cálculo da sprint (horas)</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Capacidade de {SPRINT_CAPACIDADE}h por desenvolvedor · horas estimadas pelo nível de dificuldade
+                      </p>
+                    </div>
+                    <div className="text-right text-xs text-muted-foreground">
+                      <p>
+                        Equipe:{" "}
+                        <strong className="text-foreground">
+                          {capacidadeEquipe.horas}h / {capacidadeEquipe.capacidade}h
+                        </strong>{" "}
+                        ({capacidadeEquipe.atividades} atividades)
+                      </p>
+                      <p>{capacidadeEquipe.feitas}h já entregues</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 mt-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {capacidadeRows.length === 0 && (
+                      <p className="text-sm text-muted-foreground">Sem atividades nesta seleção</p>
+                    )}
+                    {capacidadeRows.map((r) => {
+                      const excedeu = r.horas > SPRINT_CAPACIDADE;
                       return (
-                        <div key={r.nome} className="border-b border-border/50 last:border-0 pb-3 last:pb-0">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="font-medium">{r.nome}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {r.total ? `${r.done}/${r.total} atividades · ${pct}%` : "sem atividades"}
+                        <div key={r.nome} className="rounded-xl border border-border/60 bg-card p-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold">{r.nome}</span>
+                            <span className={`text-sm font-bold ${excedeu ? "text-destructive" : "text-primary"}`}>
+                              {r.horas}h / {SPRINT_CAPACIDADE}h
                             </span>
                           </div>
-                          <div className="flex h-2 rounded-full overflow-hidden bg-muted">
-                            {seg(r.done, "#2dd4bf")}
-                            {seg(r.run, "#60a5fa")}
-                            {seg(r.late, "#fb7185")}
+                          <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+                            <i
+                              className="block h-full"
+                              style={{
+                                width: `${Math.min(100, r.pct)}%`,
+                                background: excedeu ? "#fb7185" : "#2dd4bf",
+                              }}
+                            />
                           </div>
-                          <p className={`text-[11px] mt-1 ${r.hasLate ? "text-destructive" : "text-muted-foreground"}`}>
-                            {r.note}
+                          <p className={`text-[11px] mt-1 ${excedeu ? "text-destructive" : "text-muted-foreground"}`}>
+                            {r.itens.length} atividade(s) · {r.pct}% da capacidade ·{" "}
+                            {excedeu ? `${Math.abs(r.saldo)}h acima` : `${r.saldo}h livres`}
                           </p>
+                          <ul className="mt-3 space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                            {r.itens.map((i) => (
+                              <li key={i.id} className="flex items-start justify-between gap-2 text-xs">
+                                <span className={i.concluida ? "line-through text-muted-foreground" : ""}>
+                                  {i.titulo}
+                                  {i.info && (
+                                    <span className="block text-[10px] text-muted-foreground">
+                                      {i.pts} · {i.info.label} ({i.info.faixa})
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="shrink-0 font-medium text-foreground">{i.horas}h</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="flex justify-between flex-wrap gap-2 border-t border-border/50 pt-3 mt-3 text-sm text-muted-foreground">
-                    <span>
-                      Equipe:{" "}
-                      <strong className="text-foreground">
-                        {teamTotals.done}/{teamTotals.total} atividades entregues (
-                        {teamTotals.total ? Math.round((teamTotals.done / teamTotals.total) * 100) : 0}%)
-                      </strong>
-                    </span>
-                    {teamTotals.late ? (
-                      <span className="text-destructive">{teamTotals.late} atividades em atraso</span>
-                    ) : (
-                      <span className="text-primary">Nenhuma atividade em atraso</span>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
+
             </TabsContent>
           </Tabs>
         </main>
