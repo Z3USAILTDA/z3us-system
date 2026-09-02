@@ -1171,6 +1171,7 @@ const NewProjectsContent = () => {
         // capacidade real da equipe = todos os desenvolvedores da equipe
         const capacidade = +(capDia * dias * DEVS.length).toFixed(1);
         return {
+          id: s.id,
           sprint: `Sprint ${sprintNum(s.nome) || s.nome}`,
           planejado: +planejado.toFixed(1),
           entregue: +entregue.toFixed(1),
@@ -1185,8 +1186,8 @@ const NewProjectsContent = () => {
       })
       .filter((s) => s.atividades > 0)
       .filter((s) => !sprintSel || s.id === sprintSel.id);
+  }, [db.sprints, db.tarefas, sprintSel]);
 
-  }, [db.sprints, db.tarefas]);
 
 
 
