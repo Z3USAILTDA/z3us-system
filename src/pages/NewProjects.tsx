@@ -1157,19 +1157,29 @@ const NewProjectsContent = () => {
     { horas: 0, feitas: 0, atividades: 0, capacidade: 0 }
   );
 
-  /* --------------------- resumo de atividades (por dev) -------------------- */
+  /* ------------------------- horas por sprint ------------------------------ */
 
-  const resumoAtividades = useMemo(
-    () =>
-      capacidadeRows.map((r) => ({
-        nome: r.nome,
-        planejado: +r.horas.toFixed(1),
-        entregue: +r.horasFeitas.toFixed(1),
-        capacidade: +SPRINT_CAPACIDADE.toFixed(1),
-        atividades: r.itens.length,
-      })),
-    [capacidadeRows, SPRINT_CAPACIDADE]
-  );
+  const horasPorSprint = useMemo(() => {
+    return [...db.sprints]
+      .sort((a, b) => Number(sprintNum(a.nome) || 0) - Number(sprintNum(b.nome) || 0))
+      .map((s) => {
+        const list = db.tarefas.filter((t) => t.sprintId === s.id);
+        const planejado = list.reduce((a, t) => a + horasDaTarefa(t.pts), 0);
+        const entregue = list.filter((t) => t.fimReal).reduce((a, t) => a + horasDaTarefa(t.pts), 0);
+        const devs = new Set(list.map((t) => t.dev).filter(Boolean)).size;
+        const capDia = s.capacidadeDia ?? CAPACIDADE_DIA_PADRAO;
+        const dias = diasUteis(s.inicio, s.fim).length || 1;
+        return {
+          sprint: `Sprint ${sprintNum(s.nome) || s.nome}`,
+          planejado: +planejado.toFixed(1),
+          entregue: +entregue.toFixed(1),
+          capacidade: +(capDia * dias * (devs || 1)).toFixed(1),
+          atividades: list.length,
+        };
+      })
+      .filter((s) => s.atividades > 0);
+  }, [db.sprints, db.tarefas]);
+
 
 
 
@@ -1612,37 +1622,19 @@ const NewProjectsContent = () => {
 
               <Card className="bg-card/60 border-border/60">
                 <CardContent className="p-5">
-                  <div className="flex flex-wrap items-end justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold">Resumo de atividades da sprint</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Horas planejadas x entregues por desenvolvedor · capacidade de {fmtH(SPRINT_CAPACIDADE)}h
-                      </p>
-                    </div>
-                    <div className="text-right text-xs text-muted-foreground">
-                      <p>
-                        Equipe:{" "}
-                        <strong className="text-foreground">
-                          {fmtH(capacidadeEquipe.horas)}h / {fmtH(capacidadeEquipe.capacidade)}h
-                        </strong>{" "}
-                        ({capacidadeEquipe.atividades} atividades)
-                      </p>
-                      <p className="text-emerald-400">{fmtH(capacidadeEquipe.feitas)}h já entregues</p>
-                    </div>
+                  <div>
+                    <h3 className="font-semibold">Horas por sprint</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Planejado x entregue por sprint · comparado à capacidade total da equipe
+                    </p>
                   </div>
-                  <div className="h-72 mt-4">
-                    {resumoAtividades.length ? (
+                  <div className="h-80 mt-4">
+                    {horasPorSprint.length ? (
                       <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={resumoAtividades} layout="vertical" margin={{ left: 12, right: 16 }}>
+                        <ComposedChart data={horasPorSprint}>
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                          <YAxis
-                            type="category"
-                            dataKey="nome"
-                            width={110}
-                            stroke="hsl(var(--muted-foreground))"
-                            fontSize={11}
-                          />
+                          <XAxis dataKey="sprint" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
                           <RTooltip
                             contentStyle={{
                               background: "hsl(var(--card))",
@@ -1655,12 +1647,12 @@ const NewProjectsContent = () => {
                             }
                           />
                           <Legend wrapperStyle={{ fontSize: 12 }} />
-                          <Bar dataKey="planejado" name="Planejado" fill="#60a5fa" radius={[0, 4, 4, 0]} />
-                          <Bar dataKey="entregue" name="Entregue" fill="#34d399" radius={[0, 4, 4, 0]} />
+                          <Bar dataKey="planejado" name="Planejado" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="entregue" name="Entregue" fill="#34d399" radius={[4, 4, 0, 0]} />
                           <Line
                             type="monotone"
                             dataKey="capacidade"
-                            name="Capacidade"
+                            name="Capacidade da equipe"
                             stroke="#fbbf24"
                             strokeDasharray="5 5"
                             dot={false}
@@ -1669,11 +1661,12 @@ const NewProjectsContent = () => {
                         </ComposedChart>
                       </ResponsiveContainer>
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center pt-24">Sem atividades nesta seleção</p>
+                      <p className="text-sm text-muted-foreground text-center pt-24">Sem sprints cadastradas</p>
                     )}
                   </div>
                 </CardContent>
               </Card>
+
 
 
               <Card className="bg-card/60 border-border/60">
