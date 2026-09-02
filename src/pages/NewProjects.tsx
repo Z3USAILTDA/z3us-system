@@ -1166,19 +1166,27 @@ const NewProjectsContent = () => {
         const list = db.tarefas.filter((t) => t.sprintId === s.id);
         const planejado = list.reduce((a, t) => a + horasDaTarefa(t.pts), 0);
         const entregue = list.filter((t) => t.fimReal).reduce((a, t) => a + horasDaTarefa(t.pts), 0);
-        const devs = new Set(list.map((t) => t.dev).filter(Boolean)).size;
         const capDia = s.capacidadeDia ?? CAPACIDADE_DIA_PADRAO;
         const dias = diasUteis(s.inicio, s.fim).length || 1;
+        // capacidade real da equipe = todos os desenvolvedores da equipe
+        const capacidade = +(capDia * dias * DEVS.length).toFixed(1);
         return {
           sprint: `Sprint ${sprintNum(s.nome) || s.nome}`,
           planejado: +planejado.toFixed(1),
           entregue: +entregue.toFixed(1),
-          capacidade: +(capDia * dias * (devs || 1)).toFixed(1),
+          capacidade,
+          desvio: +(entregue - capacidade).toFixed(1),
+          desvioPlan: +(planejado - capacidade).toFixed(1),
+          usoPlan: capacidade ? Math.round((planejado / capacidade) * 100) : 0,
+          usoReal: capacidade ? Math.round((entregue / capacidade) * 100) : 0,
+          dias,
           atividades: list.length,
         };
       })
       .filter((s) => s.atividades > 0);
   }, [db.sprints, db.tarefas]);
+
+
 
 
 
