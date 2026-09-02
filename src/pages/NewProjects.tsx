@@ -1636,10 +1636,6 @@ const NewProjectsContent = () => {
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
                       <h3 className="font-semibold">Horas por sprint</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Planejado x entregue x capacidade real da equipe ({DEVS.length} devs ×{" "}
-                        {fmtH(CAPACIDADE_DIA_PADRAO)}h/dia) · desvio = entregue − capacidade
-                      </p>
                     </div>
                   </div>
 
