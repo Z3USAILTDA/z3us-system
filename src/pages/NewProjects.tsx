@@ -1079,6 +1079,57 @@ const NewProjectsContent = () => {
     { done: 0, total: 0, late: 0 }
   );
 
+  /* --------------------- capacidade da sprint (horas) ---------------------- */
+
+  const SPRINT_CAPACIDADE = 55; // horas por desenvolvedor
+
+  const PTS_HORAS: Record<number, { label: string; faixa: string; horas: number }> = {
+    1: { label: "Muito fácil", faixa: "1-3h", horas: 2 },
+    2: { label: "Fácil", faixa: "4-8h", horas: 6 },
+    3: { label: "Normal", faixa: "9-16h", horas: 12 },
+    5: { label: "Complexo", faixa: "17-26h", horas: 21 },
+    8: { label: "Muito complexo", faixa: "27-40h", horas: 33 },
+    13: { label: "Extremamente complexo", faixa: "+40h", horas: 48 },
+    21: { label: "Muito grande (épico)", faixa: "épico", horas: 80 },
+  };
+
+  const horasDaTarefa = (pts?: number | null) => (pts ? PTS_HORAS[pts]?.horas ?? 0 : 0);
+
+  const capacidadeRows = useMemo(() => {
+    return DEVS.map((nome) => {
+      const list = adminTarefas.filter((t) => t.dev === nome);
+      const itens = list.map((t) => ({
+        id: t.id,
+        titulo: t.titulo,
+        pts: t.pts || 0,
+        horas: horasDaTarefa(t.pts),
+        info: t.pts ? PTS_HORAS[t.pts] : undefined,
+        concluida: !!t.fimReal,
+      }));
+      const horas = itens.reduce((a, i) => a + i.horas, 0);
+      const horasFeitas = itens.filter((i) => i.concluida).reduce((a, i) => a + i.horas, 0);
+      return {
+        nome,
+        itens,
+        horas,
+        horasFeitas,
+        pct: Math.round((horas / SPRINT_CAPACIDADE) * 100),
+        saldo: SPRINT_CAPACIDADE - horas,
+      };
+    }).filter((r) => r.itens.length > 0);
+  }, [adminTarefas]);
+
+  const capacidadeEquipe = capacidadeRows.reduce(
+    (a, r) => ({
+      horas: a.horas + r.horas,
+      feitas: a.feitas + r.horasFeitas,
+      atividades: a.atividades + r.itens.length,
+      capacidade: a.capacidade + SPRINT_CAPACIDADE,
+    }),
+    { horas: 0, feitas: 0, atividades: 0, capacidade: 0 }
+  );
+
+
   /* --------------------------------- menu --------------------------------- */
 
   const menuItems = [
