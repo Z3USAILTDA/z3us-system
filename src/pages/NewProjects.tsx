@@ -1085,7 +1085,7 @@ const NewProjectsContent = () => {
 
   /* --------------------- capacidade da sprint (horas) ---------------------- */
 
-  const SPRINT_CAPACIDADE = 5.5; // horas por desenvolvedor
+  const CAPACIDADE_DIA_PADRAO = 5.5; // horas por dia por desenvolvedor
   const fmtH = (n: number) => (Math.round(n * 10) / 10).toString().replace(".", ",");
 
   const PTS_HORAS: Record<number, { label: string; faixa: string; horas: number }> = {
@@ -1100,6 +1100,28 @@ const NewProjectsContent = () => {
 
   const horasDaTarefa = (pts?: number | null) => (pts ? PTS_HORAS[pts]?.horas ?? 0 : 0);
 
+  // dias úteis (seg-sex) entre duas datas ISO
+  const diasUteis = (ini: string, fim: string) => {
+    const out: string[] = [];
+    if (!ini || !fim || fim < ini) return out;
+    const d = new Date(ini + "T00:00:00");
+    const end = new Date(fim + "T00:00:00");
+    const p = (n: number) => String(n).padStart(2, "0");
+    let guard = 0;
+    while (d <= end && guard++ < 400) {
+      const dow = d.getDay();
+      if (dow !== 0 && dow !== 6) out.push(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`);
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  };
+
+  const capacidadeDia = sprintSel?.capacidadeDia ?? CAPACIDADE_DIA_PADRAO;
+  const diasSprint = useMemo(
+    () => (sprintSel ? diasUteis(sprintSel.inicio, sprintSel.fim) : []),
+    [sprintSel]
+  );
+  const SPRINT_CAPACIDADE = +(capacidadeDia * (diasSprint.length || 1)).toFixed(1);
 
   const capacidadeRows = useMemo(() => {
     return DEVS.map((nome) => {
@@ -1120,10 +1142,10 @@ const NewProjectsContent = () => {
         horas,
         horasFeitas,
         pct: Math.round((horas / SPRINT_CAPACIDADE) * 100),
-        saldo: SPRINT_CAPACIDADE - horas,
+        saldo: +(SPRINT_CAPACIDADE - horas).toFixed(1),
       };
     }).filter((r) => r.itens.length > 0);
-  }, [adminTarefas]);
+  }, [adminTarefas, SPRINT_CAPACIDADE]);
 
   const capacidadeEquipe = capacidadeRows.reduce(
     (a, r) => ({
@@ -1134,6 +1156,56 @@ const NewProjectsContent = () => {
     }),
     { horas: 0, feitas: 0, atividades: 0, capacidade: 0 }
   );
+
+  /* ----------------------- horas por dia (planejado x real) ---------------- */
+
+  const [horasDevSel, setHorasDevSel] = useState<string>("todos");
+
+  const horasPorDia = useMemo(() => {
+    if (!sprintSel || diasSprint.length === 0) return [];
+    const idx = new Map(diasSprint.map((d, i) => [d, i]));
+    const plan = diasSprint.map(() => 0);
+    const real = diasSprint.map(() => 0);
+    const lista = adminTarefas.filter((t) => horasDevSel === "todos" || t.dev === horasDevSel);
+
+    const espalhar = (alvo: number[], ini: string, fim: string, horas: number) => {
+      if (!horas) return;
+      let faixa = diasUteis(ini || fim, fim || ini).filter((d) => idx.has(d));
+      if (faixa.length === 0) {
+        const ref = (fim || ini || "").slice(0, 10);
+        const near = diasSprint.find((d) => d >= ref) ?? diasSprint[diasSprint.length - 1];
+        faixa = near ? [near] : [];
+      }
+      if (faixa.length === 0) return;
+      const parte = horas / faixa.length;
+      faixa.forEach((d) => (alvo[idx.get(d)!] += parte));
+    };
+
+    lista.forEach((t) => {
+      const h = horasDaTarefa(t.pts);
+      espalhar(plan, t.iniPrev, t.fimPrev, h);
+      if (t.fimReal) espalhar(real, t.iniReal, t.fimReal, h);
+    });
+
+    const devsAtivos =
+      horasDevSel === "todos"
+        ? new Set(lista.map((t) => t.dev).filter(Boolean)).size || 1
+        : 1;
+    const hoje = todayISO();
+
+    return diasSprint.map((d, i) => ({
+      dia: d.split("-").slice(1).reverse().join("/"),
+      planejado: +plan[i].toFixed(1),
+      real: d > hoje ? null : +real[i].toFixed(1),
+      ideal: +(capacidadeDia * devsAtivos).toFixed(1),
+    }));
+  }, [sprintSel, diasSprint, adminTarefas, horasDevSel, capacidadeDia]);
+
+  const totalHorasSprint = useMemo(() => {
+    const planejadas = adminTarefas.reduce((a, t) => a + horasDaTarefa(t.pts), 0);
+    const reais = adminTarefas.filter((t) => t.fimReal).reduce((a, t) => a + horasDaTarefa(t.pts), 0);
+    return { planejadas, reais };
+  }, [adminTarefas]);
 
 
   /* --------------------------------- menu --------------------------------- */
