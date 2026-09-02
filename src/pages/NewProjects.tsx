@@ -1792,7 +1792,9 @@ const NewProjectsContent = () => {
                             {r.itens.length} atividade(s) · {r.pct}% da capacidade ·{" "}
                             {excedeu ? `${fmtH(Math.abs(r.saldo))}h acima` : `${fmtH(r.saldo)}h livres`}
                           </p>
+                          {sprintSel && (
                           <ul className="mt-3 space-y-1.5 max-h-52 overflow-y-auto pr-1">
+
                             {r.itens.map((i) => (
                               <li key={i.id} className="flex items-start justify-between gap-2 text-xs">
                                 <span className={i.concluida ? "line-through text-muted-foreground" : ""}>
