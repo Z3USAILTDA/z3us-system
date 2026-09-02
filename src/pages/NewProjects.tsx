@@ -1081,7 +1081,8 @@ const NewProjectsContent = () => {
 
   /* --------------------- capacidade da sprint (horas) ---------------------- */
 
-  const SPRINT_CAPACIDADE = 55; // horas por desenvolvedor
+  const SPRINT_CAPACIDADE = 5.5; // horas por desenvolvedor
+  const fmtH = (n: number) => (Math.round(n * 10) / 10).toString().replace(".", ",");
 
   const PTS_HORAS: Record<number, { label: string; faixa: string; horas: number }> = {
     1: { label: "Muito fácil", faixa: "1-3h", horas: 2 },
@@ -1094,6 +1095,7 @@ const NewProjectsContent = () => {
   };
 
   const horasDaTarefa = (pts?: number | null) => (pts ? PTS_HORAS[pts]?.horas ?? 0 : 0);
+
 
   const capacidadeRows = useMemo(() => {
     return DEVS.map((nome) => {
@@ -1573,18 +1575,18 @@ const NewProjectsContent = () => {
                     <div>
                       <h3 className="font-semibold">Cálculo da sprint (horas)</h3>
                       <p className="text-xs text-muted-foreground">
-                        Capacidade de {SPRINT_CAPACIDADE}h por desenvolvedor · horas estimadas pelo nível de dificuldade
+                        Capacidade de {fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade
                       </p>
                     </div>
                     <div className="text-right text-xs text-muted-foreground">
                       <p>
                         Equipe:{" "}
                         <strong className="text-foreground">
-                          {capacidadeEquipe.horas}h / {capacidadeEquipe.capacidade}h
+                          {fmtH(capacidadeEquipe.horas)}h / {fmtH(capacidadeEquipe.capacidade)}h
                         </strong>{" "}
                         ({capacidadeEquipe.atividades} atividades)
                       </p>
-                      <p>{capacidadeEquipe.feitas}h já entregues</p>
+                      <p>{fmtH(capacidadeEquipe.feitas)}h já entregues</p>
                     </div>
                   </div>
 
@@ -1599,7 +1601,7 @@ const NewProjectsContent = () => {
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-semibold">{r.nome}</span>
                             <span className={`text-sm font-bold ${excedeu ? "text-destructive" : "text-primary"}`}>
-                              {r.horas}h / {SPRINT_CAPACIDADE}h
+                              {fmtH(r.horas)}h / {fmtH(SPRINT_CAPACIDADE)}h
                             </span>
                           </div>
                           <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
@@ -1613,7 +1615,7 @@ const NewProjectsContent = () => {
                           </div>
                           <p className={`text-[11px] mt-1 ${excedeu ? "text-destructive" : "text-muted-foreground"}`}>
                             {r.itens.length} atividade(s) · {r.pct}% da capacidade ·{" "}
-                            {excedeu ? `${Math.abs(r.saldo)}h acima` : `${r.saldo}h livres`}
+                            {excedeu ? `${fmtH(Math.abs(r.saldo))}h acima` : `${fmtH(r.saldo)}h livres`}
                           </p>
                           <ul className="mt-3 space-y-1.5 max-h-52 overflow-y-auto pr-1">
                             {r.itens.map((i) => (
@@ -1626,7 +1628,7 @@ const NewProjectsContent = () => {
                                     </span>
                                   )}
                                 </span>
-                                <span className="shrink-0 font-medium text-foreground">{i.horas}h</span>
+                                <span className="shrink-0 font-medium text-foreground">{fmtH(i.horas)}h</span>
                               </li>
                             ))}
                           </ul>
