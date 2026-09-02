@@ -687,15 +687,16 @@ const NewProjectsContent = () => {
   const saveSprint = () => {
     const { id, inicio, fim } = sprintForm;
     const nome = sprintNum(sprintForm.nome);
+    const capacidadeDia = Number(String(sprintForm.capacidadeDia).replace(",", ".")) || 5.5;
     if (!nome) return toast.error("Informe o número da sprint");
     if (!inicio || !fim) return toast.error("Informe as datas de início e fim");
     if (fim < inicio) return toast.error("O fim da sprint não pode ser antes do início");
     setDb((prev) =>
       id
-        ? { ...prev, sprints: prev.sprints.map((s) => (s.id === id ? { ...s, nome, inicio, fim } : s)) }
+        ? { ...prev, sprints: prev.sprints.map((s) => (s.id === id ? { ...s, nome, inicio, fim, capacidadeDia } : s)) }
         : {
             ...prev,
-            sprints: [...prev.sprints, { id: `s${prev.seqSprint}`, nome, inicio, fim }],
+            sprints: [...prev.sprints, { id: `s${prev.seqSprint}`, nome, inicio, fim, capacidadeDia }],
             seqSprint: prev.seqSprint + 1,
           }
     );
