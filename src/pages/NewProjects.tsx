@@ -1193,16 +1193,28 @@ const NewProjectsContent = () => {
   }, [db.sprints, db.tarefas, sprintSel]);
 
   const comparativoSprint = useMemo(() => {
-    const s = horasPorSprint[0];
-    if (!s) return [] as { nome: string; valor: number; rotulo: string; cor: string; capacidade: number }[];
-    const restante = Math.max(0, +(s.planejado - s.entregue).toFixed(1));
+    if (!horasPorSprint.length)
+      return [] as { nome: string; valor: number; rotulo: string; cor: string; capacidade: number }[];
+    // quando não há sprint selecionada, soma TODAS as sprints exibidas
+    const agg = horasPorSprint.reduce(
+      (a, s) => ({
+        planejado: +(a.planejado + s.planejado).toFixed(1),
+        entregue: +(a.entregue + s.entregue).toFixed(1),
+        capacidade: +(a.capacidade + s.capacidade).toFixed(1),
+      }),
+      { planejado: 0, entregue: 0, capacidade: 0 }
+    );
+    const usoPlan = agg.capacidade ? Math.round((agg.planejado / agg.capacidade) * 100) : 0;
+    const usoReal = agg.capacidade ? Math.round((agg.entregue / agg.capacidade) * 100) : 0;
+    const restante = Math.max(0, +(agg.planejado - agg.entregue).toFixed(1));
     return [
-      { nome: "Capacidade", valor: s.capacidade, rotulo: `${fmtH(s.capacidade)}h`, cor: "#fbbf24", capacidade: s.capacidade },
-      { nome: "Planejado", valor: s.planejado, rotulo: `${fmtH(s.planejado)}h · ${s.usoPlan}%`, cor: "#60a5fa", capacidade: s.capacidade },
-      { nome: "Entregue", valor: s.entregue, rotulo: `${fmtH(s.entregue)}h · ${s.usoReal}%`, cor: "#34d399", capacidade: s.capacidade },
-      { nome: "Em aberto", valor: restante, rotulo: `${fmtH(restante)}h`, cor: "#94a3b8", capacidade: s.capacidade },
+      { nome: "Capacidade", valor: agg.capacidade, rotulo: `${fmtH(agg.capacidade)}h`, cor: "#fbbf24", capacidade: agg.capacidade },
+      { nome: "Planejado", valor: agg.planejado, rotulo: `${fmtH(agg.planejado)}h · ${usoPlan}%`, cor: "#60a5fa", capacidade: agg.capacidade },
+      { nome: "Entregue", valor: agg.entregue, rotulo: `${fmtH(agg.entregue)}h · ${usoReal}%`, cor: "#34d399", capacidade: agg.capacidade },
+      { nome: "Em aberto", valor: restante, rotulo: `${fmtH(restante)}h`, cor: "#94a3b8", capacidade: agg.capacidade },
     ];
   }, [horasPorSprint]);
+
 
 
 
