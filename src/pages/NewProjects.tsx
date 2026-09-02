@@ -65,6 +65,10 @@ import {
   LineChart,
   Line,
   ComposedChart,
+  BarChart,
+  LabelList,
+  ReferenceLine,
+
   Bar,
   XAxis,
   YAxis,
@@ -1188,6 +1192,18 @@ const NewProjectsContent = () => {
       .filter((s) => !sprintSel || s.id === sprintSel.id);
   }, [db.sprints, db.tarefas, sprintSel]);
 
+  const comparativoSprint = useMemo(() => {
+    const s = horasPorSprint[0];
+    if (!s) return [] as { nome: string; valor: number; rotulo: string; cor: string; capacidade: number }[];
+    const restante = Math.max(0, +(s.planejado - s.entregue).toFixed(1));
+    return [
+      { nome: "Capacidade", valor: s.capacidade, rotulo: `${fmtH(s.capacidade)}h`, cor: "#fbbf24", capacidade: s.capacidade },
+      { nome: "Planejado", valor: s.planejado, rotulo: `${fmtH(s.planejado)}h · ${s.usoPlan}%`, cor: "#60a5fa", capacidade: s.capacidade },
+      { nome: "Entregue", valor: s.entregue, rotulo: `${fmtH(s.entregue)}h · ${s.usoReal}%`, cor: "#34d399", capacidade: s.capacidade },
+      { nome: "Em aberto", valor: restante, rotulo: `${fmtH(restante)}h`, cor: "#94a3b8", capacidade: s.capacidade },
+    ];
+  }, [horasPorSprint]);
+
 
 
 
@@ -1653,40 +1669,54 @@ const NewProjectsContent = () => {
                     ))}
                   </div>
 
-                  <div className="h-80 mt-4">
-                    {horasPorSprint.length ? (
+                  <div className="h-64 mt-4">
+                    {comparativoSprint.length ? (
                       <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={horasPorSprint} margin={{ top: 8, right: 12 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="sprint" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} unit="h" />
+                        <BarChart
+                          data={comparativoSprint}
+                          layout="vertical"
+                          margin={{ top: 8, right: 60, left: 8, bottom: 8 }}
+                          barCategoryGap={24}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                          <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} unit="h" />
+                          <YAxis
+                            type="category"
+                            dataKey="nome"
+                            width={110}
+                            stroke="hsl(var(--muted-foreground))"
+                            fontSize={12}
+                          />
                           <RTooltip
+                            cursor={{ fill: "hsl(var(--muted)/0.3)" }}
                             contentStyle={{
                               background: "hsl(var(--card))",
                               border: "1px solid hsl(var(--border))",
                               borderRadius: 8,
                               fontSize: 12,
                             }}
-                            formatter={(v: number) => `${fmtH(Number(v))}h`}
+                            formatter={(v: number) => [`${fmtH(Number(v))}h`, "Horas"]}
                           />
-                          <Legend wrapperStyle={{ fontSize: 12 }} />
-                          <Bar dataKey="planejado" name="Planejado" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="entregue" name="Entregue" fill="#34d399" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="desvio" name="Desvio (entregue − capacidade)" fill="#fb7185" radius={[4, 4, 0, 0]} />
-                          <Line
-                            type="monotone"
-                            dataKey="capacidade"
-                            name="Capacidade real da equipe"
+                          <ReferenceLine
+                            x={comparativoSprint[0]?.capacidade}
                             stroke="#fbbf24"
                             strokeDasharray="5 5"
-                            dot={{ r: 3 }}
-                            strokeWidth={2}
                           />
-
-                        </ComposedChart>
+                          <Bar dataKey="valor" radius={[0, 6, 6, 0]} barSize={28}>
+                            {comparativoSprint.map((d) => (
+                              <Cell key={d.nome} fill={d.cor} />
+                            ))}
+                            <LabelList
+                              dataKey="rotulo"
+                              position="right"
+                              style={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 600 }}
+                            />
+                          </Bar>
+                        </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center pt-24">Sem sprints cadastradas</p>
+                      <p className="text-sm text-muted-foreground text-center pt-24">Selecione uma sprint</p>
+
                     )}
                   </div>
                 </CardContent>
