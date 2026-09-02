@@ -108,6 +108,7 @@ interface Sprint {
   nome: string;
   inicio: string;
   fim: string;
+  capacidadeDia?: number;
   encerrada?: boolean;
   encerradaEm?: string;
 }
