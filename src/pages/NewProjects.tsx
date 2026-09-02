@@ -1081,7 +1081,8 @@ const NewProjectsContent = () => {
 
   /* --------------------- capacidade da sprint (horas) ---------------------- */
 
-  const SPRINT_CAPACIDADE = 55; // horas por desenvolvedor
+  const SPRINT_CAPACIDADE = 5.5; // horas por desenvolvedor
+  const fmtH = (n: number) => (Math.round(n * 10) / 10).toString().replace(".", ",");
 
   const PTS_HORAS: Record<number, { label: string; faixa: string; horas: number }> = {
     1: { label: "Muito fácil", faixa: "1-3h", horas: 2 },
@@ -1094,6 +1095,7 @@ const NewProjectsContent = () => {
   };
 
   const horasDaTarefa = (pts?: number | null) => (pts ? PTS_HORAS[pts]?.horas ?? 0 : 0);
+
 
   const capacidadeRows = useMemo(() => {
     return DEVS.map((nome) => {
