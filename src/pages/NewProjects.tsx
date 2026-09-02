@@ -1125,7 +1125,22 @@ const NewProjectsContent = () => {
     () => (sprintSel ? diasUteis(sprintSel.inicio, sprintSel.fim) : []),
     [sprintSel]
   );
-  const SPRINT_CAPACIDADE = +(capacidadeDia * (diasSprint.length || 1)).toFixed(1);
+  // sem sprint selecionada: considera as 3 últimas sprints
+  const ultimas3 = useMemo(() => {
+    if (sprintSel) return [];
+    return [...db.sprints]
+      .sort((a, b) => Number(sprintNum(b.nome) || 0) - Number(sprintNum(a.nome) || 0))
+      .slice(0, 3);
+  }, [db.sprints, sprintSel]);
+  const diasBase = sprintSel
+    ? diasSprint.length || 1
+    : ultimas3.reduce((a, s) => a + (diasUteis(s.inicio, s.fim).length || 1), 0) || 1;
+  const SPRINT_CAPACIDADE = sprintSel
+    ? +(capacidadeDia * (diasSprint.length || 1)).toFixed(1)
+    : +ultimas3
+        .reduce((a, s) => a + (s.capacidadeDia ?? CAPACIDADE_DIA_PADRAO) * (diasUteis(s.inicio, s.fim).length || 1), 0)
+        .toFixed(1) || CAPACIDADE_DIA_PADRAO;
+
 
   const capacidadeRows = useMemo(() => {
     return DEVS.map((nome) => {
@@ -1742,8 +1757,11 @@ const NewProjectsContent = () => {
                     <div>
                       <h3 className="font-semibold">Cálculo da sprint (horas)</h3>
                       <p className="text-xs text-muted-foreground">
-                        {fmtH(capacidadeDia)}h/dia × {diasSprint.length || 1} dias = {fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade
+                        {sprintSel
+                          ? `${fmtH(capacidadeDia)}h/dia × ${diasSprint.length || 1} dias = ${fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade`
+                          : `Últimas ${ultimas3.length} sprints · ${fmtH(CAPACIDADE_DIA_PADRAO)}h/dia × ${diasBase} dias = ${fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor`}
                       </p>
+
                     </div>
                   </div>
 
@@ -1774,7 +1792,9 @@ const NewProjectsContent = () => {
                             {r.itens.length} atividade(s) · {r.pct}% da capacidade ·{" "}
                             {excedeu ? `${fmtH(Math.abs(r.saldo))}h acima` : `${fmtH(r.saldo)}h livres`}
                           </p>
+                          {sprintSel && (
                           <ul className="mt-3 space-y-1.5 max-h-52 overflow-y-auto pr-1">
+
                             {r.itens.map((i) => (
                               <li key={i.id} className="flex items-start justify-between gap-2 text-xs">
                                 <span className={i.concluida ? "line-through text-muted-foreground" : ""}>
@@ -1789,6 +1809,8 @@ const NewProjectsContent = () => {
                               </li>
                             ))}
                           </ul>
+                          )}
+
                         </div>
                       );
                     })}
