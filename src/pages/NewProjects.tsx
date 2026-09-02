@@ -283,7 +283,7 @@ const NewProjectsContent = () => {
   const [formNames, setFormNames] = useState({ cliente: "", projeto: "", sprint: "" });
   const [sprintModal, setSprintModal] = useState(false);
   const [leadModal, setLeadModal] = useState(false);
-  const [sprintForm, setSprintForm] = useState({ id: "", nome: "", inicio: "", fim: "" });
+  const [sprintForm, setSprintForm] = useState({ id: "", nome: "", inicio: "", fim: "", capacidadeDia: "5.5" });
   const [dragId, setDragId] = useState<string | null>(null);
   const [tab, setTab] = useState("projetos");
 
@@ -700,7 +700,7 @@ const NewProjectsContent = () => {
           }
     );
     toast.success(id ? "Sprint atualizada" : "Sprint criada");
-    setSprintForm({ id: "", nome: "", inicio: "", fim: "" });
+    setSprintForm({ id: "", nome: "", inicio: "", fim: "", capacidadeDia: "5.5" });
   };
 
   const deleteSprint = (id: string) => {
@@ -1909,7 +1909,7 @@ const NewProjectsContent = () => {
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                     {db.tarefas.filter((t) => t.sprintId === s.id).length} atividades
                   </span>
-                  <Button variant="outline" size="sm" onClick={() => setSprintForm({ id: s.id, nome: s.nome, inicio: s.inicio, fim: s.fim })}>Editar</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSprintForm({ id: s.id, nome: s.nome, inicio: s.inicio, fim: s.fim, capacidadeDia: String(s.capacidadeDia ?? 5.5) })}>Editar</Button>
                   <Button variant="ghost" size="sm" className="text-destructive" onClick={() => deleteSprint(s.id)}>
                     Excluir
                   </Button>
@@ -1935,7 +1935,7 @@ const NewProjectsContent = () => {
           </div>
           <DialogFooter className="sm:justify-between">
             {sprintForm.id ? (
-              <Button variant="outline" onClick={() => setSprintForm({ id: "", nome: "", inicio: "", fim: "" })}>
+              <Button variant="outline" onClick={() => setSprintForm({ id: "", nome: "", inicio: "", fim: "", capacidadeDia: "5.5" })}>
                 Cancelar edição
               </Button>
             ) : <span />}
