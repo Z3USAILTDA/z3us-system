@@ -1192,6 +1192,18 @@ const NewProjectsContent = () => {
       .filter((s) => !sprintSel || s.id === sprintSel.id);
   }, [db.sprints, db.tarefas, sprintSel]);
 
+  const comparativoSprint = useMemo(() => {
+    const s = horasPorSprint[0];
+    if (!s) return [] as { nome: string; valor: number; rotulo: string; cor: string; capacidade: number }[];
+    const restante = Math.max(0, +(s.planejado - s.entregue).toFixed(1));
+    return [
+      { nome: "Capacidade", valor: s.capacidade, rotulo: `${fmtH(s.capacidade)}h`, cor: "#fbbf24", capacidade: s.capacidade },
+      { nome: "Planejado", valor: s.planejado, rotulo: `${fmtH(s.planejado)}h · ${s.usoPlan}%`, cor: "#60a5fa", capacidade: s.capacidade },
+      { nome: "Entregue", valor: s.entregue, rotulo: `${fmtH(s.entregue)}h · ${s.usoReal}%`, cor: "#34d399", capacidade: s.capacidade },
+      { nome: "Em aberto", valor: restante, rotulo: `${fmtH(restante)}h`, cor: "#94a3b8", capacidade: s.capacidade },
+    ];
+  }, [horasPorSprint]);
+
 
 
 
