@@ -1157,55 +1157,20 @@ const NewProjectsContent = () => {
     { horas: 0, feitas: 0, atividades: 0, capacidade: 0 }
   );
 
-  /* ----------------------- horas por dia (planejado x real) ---------------- */
+  /* --------------------- resumo de atividades (por dev) -------------------- */
 
-  const [horasDevSel, setHorasDevSel] = useState<string>("todos");
+  const resumoAtividades = useMemo(
+    () =>
+      capacidadeRows.map((r) => ({
+        nome: r.nome,
+        planejado: +r.horas.toFixed(1),
+        entregue: +r.horasFeitas.toFixed(1),
+        capacidade: +SPRINT_CAPACIDADE.toFixed(1),
+        atividades: r.itens.length,
+      })),
+    [capacidadeRows, SPRINT_CAPACIDADE]
+  );
 
-  const horasPorDia = useMemo(() => {
-    if (!sprintSel || diasSprint.length === 0) return [];
-    const idx = new Map(diasSprint.map((d, i) => [d, i]));
-    const plan = diasSprint.map(() => 0);
-    const real = diasSprint.map(() => 0);
-    const lista = adminTarefas.filter((t) => horasDevSel === "todos" || t.dev === horasDevSel);
-
-    const espalhar = (alvo: number[], ini: string, fim: string, horas: number) => {
-      if (!horas) return;
-      let faixa = diasUteis(ini || fim, fim || ini).filter((d) => idx.has(d));
-      if (faixa.length === 0) {
-        const ref = (fim || ini || "").slice(0, 10);
-        const near = diasSprint.find((d) => d >= ref) ?? diasSprint[diasSprint.length - 1];
-        faixa = near ? [near] : [];
-      }
-      if (faixa.length === 0) return;
-      const parte = horas / faixa.length;
-      faixa.forEach((d) => (alvo[idx.get(d)!] += parte));
-    };
-
-    lista.forEach((t) => {
-      const h = horasDaTarefa(t.pts);
-      espalhar(plan, t.iniPrev, t.fimPrev, h);
-      if (t.fimReal) espalhar(real, t.iniReal, t.fimReal, h);
-    });
-
-    const devsAtivos =
-      horasDevSel === "todos"
-        ? new Set(lista.map((t) => t.dev).filter(Boolean)).size || 1
-        : 1;
-    const hoje = todayISO();
-
-    return diasSprint.map((d, i) => ({
-      dia: d.split("-").slice(1).reverse().join("/"),
-      planejado: +plan[i].toFixed(1),
-      real: d > hoje ? null : +real[i].toFixed(1),
-      ideal: +(capacidadeDia * devsAtivos).toFixed(1),
-    }));
-  }, [sprintSel, diasSprint, adminTarefas, horasDevSel, capacidadeDia]);
-
-  const totalHorasSprint = useMemo(() => {
-    const planejadas = adminTarefas.reduce((a, t) => a + horasDaTarefa(t.pts), 0);
-    const reais = adminTarefas.filter((t) => t.fimReal).reduce((a, t) => a + horasDaTarefa(t.pts), 0);
-    return { planejadas, reais };
-  }, [adminTarefas]);
 
 
   /* --------------------------------- menu --------------------------------- */
@@ -1649,40 +1614,35 @@ const NewProjectsContent = () => {
                 <CardContent className="p-5">
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold">Horas por dia da sprint</h3>
+                      <h3 className="font-semibold">Resumo de atividades da sprint</h3>
                       <p className="text-xs text-muted-foreground">
-                        Planejado x realizado · linha ideal de {fmtH(capacidadeDia)}h por dia por desenvolvedor
+                        Horas planejadas x entregues por desenvolvedor · capacidade de {fmtH(SPRINT_CAPACIDADE)}h
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="text-right text-xs text-muted-foreground">
-                        <p>
-                          Sprint:{" "}
-                          <strong className="text-foreground">{fmtH(totalHorasSprint.planejadas)}h planejadas</strong> ·{" "}
-                          <strong className="text-emerald-400">{fmtH(totalHorasSprint.reais)}h reais</strong>
-                        </p>
-                        <p>{diasSprint.length} dias úteis · capacidade {fmtH(SPRINT_CAPACIDADE)}h/dev</p>
-                      </div>
-                      <Select value={horasDevSel} onValueChange={setHorasDevSel}>
-                        <SelectTrigger className="h-8 w-40 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">Toda a equipe</SelectItem>
-                          {DEVS.map((d) => (
-                            <SelectItem key={d} value={d}>{d}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="text-right text-xs text-muted-foreground">
+                      <p>
+                        Equipe:{" "}
+                        <strong className="text-foreground">
+                          {fmtH(capacidadeEquipe.horas)}h / {fmtH(capacidadeEquipe.capacidade)}h
+                        </strong>{" "}
+                        ({capacidadeEquipe.atividades} atividades)
+                      </p>
+                      <p className="text-emerald-400">{fmtH(capacidadeEquipe.feitas)}h já entregues</p>
                     </div>
                   </div>
                   <div className="h-72 mt-4">
-                    {horasPorDia.length ? (
+                    {resumoAtividades.length ? (
                       <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={horasPorDia}>
+                        <ComposedChart data={resumoAtividades} layout="vertical" margin={{ left: 12, right: 16 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="dia" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <YAxis
+                            type="category"
+                            dataKey="nome"
+                            width={110}
+                            stroke="hsl(var(--muted-foreground))"
+                            fontSize={11}
+                          />
                           <RTooltip
                             contentStyle={{
                               background: "hsl(var(--card))",
@@ -1690,15 +1650,17 @@ const NewProjectsContent = () => {
                               borderRadius: 8,
                               fontSize: 12,
                             }}
-                            formatter={(v: number | null) => (v == null ? "—" : `${fmtH(Number(v))}h`)}
+                            formatter={(v: number, n: string) =>
+                              n === "Atividades" ? `${v}` : `${fmtH(Number(v))}h`
+                            }
                           />
                           <Legend wrapperStyle={{ fontSize: 12 }} />
-                          <Bar dataKey="planejado" name="Planejado" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="real" name="Real" fill="#34d399" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="planejado" name="Planejado" fill="#60a5fa" radius={[0, 4, 4, 0]} />
+                          <Bar dataKey="entregue" name="Entregue" fill="#34d399" radius={[0, 4, 4, 0]} />
                           <Line
                             type="monotone"
-                            dataKey="ideal"
-                            name="Ideal"
+                            dataKey="capacidade"
+                            name="Capacidade"
                             stroke="#fbbf24"
                             strokeDasharray="5 5"
                             dot={false}
@@ -1707,11 +1669,12 @@ const NewProjectsContent = () => {
                         </ComposedChart>
                       </ResponsiveContainer>
                     ) : (
-                      <p className="text-sm text-muted-foreground text-center pt-24">Selecione uma sprint com datas definidas</p>
+                      <p className="text-sm text-muted-foreground text-center pt-24">Sem atividades nesta seleção</p>
                     )}
                   </div>
                 </CardContent>
               </Card>
+
 
               <Card className="bg-card/60 border-border/60">
                 <CardContent className="p-5">
