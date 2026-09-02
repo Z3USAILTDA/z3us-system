@@ -1647,11 +1647,79 @@ const NewProjectsContent = () => {
 
               <Card className="bg-card/60 border-border/60">
                 <CardContent className="p-5">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold">Horas por dia da sprint</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Planejado x realizado · linha ideal de {fmtH(capacidadeDia)}h por dia por desenvolvedor
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="text-right text-xs text-muted-foreground">
+                        <p>
+                          Sprint:{" "}
+                          <strong className="text-foreground">{fmtH(totalHorasSprint.planejadas)}h planejadas</strong> ·{" "}
+                          <strong className="text-emerald-400">{fmtH(totalHorasSprint.reais)}h reais</strong>
+                        </p>
+                        <p>{diasSprint.length} dias úteis · capacidade {fmtH(SPRINT_CAPACIDADE)}h/dev</p>
+                      </div>
+                      <Select value={horasDevSel} onValueChange={setHorasDevSel}>
+                        <SelectTrigger className="h-8 w-40 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="todos">Toda a equipe</SelectItem>
+                          {DEVS.map((d) => (
+                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="h-72 mt-4">
+                    {horasPorDia.length ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={horasPorDia}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="dia" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <RTooltip
+                            contentStyle={{
+                              background: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: 8,
+                              fontSize: 12,
+                            }}
+                            formatter={(v: number | null) => (v == null ? "—" : `${fmtH(Number(v))}h`)}
+                          />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <Bar dataKey="planejado" name="Planejado" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="real" name="Real" fill="#34d399" radius={[4, 4, 0, 0]} />
+                          <Line
+                            type="monotone"
+                            dataKey="ideal"
+                            name="Ideal"
+                            stroke="#fbbf24"
+                            strokeDasharray="5 5"
+                            dot={false}
+                            strokeWidth={2}
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center pt-24">Selecione uma sprint com datas definidas</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/60 border-border/60">
+                <CardContent className="p-5">
                   <div className="flex flex-wrap items-end justify-between gap-2">
                     <div>
                       <h3 className="font-semibold">Cálculo da sprint (horas)</h3>
                       <p className="text-xs text-muted-foreground">
-                        Capacidade de {fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade
+                        {fmtH(capacidadeDia)}h/dia × {diasSprint.length || 1} dias = {fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade
                       </p>
                     </div>
                     <div className="text-right text-xs text-muted-foreground">
