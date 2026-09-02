@@ -1809,6 +1809,8 @@ const NewProjectsContent = () => {
                               </li>
                             ))}
                           </ul>
+                          )}
+
                         </div>
                       );
                     })}
