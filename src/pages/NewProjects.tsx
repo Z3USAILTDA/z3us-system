@@ -1079,6 +1079,57 @@ const NewProjectsContent = () => {
     { done: 0, total: 0, late: 0 }
   );
 
+  /* --------------------- capacidade da sprint (horas) ---------------------- */
+
+  const SPRINT_CAPACIDADE = 55; // horas por desenvolvedor
+
+  const PTS_HORAS: Record<number, { label: string; faixa: string; horas: number }> = {
+    1: { label: "Muito fácil", faixa: "1-3h", horas: 2 },
+    2: { label: "Fácil", faixa: "4-8h", horas: 6 },
+    3: { label: "Normal", faixa: "9-16h", horas: 12 },
+    5: { label: "Complexo", faixa: "17-26h", horas: 21 },
+    8: { label: "Muito complexo", faixa: "27-40h", horas: 33 },
+    13: { label: "Extremamente complexo", faixa: "+40h", horas: 48 },
+    21: { label: "Muito grande (épico)", faixa: "épico", horas: 80 },
+  };
+
+  const horasDaTarefa = (pts?: number | null) => (pts ? PTS_HORAS[pts]?.horas ?? 0 : 0);
+
+  const capacidadeRows = useMemo(() => {
+    return DEVS.map((nome) => {
+      const list = adminTarefas.filter((t) => t.dev === nome);
+      const itens = list.map((t) => ({
+        id: t.id,
+        titulo: t.titulo,
+        pts: t.pts || 0,
+        horas: horasDaTarefa(t.pts),
+        info: t.pts ? PTS_HORAS[t.pts] : undefined,
+        concluida: !!t.fimReal,
+      }));
+      const horas = itens.reduce((a, i) => a + i.horas, 0);
+      const horasFeitas = itens.filter((i) => i.concluida).reduce((a, i) => a + i.horas, 0);
+      return {
+        nome,
+        itens,
+        horas,
+        horasFeitas,
+        pct: Math.round((horas / SPRINT_CAPACIDADE) * 100),
+        saldo: SPRINT_CAPACIDADE - horas,
+      };
+    }).filter((r) => r.itens.length > 0);
+  }, [adminTarefas]);
+
+  const capacidadeEquipe = capacidadeRows.reduce(
+    (a, r) => ({
+      horas: a.horas + r.horas,
+      feitas: a.feitas + r.horasFeitas,
+      atividades: a.atividades + r.itens.length,
+      capacidade: a.capacidade + SPRINT_CAPACIDADE,
+    }),
+    { horas: 0, feitas: 0, atividades: 0, capacidade: 0 }
+  );
+
+
   /* --------------------------------- menu --------------------------------- */
 
   const menuItems = [
@@ -1518,51 +1569,74 @@ const NewProjectsContent = () => {
 
               <Card className="bg-card/60 border-border/60">
                 <CardContent className="p-5">
-                  <h3 className="font-semibold">Acompanhamento de entregas</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Progresso de cada desenvolvedor em story points
-                  </p>
-                  <div className="space-y-3">
-                    {devRows.map((r) => {
-                      const pct = r.total ? Math.round((r.done / r.total) * 100) : 0;
-                      const seg = (v: number, color: string) =>
-                        r.total ? <i style={{ width: `${(v / r.total) * 100}%`, background: color }} className="block h-full" /> : null;
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                      <h3 className="font-semibold">Cálculo da sprint (horas)</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Capacidade de {SPRINT_CAPACIDADE}h por desenvolvedor · horas estimadas pelo nível de dificuldade
+                      </p>
+                    </div>
+                    <div className="text-right text-xs text-muted-foreground">
+                      <p>
+                        Equipe:{" "}
+                        <strong className="text-foreground">
+                          {capacidadeEquipe.horas}h / {capacidadeEquipe.capacidade}h
+                        </strong>{" "}
+                        ({capacidadeEquipe.atividades} atividades)
+                      </p>
+                      <p>{capacidadeEquipe.feitas}h já entregues</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 mt-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {capacidadeRows.length === 0 && (
+                      <p className="text-sm text-muted-foreground">Sem atividades nesta seleção</p>
+                    )}
+                    {capacidadeRows.map((r) => {
+                      const excedeu = r.horas > SPRINT_CAPACIDADE;
                       return (
-                        <div key={r.nome} className="border-b border-border/50 last:border-0 pb-3 last:pb-0">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="font-medium">{r.nome}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {r.total ? `${r.done}/${r.total} atividades · ${pct}%` : "sem atividades"}
+                        <div key={r.nome} className="rounded-xl border border-border/60 bg-card p-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold">{r.nome}</span>
+                            <span className={`text-sm font-bold ${excedeu ? "text-destructive" : "text-primary"}`}>
+                              {r.horas}h / {SPRINT_CAPACIDADE}h
                             </span>
                           </div>
-                          <div className="flex h-2 rounded-full overflow-hidden bg-muted">
-                            {seg(r.done, "#2dd4bf")}
-                            {seg(r.run, "#60a5fa")}
-                            {seg(r.late, "#fb7185")}
+                          <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+                            <i
+                              className="block h-full"
+                              style={{
+                                width: `${Math.min(100, r.pct)}%`,
+                                background: excedeu ? "#fb7185" : "#2dd4bf",
+                              }}
+                            />
                           </div>
-                          <p className={`text-[11px] mt-1 ${r.hasLate ? "text-destructive" : "text-muted-foreground"}`}>
-                            {r.note}
+                          <p className={`text-[11px] mt-1 ${excedeu ? "text-destructive" : "text-muted-foreground"}`}>
+                            {r.itens.length} atividade(s) · {r.pct}% da capacidade ·{" "}
+                            {excedeu ? `${Math.abs(r.saldo)}h acima` : `${r.saldo}h livres`}
                           </p>
+                          <ul className="mt-3 space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                            {r.itens.map((i) => (
+                              <li key={i.id} className="flex items-start justify-between gap-2 text-xs">
+                                <span className={i.concluida ? "line-through text-muted-foreground" : ""}>
+                                  {i.titulo}
+                                  {i.info && (
+                                    <span className="block text-[10px] text-muted-foreground">
+                                      {i.pts} · {i.info.label} ({i.info.faixa})
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="shrink-0 font-medium text-foreground">{i.horas}h</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="flex justify-between flex-wrap gap-2 border-t border-border/50 pt-3 mt-3 text-sm text-muted-foreground">
-                    <span>
-                      Equipe:{" "}
-                      <strong className="text-foreground">
-                        {teamTotals.done}/{teamTotals.total} atividades entregues (
-                        {teamTotals.total ? Math.round((teamTotals.done / teamTotals.total) * 100) : 0}%)
-                      </strong>
-                    </span>
-                    {teamTotals.late ? (
-                      <span className="text-destructive">{teamTotals.late} atividades em atraso</span>
-                    ) : (
-                      <span className="text-primary">Nenhuma atividade em atraso</span>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
+
             </TabsContent>
           </Tabs>
         </main>
