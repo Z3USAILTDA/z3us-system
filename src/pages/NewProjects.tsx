@@ -64,6 +64,8 @@ import {
   Legend,
   LineChart,
   Line,
+  ComposedChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
