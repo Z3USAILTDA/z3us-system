@@ -1166,19 +1166,27 @@ const NewProjectsContent = () => {
         const list = db.tarefas.filter((t) => t.sprintId === s.id);
         const planejado = list.reduce((a, t) => a + horasDaTarefa(t.pts), 0);
         const entregue = list.filter((t) => t.fimReal).reduce((a, t) => a + horasDaTarefa(t.pts), 0);
-        const devs = new Set(list.map((t) => t.dev).filter(Boolean)).size;
         const capDia = s.capacidadeDia ?? CAPACIDADE_DIA_PADRAO;
         const dias = diasUteis(s.inicio, s.fim).length || 1;
+        // capacidade real da equipe = todos os desenvolvedores da equipe
+        const capacidade = +(capDia * dias * DEVS.length).toFixed(1);
         return {
           sprint: `Sprint ${sprintNum(s.nome) || s.nome}`,
           planejado: +planejado.toFixed(1),
           entregue: +entregue.toFixed(1),
-          capacidade: +(capDia * dias * (devs || 1)).toFixed(1),
+          capacidade,
+          desvio: +(entregue - capacidade).toFixed(1),
+          desvioPlan: +(planejado - capacidade).toFixed(1),
+          usoPlan: capacidade ? Math.round((planejado / capacidade) * 100) : 0,
+          usoReal: capacidade ? Math.round((entregue / capacidade) * 100) : 0,
+          dias,
           atividades: list.length,
         };
       })
       .filter((s) => s.atividades > 0);
   }, [db.sprints, db.tarefas]);
+
+
 
 
 
@@ -1622,19 +1630,37 @@ const NewProjectsContent = () => {
 
               <Card className="bg-card/60 border-border/60">
                 <CardContent className="p-5">
-                  <div>
-                    <h3 className="font-semibold">Horas por sprint</h3>
-                    <p className="text-xs text-muted-foreground">
-                      Planejado x entregue por sprint · comparado à capacidade total da equipe
-                    </p>
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold">Horas por sprint</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Planejado x entregue x capacidade real da equipe ({DEVS.length} devs ×{" "}
+                        {fmtH(CAPACIDADE_DIA_PADRAO)}h/dia) · desvio = entregue − capacidade
+                      </p>
+                    </div>
                   </div>
+
+                  <div className="grid gap-2 mt-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {horasPorSprint.map((s) => (
+                      <div key={s.sprint} className="rounded-lg border border-border/60 bg-card p-3">
+                        <p className="text-xs text-muted-foreground">{s.sprint} · {s.dias} dias úteis</p>
+                        <p className="text-sm font-semibold mt-1">
+                          {fmtH(s.entregue)}h <span className="text-muted-foreground">/ {fmtH(s.capacidade)}h</span>
+                        </p>
+                        <p className={`text-[11px] ${s.desvio < 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                          desvio {s.desvio > 0 ? "+" : ""}{fmtH(s.desvio)}h · {s.usoReal}% da capacidade
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
                   <div className="h-80 mt-4">
                     {horasPorSprint.length ? (
                       <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={horasPorSprint}>
+                        <ComposedChart data={horasPorSprint} margin={{ top: 8, right: 12 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                           <XAxis dataKey="sprint" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} unit="h" />
                           <RTooltip
                             contentStyle={{
                               background: "hsl(var(--card))",
@@ -1642,22 +1668,22 @@ const NewProjectsContent = () => {
                               borderRadius: 8,
                               fontSize: 12,
                             }}
-                            formatter={(v: number, n: string) =>
-                              n === "Atividades" ? `${v}` : `${fmtH(Number(v))}h`
-                            }
+                            formatter={(v: number) => `${fmtH(Number(v))}h`}
                           />
                           <Legend wrapperStyle={{ fontSize: 12 }} />
                           <Bar dataKey="planejado" name="Planejado" fill="#60a5fa" radius={[4, 4, 0, 0]} />
                           <Bar dataKey="entregue" name="Entregue" fill="#34d399" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="desvio" name="Desvio (entregue − capacidade)" fill="#fb7185" radius={[4, 4, 0, 0]} />
                           <Line
                             type="monotone"
                             dataKey="capacidade"
-                            name="Capacidade da equipe"
+                            name="Capacidade real da equipe"
                             stroke="#fbbf24"
                             strokeDasharray="5 5"
-                            dot={false}
+                            dot={{ r: 3 }}
                             strokeWidth={2}
                           />
+
                         </ComposedChart>
                       </ResponsiveContainer>
                     ) : (
