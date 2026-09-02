@@ -1183,7 +1183,9 @@ const NewProjectsContent = () => {
           atividades: list.length,
         };
       })
-      .filter((s) => s.atividades > 0);
+      .filter((s) => s.atividades > 0)
+      .filter((s) => !sprintSel || s.id === sprintSel.id);
+
   }, [db.sprints, db.tarefas]);
 
 
@@ -1703,16 +1705,6 @@ const NewProjectsContent = () => {
                       <p className="text-xs text-muted-foreground">
                         {fmtH(capacidadeDia)}h/dia × {diasSprint.length || 1} dias = {fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade
                       </p>
-                    </div>
-                    <div className="text-right text-xs text-muted-foreground">
-                      <p>
-                        Equipe:{" "}
-                        <strong className="text-foreground">
-                          {fmtH(capacidadeEquipe.horas)}h / {fmtH(capacidadeEquipe.capacidade)}h
-                        </strong>{" "}
-                        ({capacidadeEquipe.atividades} atividades)
-                      </p>
-                      <p>{fmtH(capacidadeEquipe.feitas)}h já entregues</p>
                     </div>
                   </div>
 
