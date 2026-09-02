@@ -64,6 +64,8 @@ import {
   Legend,
   LineChart,
   Line,
+  ComposedChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -106,6 +108,7 @@ interface Sprint {
   nome: string;
   inicio: string;
   fim: string;
+  capacidadeDia?: number;
   encerrada?: boolean;
   encerradaEm?: string;
 }
@@ -280,7 +283,7 @@ const NewProjectsContent = () => {
   const [formNames, setFormNames] = useState({ cliente: "", projeto: "", sprint: "" });
   const [sprintModal, setSprintModal] = useState(false);
   const [leadModal, setLeadModal] = useState(false);
-  const [sprintForm, setSprintForm] = useState({ id: "", nome: "", inicio: "", fim: "" });
+  const [sprintForm, setSprintForm] = useState({ id: "", nome: "", inicio: "", fim: "", capacidadeDia: "5.5" });
   const [dragId, setDragId] = useState<string | null>(null);
   const [tab, setTab] = useState("projetos");
 
@@ -684,20 +687,21 @@ const NewProjectsContent = () => {
   const saveSprint = () => {
     const { id, inicio, fim } = sprintForm;
     const nome = sprintNum(sprintForm.nome);
+    const capacidadeDia = Number(String(sprintForm.capacidadeDia).replace(",", ".")) || 5.5;
     if (!nome) return toast.error("Informe o número da sprint");
     if (!inicio || !fim) return toast.error("Informe as datas de início e fim");
     if (fim < inicio) return toast.error("O fim da sprint não pode ser antes do início");
     setDb((prev) =>
       id
-        ? { ...prev, sprints: prev.sprints.map((s) => (s.id === id ? { ...s, nome, inicio, fim } : s)) }
+        ? { ...prev, sprints: prev.sprints.map((s) => (s.id === id ? { ...s, nome, inicio, fim, capacidadeDia } : s)) }
         : {
             ...prev,
-            sprints: [...prev.sprints, { id: `s${prev.seqSprint}`, nome, inicio, fim }],
+            sprints: [...prev.sprints, { id: `s${prev.seqSprint}`, nome, inicio, fim, capacidadeDia }],
             seqSprint: prev.seqSprint + 1,
           }
     );
     toast.success(id ? "Sprint atualizada" : "Sprint criada");
-    setSprintForm({ id: "", nome: "", inicio: "", fim: "" });
+    setSprintForm({ id: "", nome: "", inicio: "", fim: "", capacidadeDia: "5.5" });
   };
 
   const deleteSprint = (id: string) => {
@@ -1081,7 +1085,7 @@ const NewProjectsContent = () => {
 
   /* --------------------- capacidade da sprint (horas) ---------------------- */
 
-  const SPRINT_CAPACIDADE = 5.5; // horas por desenvolvedor
+  const CAPACIDADE_DIA_PADRAO = 5.5; // horas por dia por desenvolvedor
   const fmtH = (n: number) => (Math.round(n * 10) / 10).toString().replace(".", ",");
 
   const PTS_HORAS: Record<number, { label: string; faixa: string; horas: number }> = {
@@ -1096,6 +1100,28 @@ const NewProjectsContent = () => {
 
   const horasDaTarefa = (pts?: number | null) => (pts ? PTS_HORAS[pts]?.horas ?? 0 : 0);
 
+  // dias úteis (seg-sex) entre duas datas ISO
+  const diasUteis = (ini: string, fim: string) => {
+    const out: string[] = [];
+    if (!ini || !fim || fim < ini) return out;
+    const d = new Date(ini + "T00:00:00");
+    const end = new Date(fim + "T00:00:00");
+    const p = (n: number) => String(n).padStart(2, "0");
+    let guard = 0;
+    while (d <= end && guard++ < 400) {
+      const dow = d.getDay();
+      if (dow !== 0 && dow !== 6) out.push(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`);
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  };
+
+  const capacidadeDia = sprintSel?.capacidadeDia ?? CAPACIDADE_DIA_PADRAO;
+  const diasSprint = useMemo(
+    () => (sprintSel ? diasUteis(sprintSel.inicio, sprintSel.fim) : []),
+    [sprintSel]
+  );
+  const SPRINT_CAPACIDADE = +(capacidadeDia * (diasSprint.length || 1)).toFixed(1);
 
   const capacidadeRows = useMemo(() => {
     return DEVS.map((nome) => {
@@ -1116,10 +1142,10 @@ const NewProjectsContent = () => {
         horas,
         horasFeitas,
         pct: Math.round((horas / SPRINT_CAPACIDADE) * 100),
-        saldo: SPRINT_CAPACIDADE - horas,
+        saldo: +(SPRINT_CAPACIDADE - horas).toFixed(1),
       };
     }).filter((r) => r.itens.length > 0);
-  }, [adminTarefas]);
+  }, [adminTarefas, SPRINT_CAPACIDADE]);
 
   const capacidadeEquipe = capacidadeRows.reduce(
     (a, r) => ({
@@ -1130,6 +1156,56 @@ const NewProjectsContent = () => {
     }),
     { horas: 0, feitas: 0, atividades: 0, capacidade: 0 }
   );
+
+  /* ----------------------- horas por dia (planejado x real) ---------------- */
+
+  const [horasDevSel, setHorasDevSel] = useState<string>("todos");
+
+  const horasPorDia = useMemo(() => {
+    if (!sprintSel || diasSprint.length === 0) return [];
+    const idx = new Map(diasSprint.map((d, i) => [d, i]));
+    const plan = diasSprint.map(() => 0);
+    const real = diasSprint.map(() => 0);
+    const lista = adminTarefas.filter((t) => horasDevSel === "todos" || t.dev === horasDevSel);
+
+    const espalhar = (alvo: number[], ini: string, fim: string, horas: number) => {
+      if (!horas) return;
+      let faixa = diasUteis(ini || fim, fim || ini).filter((d) => idx.has(d));
+      if (faixa.length === 0) {
+        const ref = (fim || ini || "").slice(0, 10);
+        const near = diasSprint.find((d) => d >= ref) ?? diasSprint[diasSprint.length - 1];
+        faixa = near ? [near] : [];
+      }
+      if (faixa.length === 0) return;
+      const parte = horas / faixa.length;
+      faixa.forEach((d) => (alvo[idx.get(d)!] += parte));
+    };
+
+    lista.forEach((t) => {
+      const h = horasDaTarefa(t.pts);
+      espalhar(plan, t.iniPrev, t.fimPrev, h);
+      if (t.fimReal) espalhar(real, t.iniReal, t.fimReal, h);
+    });
+
+    const devsAtivos =
+      horasDevSel === "todos"
+        ? new Set(lista.map((t) => t.dev).filter(Boolean)).size || 1
+        : 1;
+    const hoje = todayISO();
+
+    return diasSprint.map((d, i) => ({
+      dia: d.split("-").slice(1).reverse().join("/"),
+      planejado: +plan[i].toFixed(1),
+      real: d > hoje ? null : +real[i].toFixed(1),
+      ideal: +(capacidadeDia * devsAtivos).toFixed(1),
+    }));
+  }, [sprintSel, diasSprint, adminTarefas, horasDevSel, capacidadeDia]);
+
+  const totalHorasSprint = useMemo(() => {
+    const planejadas = adminTarefas.reduce((a, t) => a + horasDaTarefa(t.pts), 0);
+    const reais = adminTarefas.filter((t) => t.fimReal).reduce((a, t) => a + horasDaTarefa(t.pts), 0);
+    return { planejadas, reais };
+  }, [adminTarefas]);
 
 
   /* --------------------------------- menu --------------------------------- */
@@ -1571,11 +1647,79 @@ const NewProjectsContent = () => {
 
               <Card className="bg-card/60 border-border/60">
                 <CardContent className="p-5">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold">Horas por dia da sprint</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Planejado x realizado · linha ideal de {fmtH(capacidadeDia)}h por dia por desenvolvedor
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="text-right text-xs text-muted-foreground">
+                        <p>
+                          Sprint:{" "}
+                          <strong className="text-foreground">{fmtH(totalHorasSprint.planejadas)}h planejadas</strong> ·{" "}
+                          <strong className="text-emerald-400">{fmtH(totalHorasSprint.reais)}h reais</strong>
+                        </p>
+                        <p>{diasSprint.length} dias úteis · capacidade {fmtH(SPRINT_CAPACIDADE)}h/dev</p>
+                      </div>
+                      <Select value={horasDevSel} onValueChange={setHorasDevSel}>
+                        <SelectTrigger className="h-8 w-40 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="todos">Toda a equipe</SelectItem>
+                          {DEVS.map((d) => (
+                            <SelectItem key={d} value={d}>{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="h-72 mt-4">
+                    {horasPorDia.length ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={horasPorDia}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="dia" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                          <RTooltip
+                            contentStyle={{
+                              background: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: 8,
+                              fontSize: 12,
+                            }}
+                            formatter={(v: number | null) => (v == null ? "—" : `${fmtH(Number(v))}h`)}
+                          />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <Bar dataKey="planejado" name="Planejado" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="real" name="Real" fill="#34d399" radius={[4, 4, 0, 0]} />
+                          <Line
+                            type="monotone"
+                            dataKey="ideal"
+                            name="Ideal"
+                            stroke="#fbbf24"
+                            strokeDasharray="5 5"
+                            dot={false}
+                            strokeWidth={2}
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center pt-24">Selecione uma sprint com datas definidas</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card/60 border-border/60">
+                <CardContent className="p-5">
                   <div className="flex flex-wrap items-end justify-between gap-2">
                     <div>
                       <h3 className="font-semibold">Cálculo da sprint (horas)</h3>
                       <p className="text-xs text-muted-foreground">
-                        Capacidade de {fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade
+                        {fmtH(capacidadeDia)}h/dia × {diasSprint.length || 1} dias = {fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade
                       </p>
                     </div>
                     <div className="text-right text-xs text-muted-foreground">
@@ -1906,7 +2050,7 @@ const NewProjectsContent = () => {
                   <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                     {db.tarefas.filter((t) => t.sprintId === s.id).length} atividades
                   </span>
-                  <Button variant="outline" size="sm" onClick={() => setSprintForm({ id: s.id, nome: s.nome, inicio: s.inicio, fim: s.fim })}>Editar</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSprintForm({ id: s.id, nome: s.nome, inicio: s.inicio, fim: s.fim, capacidadeDia: String(s.capacidadeDia ?? 5.5) })}>Editar</Button>
                   <Button variant="ghost" size="sm" className="text-destructive" onClick={() => deleteSprint(s.id)}>
                     Excluir
                   </Button>
@@ -1929,10 +2073,14 @@ const NewProjectsContent = () => {
               <Label>Fim</Label>
               <Input type="date" value={sprintForm.fim} onChange={(e) => setSprintForm({ ...sprintForm, fim: e.target.value })} />
             </div>
+            <div className="sm:col-span-3">
+              <Label>Capacidade por dia (h/desenvolvedor)</Label>
+              <Input inputMode="decimal" value={sprintForm.capacidadeDia} onChange={(e) => setSprintForm({ ...sprintForm, capacidadeDia: e.target.value.replace(/[^0-9.,]/g, "") })} placeholder="5,5" />
+            </div>
           </div>
           <DialogFooter className="sm:justify-between">
             {sprintForm.id ? (
-              <Button variant="outline" onClick={() => setSprintForm({ id: "", nome: "", inicio: "", fim: "" })}>
+              <Button variant="outline" onClick={() => setSprintForm({ id: "", nome: "", inicio: "", fim: "", capacidadeDia: "5.5" })}>
                 Cancelar edição
               </Button>
             ) : <span />}
