@@ -1125,7 +1125,22 @@ const NewProjectsContent = () => {
     () => (sprintSel ? diasUteis(sprintSel.inicio, sprintSel.fim) : []),
     [sprintSel]
   );
-  const SPRINT_CAPACIDADE = +(capacidadeDia * (diasSprint.length || 1)).toFixed(1);
+  // sem sprint selecionada: considera as 3 últimas sprints
+  const ultimas3 = useMemo(() => {
+    if (sprintSel) return [];
+    return [...db.sprints]
+      .sort((a, b) => Number(sprintNum(b.nome) || 0) - Number(sprintNum(a.nome) || 0))
+      .slice(0, 3);
+  }, [db.sprints, sprintSel]);
+  const diasBase = sprintSel
+    ? diasSprint.length || 1
+    : ultimas3.reduce((a, s) => a + (diasUteis(s.inicio, s.fim).length || 1), 0) || 1;
+  const SPRINT_CAPACIDADE = sprintSel
+    ? +(capacidadeDia * (diasSprint.length || 1)).toFixed(1)
+    : +ultimas3
+        .reduce((a, s) => a + (s.capacidadeDia ?? CAPACIDADE_DIA_PADRAO) * (diasUteis(s.inicio, s.fim).length || 1), 0)
+        .toFixed(1) || CAPACIDADE_DIA_PADRAO;
+
 
   const capacidadeRows = useMemo(() => {
     return DEVS.map((nome) => {
