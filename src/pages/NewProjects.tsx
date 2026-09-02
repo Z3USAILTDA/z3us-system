@@ -1933,6 +1933,10 @@ const NewProjectsContent = () => {
               <Label>Fim</Label>
               <Input type="date" value={sprintForm.fim} onChange={(e) => setSprintForm({ ...sprintForm, fim: e.target.value })} />
             </div>
+            <div className="sm:col-span-3">
+              <Label>Capacidade por dia (h/desenvolvedor)</Label>
+              <Input inputMode="decimal" value={sprintForm.capacidadeDia} onChange={(e) => setSprintForm({ ...sprintForm, capacidadeDia: e.target.value.replace(/[^0-9.,]/g, "") })} placeholder="5,5" />
+            </div>
           </div>
           <DialogFooter className="sm:justify-between">
             {sprintForm.id ? (
