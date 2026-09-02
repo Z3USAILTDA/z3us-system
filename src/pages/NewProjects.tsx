@@ -1757,8 +1757,11 @@ const NewProjectsContent = () => {
                     <div>
                       <h3 className="font-semibold">Cálculo da sprint (horas)</h3>
                       <p className="text-xs text-muted-foreground">
-                        {fmtH(capacidadeDia)}h/dia × {diasSprint.length || 1} dias = {fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade
+                        {sprintSel
+                          ? `${fmtH(capacidadeDia)}h/dia × ${diasSprint.length || 1} dias = ${fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor · horas estimadas pelo nível de dificuldade`
+                          : `Últimas ${ultimas3.length} sprints · ${fmtH(CAPACIDADE_DIA_PADRAO)}h/dia × ${diasBase} dias = ${fmtH(SPRINT_CAPACIDADE)}h por desenvolvedor`}
                       </p>
+
                     </div>
                   </div>
 
