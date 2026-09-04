@@ -306,21 +306,31 @@ export default function SprintMetricsTV() {
       )}
 
       {grupos.map(({ cliente, produto, itens }) => (
-        <div key={`${cliente}-${produto}`} className="mb-3 rounded-lg border border-border bg-card p-3">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2 min-w-0">
+        <div
+          key={`${cliente}-${produto}`}
+          className="mb-3 rounded-xl border border-border/70 bg-gradient-to-b from-card to-card/60 p-3 shadow-sm transition-colors hover:border-primary/40"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
               <ClienteLogo nome={cliente} />
               <div className="min-w-0">
-                <span className="block text-sm font-semibold text-primary truncate">{cliente}</span>
-                <span className="block text-xs text-muted-foreground truncate">{produto}</span>
+                <span className="block text-sm font-semibold text-foreground truncate">{cliente}</span>
+                <span className="block text-[11px] uppercase tracking-wide text-muted-foreground truncate">
+                  {produto}
+                </span>
               </div>
             </div>
-            <span className="text-xl font-bold text-foreground shrink-0">{itens.length}</span>
+            <span className="shrink-0 min-w-7 h-7 px-2 rounded-full bg-primary/10 text-primary text-sm font-bold grid place-items-center">
+              {itens.length}
+            </span>
           </div>
-          <ul className="space-y-1">
+          <ul className="mt-2 pt-2 border-t border-border/60 space-y-1">
             {itens.map((t) => (
-              <li key={t.id} className="text-[13px] leading-snug text-muted-foreground">
-                • {t.titulo}
+              <li
+                key={t.id}
+                className="text-[13px] leading-snug text-muted-foreground pl-3 relative before:absolute before:left-0 before:top-[0.5em] before:size-1.5 before:rounded-full before:bg-primary/50"
+              >
+                {t.titulo}
               </li>
             ))}
           </ul>
