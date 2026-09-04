@@ -83,7 +83,7 @@ import logoRd from "@/assets/logos/logo-r_d.png.asset.json";
 import logoSigraweb from "@/assets/logos/logo-sigraweb.png.asset.json";
 import logoUni from "@/assets/logos/logo-uni.webp.asset.json";
 import logoLuft from "@/assets/logos/logo-luft.png.asset.json";
-import logoZ3us from "@/assets/logos/logo-z3us.jpg.asset.json";
+import logoZ3us from "@/assets/logos/logo-z3us-branco.png.asset.json";
 import logoBewex from "@/assets/logos/logo-bewex.png.asset.json";
 
 const CLIENTE_LOGO: { match: string; url: string; invert?: boolean }[] = [
