@@ -68,29 +68,53 @@ const fmtBR = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "—
 
 const sprintNum = (nome?: string) => (nome || "").replace(/sprint/gi, "").trim();
 
-// Domínios oficiais dos clientes (usados para buscar a logo automaticamente)
-const CLIENTE_DOMINIO: { match: string; domain: string }[] = [
-  { match: "bewex", domain: "bewex.tech" },
-  { match: "luft", domain: "luft.com.br" },
-  { match: "unitrading", domain: "unitradinglog.com.br" },
-  { match: "amazon transportes", domain: "amazontransportes.com.br" },
-  { match: "amazon", domain: "amazontransportes.com.br" },
-  { match: "dasch", domain: "dachser.com" },
-  { match: "dachser", domain: "dachser.com" },
-  { match: "ags", domain: "agsgloballogistics.com" },
-  { match: "z3us", domain: "z3us.ai" },
-  { match: "vetor", domain: "bancovetor.com.br" },
+// Logos oficiais enviadas pelo cliente
+import logoAgs from "@/assets/logos/logo-ags.avif.asset.json";
+import logoAmazon from "@/assets/logos/logo-amazon.png.asset.json";
+import logoAndreani from "@/assets/logos/logo-andreani.png.asset.json";
+import logoBrasmeg from "@/assets/logos/logo-brasmeg.png.asset.json";
+import logoDachser from "@/assets/logos/logo-dachser.svg.asset.json";
+import logoFm from "@/assets/logos/logo-fm.png.asset.json";
+import logoHandline from "@/assets/logos/logo-handline.png.asset.json";
+import logoMorada from "@/assets/logos/logo-morada_madalena.png.asset.json";
+import logoOlli from "@/assets/logos/logo-olli_sementes.png.asset.json";
+import logoProton from "@/assets/logos/logo-proton.png.asset.json";
+import logoRd from "@/assets/logos/logo-r_d.png.asset.json";
+import logoSigraweb from "@/assets/logos/logo-sigraweb.png.asset.json";
+import logoUni from "@/assets/logos/logo-uni.webp.asset.json";
+import logoLuft from "@/assets/logos/logo-luft.png.asset.json";
+import logoZ3us from "@/assets/logos/logo-branco.png.asset.json";
+
+const CLIENTE_LOGO: { match: string; url: string }[] = [
+  { match: "unitrading", url: logoUni.url },
+  { match: "uni trading", url: logoUni.url },
+  { match: "amazon", url: logoAmazon.url },
+  { match: "andreani", url: logoAndreani.url },
+  { match: "brasmeg", url: logoBrasmeg.url },
+  { match: "dachser", url: logoDachser.url },
+  { match: "dasch", url: logoDachser.url },
+  { match: "handline", url: logoHandline.url },
+  { match: "morada", url: logoMorada.url },
+  { match: "olli", url: logoOlli.url },
+  { match: "proton", url: logoProton.url },
+  { match: "sigraweb", url: logoSigraweb.url },
+  { match: "sigra", url: logoSigraweb.url },
+  { match: "luft", url: logoLuft.url },
+  { match: "ags", url: logoAgs.url },
+  { match: "r&d", url: logoRd.url },
+  { match: "fm ", url: logoFm.url },
+  { match: "z3us", url: logoZ3us.url },
 ];
 
-const dominioCliente = (nome: string) => {
+const logoCliente = (nome: string) => {
   const n = (nome || "").toLowerCase();
-  return CLIENTE_DOMINIO.find((c) => n.includes(c.match))?.domain;
+  return CLIENTE_LOGO.find((c) => n.includes(c.match))?.url;
 };
 
 const ClienteLogo = ({ nome }: { nome: string }) => {
-  const domain = dominioCliente(nome);
+  const url = logoCliente(nome);
   const [erro, setErro] = useState(false);
-  if (!domain || erro) {
+  if (!url || erro) {
     return (
       <span className="size-7 shrink-0 rounded-md bg-primary/15 text-primary text-[11px] font-bold grid place-items-center">
         {(nome || "?").trim().charAt(0).toUpperCase()}
@@ -99,7 +123,7 @@ const ClienteLogo = ({ nome }: { nome: string }) => {
   }
   return (
     <img
-      src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
+      src={url}
       alt={`Logo ${nome}`}
       loading="lazy"
       onError={() => setErro(true)}
@@ -107,6 +131,7 @@ const ClienteLogo = ({ nome }: { nome: string }) => {
     />
   );
 };
+
 
 
 
