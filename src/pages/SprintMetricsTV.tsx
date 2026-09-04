@@ -122,13 +122,13 @@ const ClienteLogo = ({ nome }: { nome: string }) => {
     );
   }
   return (
-    <span className="size-8 shrink-0 rounded-md bg-white ring-1 ring-black/10 grid place-items-center overflow-hidden">
+    <span className="size-8 shrink-0 rounded-md bg-[hsl(222_47%_8%)] ring-1 ring-primary/20 grid place-items-center overflow-hidden">
       <img
         src={url}
         alt={`Logo ${nome}`}
         loading="lazy"
         onError={() => setErro(true)}
-        className="size-full object-contain p-0.5 [filter:drop-shadow(0_0_0.5px_rgba(0,0,0,0.75))_drop-shadow(0_0_1px_rgba(0,0,0,0.45))]"
+        className="size-full object-contain p-0.5"
       />
     </span>
   );
