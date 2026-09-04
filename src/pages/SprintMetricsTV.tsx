@@ -122,7 +122,7 @@ const ClienteLogo = ({ nome }: { nome: string }) => {
     );
   }
   return (
-    <span className="size-8 shrink-0 rounded-md bg-[hsl(222_47%_8%)] ring-1 ring-primary/20 grid place-items-center overflow-hidden">
+    <span className="size-9 shrink-0 rounded-lg bg-[hsl(222_47%_7%)] ring-1 ring-border/70 shadow-inner grid place-items-center overflow-hidden">
       <img
         src={url}
         alt={`Logo ${nome}`}
