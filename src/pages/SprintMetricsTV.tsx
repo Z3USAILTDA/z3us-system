@@ -116,7 +116,7 @@ const ClienteLogo = ({ nome }: { nome: string }) => {
   const [erro, setErro] = useState(false);
   if (!url || erro) {
     return (
-      <span className="size-7 shrink-0 rounded-md bg-primary/15 text-primary text-[11px] font-bold grid place-items-center">
+      <span className="size-9 shrink-0 rounded-lg bg-primary/15 text-primary text-xs font-bold grid place-items-center ring-1 ring-border/70">
         {(nome || "?").trim().charAt(0).toUpperCase()}
       </span>
     );
