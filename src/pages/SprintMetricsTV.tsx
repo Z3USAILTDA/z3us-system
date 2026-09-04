@@ -84,8 +84,9 @@ import logoSigraweb from "@/assets/logos/logo-sigraweb.png.asset.json";
 import logoUni from "@/assets/logos/logo-uni.webp.asset.json";
 import logoLuft from "@/assets/logos/logo-luft.png.asset.json";
 import logoZ3us from "@/assets/logos/logo-z3us.jpg.asset.json";
+import logoBewex from "@/assets/logos/logo-bewex.png.asset.json";
 
-const CLIENTE_LOGO: { match: string; url: string }[] = [
+const CLIENTE_LOGO: { match: string; url: string; invert?: boolean }[] = [
   { match: "unitrading", url: logoUni.url },
   { match: "uni trading", url: logoUni.url },
   { match: "amazon", url: logoAmazon.url },
@@ -103,16 +104,18 @@ const CLIENTE_LOGO: { match: string; url: string }[] = [
   { match: "ags", url: logoAgs.url },
   { match: "r&d", url: logoRd.url },
   { match: "fm ", url: logoFm.url },
+  { match: "bewex", url: logoBewex.url, invert: true },
   { match: "z3us", url: logoZ3us.url },
 ];
 
 const logoCliente = (nome: string) => {
   const n = (nome || "").toLowerCase();
-  return CLIENTE_LOGO.find((c) => n.includes(c.match))?.url;
+  return CLIENTE_LOGO.find((c) => n.includes(c.match));
 };
 
 const ClienteLogo = ({ nome }: { nome: string }) => {
-  const url = logoCliente(nome);
+  const logo = logoCliente(nome);
+  const url = logo?.url;
   const [erro, setErro] = useState(false);
   if (!url || erro) {
     return (
@@ -128,7 +131,7 @@ const ClienteLogo = ({ nome }: { nome: string }) => {
         alt={`Logo ${nome}`}
         loading="lazy"
         onError={() => setErro(true)}
-        className="max-h-full max-w-full object-contain p-1"
+        className={`max-h-full max-w-full object-contain p-1 ${logo?.invert ? "invert" : ""}`}
       />
     </span>
   );
