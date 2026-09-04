@@ -281,9 +281,12 @@ export default function SprintMetricsTV() {
       {grupos.map(({ cliente, produto, itens }) => (
         <div key={`${cliente}-${produto}`} className="mb-3 rounded-lg border border-border bg-card p-3">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="min-w-0">
-              <span className="block text-sm font-semibold text-primary truncate">{cliente}</span>
-              <span className="block text-xs text-muted-foreground truncate">{produto}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <ClienteLogo nome={cliente} />
+              <div className="min-w-0">
+                <span className="block text-sm font-semibold text-primary truncate">{cliente}</span>
+                <span className="block text-xs text-muted-foreground truncate">{produto}</span>
+              </div>
             </div>
             <span className="text-xl font-bold text-foreground shrink-0">{itens.length}</span>
           </div>
