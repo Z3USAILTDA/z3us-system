@@ -68,6 +68,47 @@ const fmtBR = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "—
 
 const sprintNum = (nome?: string) => (nome || "").replace(/sprint/gi, "").trim();
 
+// Domínios oficiais dos clientes (usados para buscar a logo automaticamente)
+const CLIENTE_DOMINIO: { match: string; domain: string }[] = [
+  { match: "bewex", domain: "bewex.tech" },
+  { match: "luft", domain: "luft.com.br" },
+  { match: "unitrading", domain: "unitradinglog.com.br" },
+  { match: "amazon transportes", domain: "amazontransportes.com.br" },
+  { match: "amazon", domain: "amazontransportes.com.br" },
+  { match: "dasch", domain: "dachser.com" },
+  { match: "dachser", domain: "dachser.com" },
+  { match: "ags", domain: "agsgloballogistics.com" },
+  { match: "z3us", domain: "z3us.ai" },
+  { match: "vetor", domain: "bancovetor.com.br" },
+];
+
+const dominioCliente = (nome: string) => {
+  const n = (nome || "").toLowerCase();
+  return CLIENTE_DOMINIO.find((c) => n.includes(c.match))?.domain;
+};
+
+const ClienteLogo = ({ nome }: { nome: string }) => {
+  const domain = dominioCliente(nome);
+  const [erro, setErro] = useState(false);
+  if (!domain || erro) {
+    return (
+      <span className="size-7 shrink-0 rounded-md bg-primary/15 text-primary text-[11px] font-bold grid place-items-center">
+        {(nome || "?").trim().charAt(0).toUpperCase()}
+      </span>
+    );
+  }
+  return (
+    <img
+      src={`https://icons.duckduckgo.com/ip3/${domain}.ico`}
+      alt={`Logo ${nome}`}
+      loading="lazy"
+      onError={() => setErro(true)}
+      className="size-7 shrink-0 rounded-md bg-white object-contain p-0.5"
+    />
+  );
+};
+
+
 
 export default function SprintMetricsTV() {
   const navigate = useNavigate();
@@ -240,9 +281,12 @@ export default function SprintMetricsTV() {
       {grupos.map(({ cliente, produto, itens }) => (
         <div key={`${cliente}-${produto}`} className="mb-3 rounded-lg border border-border bg-card p-3">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="min-w-0">
-              <span className="block text-sm font-semibold text-primary truncate">{cliente}</span>
-              <span className="block text-xs text-muted-foreground truncate">{produto}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <ClienteLogo nome={cliente} />
+              <div className="min-w-0">
+                <span className="block text-sm font-semibold text-primary truncate">{cliente}</span>
+                <span className="block text-xs text-muted-foreground truncate">{produto}</span>
+              </div>
             </div>
             <span className="text-xl font-bold text-foreground shrink-0">{itens.length}</span>
           </div>
