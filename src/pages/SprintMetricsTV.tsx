@@ -116,19 +116,19 @@ const ClienteLogo = ({ nome }: { nome: string }) => {
   const [erro, setErro] = useState(false);
   if (!url || erro) {
     return (
-      <span className="size-9 shrink-0 rounded-lg bg-primary/15 text-primary text-xs font-bold grid place-items-center ring-1 ring-border/70">
+      <span className="h-9 w-16 shrink-0 rounded-lg bg-primary/15 text-primary text-xs font-bold grid place-items-center ring-1 ring-border/70">
         {(nome || "?").trim().charAt(0).toUpperCase()}
       </span>
     );
   }
   return (
-    <span className="size-9 shrink-0 rounded-lg bg-[hsl(222_47%_7%)] ring-1 ring-border/70 shadow-inner grid place-items-center overflow-hidden">
+    <span className="h-9 w-16 shrink-0 rounded-lg bg-[hsl(222_47%_7%)] ring-1 ring-border/70 shadow-inner grid place-items-center overflow-hidden">
       <img
         src={url}
         alt={`Logo ${nome}`}
         loading="lazy"
         onError={() => setErro(true)}
-        className="size-full object-contain p-0.5"
+        className="max-h-full max-w-full object-contain p-1"
       />
     </span>
   );
