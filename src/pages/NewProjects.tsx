@@ -1939,6 +1939,12 @@ const NewProjectsContent = () => {
                     <option key={s.id} value={sprintNum(s.nome)} />
                   ))}
                 </datalist>
+                {sprintFormEncerrada && (
+                  <p className="mt-1.5 text-[11px] leading-snug rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-400 px-2 py-1.5">
+                    Atenção: a Sprint {sprintNum(formNames.sprint)} já foi encerrada. Ao salvar, a
+                    atividade será registrada em uma sprint finalizada.
+                  </p>
+                )}
               </div>
               <div>
                 <Label>Fase</Label>
