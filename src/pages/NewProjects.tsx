@@ -576,8 +576,24 @@ const NewProjectsContent = () => {
     setModalOpen(true);
   };
 
+  /** sprint digitada no formulário que já está encerrada (aviso) */
+  const sprintFormEncerrada = (() => {
+    const n = sprintNum(formNames.sprint);
+    if (!n) return false;
+    return Boolean(
+      db.sprints.find((s) => sprintNum(s.nome).toLowerCase() === n.toLowerCase())?.encerrada
+    );
+  })();
+
   const saveTarefa = () => {
     if (!form.titulo.trim()) return toast.error("Informe o título da atividade");
+    if (sprintFormEncerrada) {
+      const ok = window.confirm(
+        `A Sprint ${sprintNum(formNames.sprint)} já foi encerrada.\n\nDeseja mesmo registrar esta atividade em uma sprint finalizada?`
+      );
+      if (!ok) return;
+      toast.warning(`Atividade registrada na Sprint ${sprintNum(formNames.sprint)}, que já está encerrada.`);
+    }
     const nomeCliente = formNames.cliente.trim();
     const nomeProjeto = formNames.projeto.trim();
     const nomeSprint = sprintNum(formNames.sprint);
