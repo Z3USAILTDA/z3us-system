@@ -192,6 +192,7 @@ export type Database = {
           type: string
           updated_at: string
           version: string | null
+          visibility: string
         }
         Insert: {
           created_at?: string
@@ -208,6 +209,7 @@ export type Database = {
           type?: string
           updated_at?: string
           version?: string | null
+          visibility?: string
         }
         Update: {
           created_at?: string
@@ -224,6 +226,7 @@ export type Database = {
           type?: string
           updated_at?: string
           version?: string | null
+          visibility?: string
         }
         Relationships: [
           {
