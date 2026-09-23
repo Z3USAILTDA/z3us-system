@@ -78,6 +78,15 @@ serve(async (req) => {
       throw createError;
     }
 
+    // O cadastro sempre nasce como 'client'; promoção a admin só aqui (admin verificado acima).
+    if (role === 'admin' && newUser?.user) {
+      const uid = newUser.user.id;
+      await supabaseAdmin.from('user_roles').delete().eq('user_id', uid);
+      const { error: rErr } = await supabaseAdmin.from('user_roles').insert({ user_id: uid, role: 'admin' });
+      if (rErr) throw rErr;
+      await supabaseAdmin.from('profiles').update({ role: 'admin' }).eq('id', uid);
+    }
+
     return new Response(
       JSON.stringify({ success: true, user: newUser }),
       {
