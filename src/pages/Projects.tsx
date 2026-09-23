@@ -1351,9 +1351,10 @@ const ProjectsContent = () => {
                         </div>
                       </div>
 
-                      {/* Observação Interna */}
+                      {/* Observação (visível ao cliente) */}
                       <div className="space-y-2">
-                        <Label htmlFor="observation">Observação Interna</Label>
+                        <Label htmlFor="observation">Observação (visível ao cliente)</Label>
+                        <p className="text-xs text-muted-foreground">Este campo aparece no portal do cliente. Não use para notas internas.</p>
                         <Textarea
                           id="observation"
                           name="observation"
