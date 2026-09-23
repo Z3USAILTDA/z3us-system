@@ -288,6 +288,7 @@ const DocumentationContent = () => {
         file_name: fileName,
         file_size: fileSize,
         tags,
+        visibility: formData.get("internal") ? "internal" : "client",
       };
 
       if (editingDocument) {
@@ -670,6 +671,16 @@ const DocumentationContent = () => {
                           defaultValue={editingDocument?.tags?.join(", ") || ""}
                         />
                       </div>
+
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          name="internal"
+                          defaultChecked={(editingDocument as any)?.visibility === "internal"}
+                          className="h-4 w-4 accent-primary"
+                        />
+                        Documento interno (não visível ao cliente)
+                      </label>
 
                       <div className="space-y-2">
                         <Label htmlFor="file">
