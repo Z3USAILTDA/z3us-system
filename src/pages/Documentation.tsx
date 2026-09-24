@@ -100,6 +100,9 @@ const DocumentationContent = () => {
   const [editingDocument, setEditingDocument] = useState<ProjectDocument | null>(null);
   const [uploading, setUploading] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [clients, setClients] = useState<{ id: string; company_name: string }[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { state } = useSidebar();
 
@@ -132,7 +135,7 @@ const DocumentationContent = () => {
   };
 
   const fetchData = async () => {
-    const [documentsRes, projectsRes] = await Promise.all([
+    const [documentsRes, projectsRes, clientsRes] = await Promise.all([
       supabase
         .from("project_documents")
         .select(`
@@ -142,7 +145,8 @@ const DocumentationContent = () => {
           )
         `)
         .order("created_at", { ascending: false }),
-      supabase.from("projects").select("id, title").order("title"),
+      supabase.from("projects").select("id, title, client_id").order("title"),
+      supabase.from("clients").select("id, company_name").order("company_name"),
     ]);
 
     if (documentsRes.error) {
@@ -154,6 +158,9 @@ const DocumentationContent = () => {
 
     if (!projectsRes.error) {
       setProjects(projectsRes.data || []);
+    }
+    if (!clientsRes.error) {
+      setClients(clientsRes.data || []);
     }
 
     setLoading(false);
@@ -220,20 +227,19 @@ const DocumentationContent = () => {
       return;
     }
 
-    // Validate product selection - always use selectedProducts (pre-filled on edit)
     const productsArray = [...selectedProducts];
 
-    // Resolve the first product to a project_id for the FK
-    const firstProduct = (() => {
-      const product = selectedProducts[0];
-      if (!product) return editingDocument?.project_id || null;
-      const matchingProject = projects.find((p) =>
-        p.title.toLowerCase().includes(product.toLowerCase())
-      );
-      return matchingProject?.id || editingDocument?.project_id || null;
-    })();
-
-    // Products are optional - no validation needed
+    // Cliente e demanda são escolhidos explicitamente — nunca derivados do produto
+    if (!selectedClientId || !selectedProjectId) {
+      toast.error("Selecione o cliente e a demanda do documento");
+      return;
+    }
+    const chosen = projects.find((p) => p.id === selectedProjectId);
+    if (!chosen || chosen.client_id !== selectedClientId) {
+      toast.error("A demanda selecionada não pertence ao cliente escolhido");
+      return;
+    }
+    const firstProduct = selectedProjectId;
 
     setUploading(true);
 
@@ -352,7 +358,10 @@ const DocumentationContent = () => {
 
   const handleEdit = (doc: ProjectDocument) => {
     setEditingDocument(doc);
-    setSelectedProducts(doc.products || [doc.projects?.title || ""].filter(Boolean));
+    setSelectedProducts(doc.products || []);
+    const proj = projects.find((p) => p.id === doc.project_id);
+    setSelectedClientId(proj?.client_id || "");
+    setSelectedProjectId(doc.project_id || "");
     setDialogOpen(true);
   };
 
@@ -361,6 +370,8 @@ const DocumentationContent = () => {
     if (!open) {
       setEditingDocument(null);
       setSelectedProducts([]);
+      setSelectedClientId("");
+      setSelectedProjectId("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -571,6 +582,42 @@ const DocumentationContent = () => {
                       </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="doc-client">Cliente *</Label>
+                        <select
+                          id="doc-client"
+                          required
+                          value={selectedClientId}
+                          onChange={(e) => {
+                            setSelectedClientId(e.target.value);
+                            setSelectedProjectId("");
+                          }}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          <option value="">Selecione o cliente</option>
+                          {clients.map((c) => (
+                            <option key={c.id} value={c.id}>{c.company_name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="doc-project">Demanda *</Label>
+                        <select
+                          id="doc-project"
+                          required
+                          disabled={!selectedClientId}
+                          value={selectedProjectId}
+                          onChange={(e) => setSelectedProjectId(e.target.value)}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+                        >
+                          <option value="">{selectedClientId ? "Selecione a demanda" : "Escolha o cliente primeiro"}</option>
+                          {projects
+                            .filter((p) => p.client_id === selectedClientId)
+                            .map((p) => (
+                              <option key={p.id} value={p.id}>{p.title}</option>
+                            ))}
+                        </select>
+                      </div>
                       <div className="space-y-2">
                         <Label>Produto(s)</Label>
                         <Popover>
