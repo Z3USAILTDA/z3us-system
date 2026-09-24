@@ -33,7 +33,7 @@ serve(async (req) => {
         email: METRICS_EMAIL,
         password: METRICS_PASSWORD,
         email_confirm: true,
-        user_metadata: { full_name: "Painel de Métricas", role: "admin" },
+        user_metadata: { full_name: "Painel de Métricas", role: "viewer" },
       });
       if (createErr) throw createErr;
       userId = created.user?.id;
@@ -47,16 +47,17 @@ serve(async (req) => {
 
     if (!userId) throw new Error("Falha ao obter user id");
 
-    // 2) Garante role admin
+    // 2) Garante papel viewer (somente leitura) e remove qualquer outro papel
+    await admin.from("user_roles").delete().eq("user_id", userId).neq("role", "viewer");
     await admin
       .from("user_roles")
-      .upsert({ user_id: userId, role: "admin" }, { onConflict: "user_id,role" });
+      .upsert({ user_id: userId, role: "viewer" }, { onConflict: "user_id,role" });
 
     // 3) Garante profile admin
     await admin
       .from("profiles")
       .upsert(
-        { id: userId, email: METRICS_EMAIL, full_name: "Painel de Métricas", role: "admin" },
+        { id: userId, email: METRICS_EMAIL, full_name: "Painel de Métricas", role: "viewer" },
         { onConflict: "id" },
       );
 
