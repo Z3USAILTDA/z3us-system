@@ -2,75 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/*
+  Z3US.AI · Sistema de Design v3 (24/09/2026), tema escuro de tela.
+  Fonte da verdade: src/site/site.css do site (hzacatei/z3us-website).
+  Formato HSL porque os componentes leem hsl(var(--token)).
+  Cada linha diz de qual variável do site o valor saiu.
 */
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 240 4.8% 4.1%;          /* --zs-bg #0a0a0b */
+    --foreground: 60 4.8% 95.9%;          /* --zs-text #f5f5f4 */
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 223 14.3% 9.6%;               /* --zs-surface #15171c (flag 1 da decisão de 24/09 em aberto) */
+    --card-foreground: 60 4.8% 95.9%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 15.2% 12.9%;           /* --zs-surface-2 #1c1f26 */
+    --popover-foreground: 60 4.8% 95.9%;
 
-    --primary: 175 70% 50%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 34 94.6% 56.7%;            /* --zs-orange #f99d28 */
+    --primary-foreground: 35 37.5% 6.3%;  /* texto do botão do site #16110a */
+    --primary-hover: 34 100% 68%;         /* --zs-orange-2 #ffb85c */
 
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 222 47% 6%;
+    --secondary: 222 15.2% 12.9%;         /* --zs-surface-2 #1c1f26 */
+    --secondary-foreground: 60 4.8% 95.9%;
+    --secondary-text: 225 4.3% 82%;       /* --zs-soft #cfd0d3, usado em text-secondary */
 
-    --muted: 222 47% 12%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 222 15.2% 12.9%;             /* --zs-surface-2 #1c1f26 */
+    --muted-foreground: 223 4% 65.3%;     /* --zs-muted #a3a5aa */
 
-    --accent: 280 85% 65%;
-    --accent-foreground: 222 47% 6%;
+    --accent: 222 11.4% 17.3%;            /* hover: superfície-2 + branco 5%, igual ao hover do menu do site */
+    --accent-foreground: 60 4.8% 95.9%;
+    --accent-text: 34 100% 68%;           /* --zs-orange-2, usado em text-accent */
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 90.6% 70.8%;         /* --zs-red #f87171 */
+    --destructive-foreground: 35 37.5% 6.3%;
 
-    --border: 222 47% 15%;
-    --input: 222 47% 15%;
-    --ring: 175 70% 50%;
+    --border: 220 7% 16.9%;               /* --zs-line (branco 8%) em valor opaco sobre a superfície */
+    --input: 220 5.3% 22.4%;              /* --zs-line-2 (branco 14%) em valor opaco, borda de campo */
+    --ring: 34 94.6% 56.7%;               /* foco em laranja, como no site */
 
-    --radius: 1rem;
+    --radius: 18px;                       /* --zs-radius */
 
-    --success: 142 76% 45%;
-    --success-foreground: 222 47% 6%;
+    --success: 158 64.4% 51.6%;           /* --zs-green #34d399 */
+    --success-foreground: 240 4.8% 4.1%;
 
-    --warning: 38 92% 55%;
-    --warning-foreground: 222 47% 6%;
+    --warning: 43 96.4% 56.3%;            /* --zs-yellow #fbbf24 */
+    --warning-foreground: 240 4.8% 4.1%;
 
-    --info: 199 89% 55%;
-    --info-foreground: 222 47% 6%;
+    --info: 223 4% 65.3%;                 /* status neutro: cinza, como "roadmap" no site */
+    --info-foreground: 240 4.8% 4.1%;
 
-    --yellow: 48 96% 53%;
-    --yellow-foreground: 222 47% 6%;
+    --yellow: 43 96.4% 56.3%;             /* --zs-yellow */
+    --yellow-foreground: 240 4.8% 4.1%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(175 70% 50%), hsl(217 91% 60%), hsl(280 85% 65%));
-    --gradient-secondary: linear-gradient(180deg, hsl(175 70% 50% / 0.1), hsl(217 91% 60% / 0.1));
-    --gradient-mesh: radial-gradient(at 0% 0%, hsl(175 70% 50% / 0.15) 0px, transparent 50%),
-                     radial-gradient(at 100% 0%, hsl(217 91% 60% / 0.15) 0px, transparent 50%),
-                     radial-gradient(at 100% 100%, hsl(280 85% 65% / 0.15) 0px, transparent 50%),
-                     radial-gradient(at 0% 100%, hsl(175 70% 50% / 0.15) 0px, transparent 50%);
-    
-    --shadow-sm: 0 1px 2px 0 hsl(175 70% 50% / 0.1);
-    --shadow-md: 0 4px 6px -1px hsl(175 70% 50% / 0.15), 0 2px 4px -2px hsl(175 70% 50% / 0.15);
-    --shadow-lg: 0 10px 15px -3px hsl(175 70% 50% / 0.2), 0 4px 6px -4px hsl(175 70% 50% / 0.1);
-    --shadow-xl: 0 20px 25px -5px hsl(175 70% 50% / 0.25), 0 8px 10px -6px hsl(175 70% 50% / 0.1);
-    --shadow-glow: 0 0 20px hsl(175 70% 50% / 0.3);
+    /* Degradês: a marca não usa degradê de cor. O "primário" vira laranja sólido. */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)));
+    --gradient-secondary: linear-gradient(180deg, hsl(var(--primary) / 0.06), transparent);
+    --gradient-subtle: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+    --gradient-mesh: none;
 
-    --sidebar-background: 222 47% 8%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 175 70% 50%;
-    --sidebar-primary-foreground: 222 47% 6%;
-    --sidebar-accent: 222 47% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 15%;
-    --sidebar-ring: 175 70% 50%;
+    /* Sombras neutras, como as do site. O brilho laranja fica só para o botão principal. */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 16px 40px -12px rgb(0 0 0 / 0.7);
+    --shadow-xl: 0 30px 80px -40px rgb(0 0 0 / 0.9);
+    --shadow-glow: 0 10px 30px -10px rgba(249, 157, 40, 0.55);
+
+    --sidebar-background: 220 16.7% 7.1%;  /* --zs-bg-2 #0f1115 */
+    --sidebar-foreground: 60 4.8% 95.9%;
+    --sidebar-primary: 34 94.6% 56.7%;
+    --sidebar-primary-foreground: 35 37.5% 6.3%;
+    --sidebar-accent: 222 15.2% 12.9%;
+    --sidebar-accent-foreground: 60 4.8% 95.9%;
+    --sidebar-border: 220 8.1% 14.5%;
+    --sidebar-ring: 34 94.6% 56.7%;
   }
 }
 
@@ -80,62 +86,57 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
     background-image: var(--gradient-mesh);
-    background-attachment: fixed;
   }
 
-  /* Tech Grid Pattern */
+  ::selection {
+    background: hsl(var(--primary));
+    color: #111;
+  }
+
+  /* Números de tabela e métricas: a Quicksand não tem dígito de largura fixa. */
+  .num,
+  .tabular {
+    font-family: theme("fontFamily.mono");
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Classes decorativas do tema antigo. Mantidas com o mesmo nome para não quebrar
+     as páginas; os efeitos neon foram trocados pelo padrão sóbrio do site. */
   .tech-grid {
-    background-image: 
-      linear-gradient(hsl(175 70% 50% / 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(175 70% 50% / 0.05) 1px, transparent 1px);
-    background-size: 40px 40px;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 56px 56px;
   }
 
-  /* Glow Effects */
   .glow-primary {
-    box-shadow: 0 0 20px hsl(175 70% 50% / 0.4), 0 0 40px hsl(175 70% 50% / 0.2);
+    box-shadow: var(--shadow-glow);
   }
 
   .glow-secondary {
-    box-shadow: 0 0 20px hsl(217 91% 60% / 0.4), 0 0 40px hsl(217 91% 60% / 0.2);
+    box-shadow: none;
   }
 
-  /* Neon Border Effect */
   .neon-border {
-    border: 1px solid hsl(175 70% 50% / 0.3);
-    box-shadow: 
-      inset 0 0 10px hsl(175 70% 50% / 0.1),
-      0 0 10px hsl(175 70% 50% / 0.2);
-  }
-
-  /* Animated Background */
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
+    border: 1px solid rgba(249, 157, 40, 0.3);
+    box-shadow: none;
   }
 
   .float-animation {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  /* Scan Line Effect */
-  @keyframes scan {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100%); }
+    animation: none;
   }
 
   .scan-line::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      transparent 0%,
-      hsl(175 70% 50% / 0.05) 50%,
-      transparent 100%
-    );
-    animation: scan 8s linear infinite;
-    pointer-events: none;
+    content: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
   }
 }

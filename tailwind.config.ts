@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 
+// Z3US.AI · Sistema de Design v3 (24/09/2026). Os valores de cor ficam em src/index.css.
 export default {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
@@ -13,6 +14,11 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        // Pilhas iguais às do site (site.css)
+        sans: ['"Quicksand Variable"', "Quicksand", "system-ui", "-apple-system", '"Segoe UI"', "sans-serif"],
+        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", '"Liberation Mono"', "monospace"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -22,6 +28,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--primary-hover))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -70,6 +77,16 @@ export default {
           foreground: "hsl(var(--info-foreground))",
         },
       },
+      // Secundária e acento eram azul e roxo usados como cor de ícone e de texto.
+      // Como fundo, agora são superfícies neutras; como texto e borda, ganham um valor legível.
+      textColor: {
+        secondary: { DEFAULT: "hsl(var(--secondary-text))" },
+        accent: { DEFAULT: "hsl(var(--accent-text))" },
+      },
+      borderColor: {
+        secondary: { DEFAULT: "hsl(var(--primary))" },
+        accent: { DEFAULT: "hsl(var(--primary))" },
+      },
       backgroundImage: {
         "gradient-primary": "var(--gradient-primary)",
         "gradient-subtle": "var(--gradient-subtle)",
@@ -82,9 +99,12 @@ export default {
         xl: "var(--shadow-xl)",
       },
       borderRadius: {
+        // Sistema de Design v3: campo 12 px, cartão 18 px, bloco grande 20 px, botão em pílula
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 6px)",
+        sm: "calc(var(--radius) - 10px)",
+        "2xl": "18px",
+        "3xl": "20px",
       },
       keyframes: {
         "accordion-down": {
@@ -104,14 +124,10 @@ export default {
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
         "glow-pulse": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(175 70% 50% / 0.4)" },
-          "50%": { boxShadow: "0 0 40px hsl(175 70% 50% / 0.6), 0 0 60px hsl(175 70% 50% / 0.4)" },
+          "0%, 100%": { opacity: "0.55" },
+          "50%": { opacity: "1" },
         },
-        "float": {
-          "0%, 100%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-20px)" },
-        },
-        "shimmer": {
+        shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
@@ -122,8 +138,9 @@ export default {
         "fade-in": "fade-in 0.5s ease-out",
         "slide-in": "slide-in 0.6s ease-out",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
-        "float": "float 6s ease-in-out infinite",
-        "shimmer": "shimmer 3s linear infinite",
+        // As bolhas flutuantes do tema antigo ficam paradas
+        float: "none",
+        shimmer: "shimmer 3s linear infinite",
       },
     },
   },
