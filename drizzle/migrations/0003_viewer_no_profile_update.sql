@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id AND NOT public.has_role(auth.uid(), 'viewer')) WITH CHECK (auth.uid() = id AND NOT public.has_role(auth.uid(), 'viewer'));
