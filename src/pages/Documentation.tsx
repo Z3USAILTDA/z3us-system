@@ -77,6 +77,16 @@ interface ProjectDocument {
 }
 
 // Lista fixa de produtos Z3US
+const ALLOWED_EXT = [".pdf", ".xlsx", ".xlsm", ".xls", ".docx", ".md"];
+const MIME_BY_EXT: Record<string, string> = {
+  pdf: "application/pdf",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  xlsm: "application/vnd.ms-excel.sheet.macroEnabled.12",
+  xls: "application/vnd.ms-excel",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  md: "text/markdown",
+};
+
 const PRODUCT_OPTIONS = [
   "Zeus",
   "Olimpo",
@@ -318,7 +328,7 @@ const DocumentationContent = () => {
           toast.error(`Erro ao atualizar documento: ${error.message}`);
         } else {
           toast.success("Documento atualizado com sucesso!");
-          fetchData();
+          fetchData(profile?.role === "admin");
           setDialogOpen(false);
           setEditingDocument(null);
         }
@@ -335,7 +345,7 @@ const DocumentationContent = () => {
           toast.error(`Erro ao adicionar documento: ${error.message}`);
         } else {
           toast.success(`Documento adicionado com ${productsArray.length} produto(s)!`);
-          fetchData();
+          fetchData(profile?.role === "admin");
           setDialogOpen(false);
           setSelectedProducts([]);
         }
@@ -362,7 +372,7 @@ const DocumentationContent = () => {
       toast.error("Erro ao remover documento");
     } else {
       toast.success("Documento removido com sucesso!");
-      fetchData();
+      fetchData(profile?.role === "admin");
     }
   };
 
@@ -431,7 +441,10 @@ const DocumentationContent = () => {
       const matchesProject = !filterProject || filterProject === "all" || doc.projects?.title.toLowerCase().includes(filterProject.toLowerCase());
       const matchesType = !filterType || filterType === "all" || doc.type === filterType;
 
-      return matchesSearch && matchesProject && matchesType;
+      const matchesClient =
+        profile?.role !== "admin" || filterClient === "all" || (doc as any).projects?.client_id === filterClient;
+
+      return matchesSearch && matchesProject && matchesType && matchesClient;
     })
     .sort((a, b) => {
       switch (sortOrder) {
@@ -448,12 +461,14 @@ const DocumentationContent = () => {
   const hasActiveFilters =
     searchTerm ||
     (filterProject && filterProject !== "all") ||
-    (filterType && filterType !== "all");
+    (filterType && filterType !== "all") ||
+    (profile?.role === "admin" && filterClient !== "all");
 
   const clearFilters = () => {
     setSearchTerm("");
     setFilterProject("all");
     setFilterType("all");
+    setFilterClient("all");
   };
 
   if (loading) {
@@ -784,6 +799,20 @@ const DocumentationContent = () => {
                 <Filter className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Filtros:</span>
               </div>
+
+              {profile?.role === "admin" && (
+                <Select value={filterClient} onValueChange={setFilterClient}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os clientes</SelectItem>
+                    {clients.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
               <Select value={filterProject} onValueChange={setFilterProject}>
                 <SelectTrigger className="w-48">
