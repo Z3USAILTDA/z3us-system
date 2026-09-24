@@ -109,6 +109,7 @@ const DocumentationContent = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [filterProject, setFilterProject] = useState("");
+  const [filterClient, setFilterClient] = useState("all");
   const [filterType, setFilterType] = useState("");
   const [sortOrder, setSortOrder] = useState<"recent" | "az" | "project">("recent");
 
@@ -131,22 +132,25 @@ const DocumentationContent = () => {
     const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
 
     setProfile(profileData);
-    fetchData();
+    fetchData(profileData?.role === "admin");
   };
 
-  const fetchData = async () => {
+  const fetchData = async (isAdmin: boolean) => {
     const [documentsRes, projectsRes, clientsRes] = await Promise.all([
       supabase
         .from("project_documents")
         .select(`
           *,
           projects (
-            title
+            title,
+            client_id
           )
         `)
         .order("created_at", { ascending: false }),
       supabase.from("projects").select("id, title, client_id").order("title"),
-      supabase.from("clients").select("id, company_name").order("company_name"),
+      isAdmin
+        ? supabase.from("clients").select("id, company_name").order("company_name")
+        : Promise.resolve({ data: [], error: null } as any),
     ]);
 
     if (documentsRes.error) {
@@ -250,7 +254,12 @@ const DocumentationContent = () => {
 
       // Upload new file if provided
       if (file) {
-        const fileExt = file.name.split(".").pop();
+        const fileExt = (file.name.split(".").pop() || "").toLowerCase();
+        if (!ALLOWED_EXT.includes(`.${fileExt}`)) {
+          toast.error("Formato não permitido. Use PDF, XLSX, XLSM, XLS, DOCX ou MD.");
+          setUploading(false);
+          return;
+        }
         const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
@@ -258,6 +267,7 @@ const DocumentationContent = () => {
           .upload(filePath, file, {
             cacheControl: "3600",
             upsert: false,
+            contentType: file.type || MIME_BY_EXT[fileExt] || "application/octet-stream",
           });
 
         if (uploadError) {
@@ -731,12 +741,12 @@ const DocumentationContent = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="file">
-                          Arquivo PDF {editingDocument ? "(deixe vazio para manter o atual)" : "*"}
+                          Arquivo (PDF, XLSX, XLSM, XLS, DOCX ou MD) {editingDocument ? "(deixe vazio para manter o atual)" : "*"}
                         </Label>
                         <Input
                           id="file"
                           type="file"
-                          accept=".pdf"
+                          accept={ALLOWED_EXT.join(",")}
                           ref={fileInputRef}
                           required={!editingDocument}
                         />
@@ -889,15 +899,17 @@ const DocumentationContent = () => {
                     )}
 
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleView(doc)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver
-                      </Button>
+                      {isPdf(doc.file_name) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleView(doc)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -966,7 +978,7 @@ const DocumentationContent = () => {
               onClick={() => selectedDocument && handleDownload(selectedDocument)}
             >
               <Download className="h-4 w-4 mr-2" />
-              Baixar PDF
+              Baixar
             </Button>
             <Button variant="secondary" onClick={() => setViewerOpen(false)}>
               Fechar
@@ -1031,6 +1043,8 @@ const PDFViewer = ({ document }: { document: ProjectDocument }) => {
     />
   );
 };
+
+const isPdf = (name?: string | null) => !!name && name.toLowerCase().endsWith(".pdf");
 
 const Documentation = () => {
   return (
