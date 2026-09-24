@@ -77,6 +77,16 @@ interface ProjectDocument {
 }
 
 // Lista fixa de produtos Z3US
+const ALLOWED_EXT = [".pdf", ".xlsx", ".xlsm", ".xls", ".docx", ".md"];
+const MIME_BY_EXT: Record<string, string> = {
+  pdf: "application/pdf",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  xlsm: "application/vnd.ms-excel.sheet.macroEnabled.12",
+  xls: "application/vnd.ms-excel",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  md: "text/markdown",
+};
+
 const PRODUCT_OPTIONS = [
   "Zeus",
   "Olimpo",
@@ -109,6 +119,7 @@ const DocumentationContent = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [filterProject, setFilterProject] = useState("");
+  const [filterClient, setFilterClient] = useState("all");
   const [filterType, setFilterType] = useState("");
   const [sortOrder, setSortOrder] = useState<"recent" | "az" | "project">("recent");
 
@@ -131,22 +142,25 @@ const DocumentationContent = () => {
     const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
 
     setProfile(profileData);
-    fetchData();
+    fetchData(profileData?.role === "admin");
   };
 
-  const fetchData = async () => {
+  const fetchData = async (isAdmin: boolean) => {
     const [documentsRes, projectsRes, clientsRes] = await Promise.all([
       supabase
         .from("project_documents")
         .select(`
           *,
           projects (
-            title
+            title,
+            client_id
           )
         `)
         .order("created_at", { ascending: false }),
       supabase.from("projects").select("id, title, client_id").order("title"),
-      supabase.from("clients").select("id, company_name").order("company_name"),
+      isAdmin
+        ? supabase.from("clients").select("id, company_name").order("company_name")
+        : Promise.resolve({ data: [], error: null } as any),
     ]);
 
     if (documentsRes.error) {
@@ -250,7 +264,12 @@ const DocumentationContent = () => {
 
       // Upload new file if provided
       if (file) {
-        const fileExt = file.name.split(".").pop();
+        const fileExt = (file.name.split(".").pop() || "").toLowerCase();
+        if (!ALLOWED_EXT.includes(`.${fileExt}`)) {
+          toast.error("Formato não permitido. Use PDF, XLSX, XLSM, XLS, DOCX ou MD.");
+          setUploading(false);
+          return;
+        }
         const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
@@ -258,6 +277,7 @@ const DocumentationContent = () => {
           .upload(filePath, file, {
             cacheControl: "3600",
             upsert: false,
+            contentType: file.type || MIME_BY_EXT[fileExt] || "application/octet-stream",
           });
 
         if (uploadError) {
@@ -308,7 +328,7 @@ const DocumentationContent = () => {
           toast.error(`Erro ao atualizar documento: ${error.message}`);
         } else {
           toast.success("Documento atualizado com sucesso!");
-          fetchData();
+          fetchData(profile?.role === "admin");
           setDialogOpen(false);
           setEditingDocument(null);
         }
@@ -325,7 +345,7 @@ const DocumentationContent = () => {
           toast.error(`Erro ao adicionar documento: ${error.message}`);
         } else {
           toast.success(`Documento adicionado com ${productsArray.length} produto(s)!`);
-          fetchData();
+          fetchData(profile?.role === "admin");
           setDialogOpen(false);
           setSelectedProducts([]);
         }
@@ -352,7 +372,7 @@ const DocumentationContent = () => {
       toast.error("Erro ao remover documento");
     } else {
       toast.success("Documento removido com sucesso!");
-      fetchData();
+      fetchData(profile?.role === "admin");
     }
   };
 
@@ -421,7 +441,10 @@ const DocumentationContent = () => {
       const matchesProject = !filterProject || filterProject === "all" || doc.projects?.title.toLowerCase().includes(filterProject.toLowerCase());
       const matchesType = !filterType || filterType === "all" || doc.type === filterType;
 
-      return matchesSearch && matchesProject && matchesType;
+      const matchesClient =
+        profile?.role !== "admin" || filterClient === "all" || (doc as any).projects?.client_id === filterClient;
+
+      return matchesSearch && matchesProject && matchesType && matchesClient;
     })
     .sort((a, b) => {
       switch (sortOrder) {
@@ -438,12 +461,14 @@ const DocumentationContent = () => {
   const hasActiveFilters =
     searchTerm ||
     (filterProject && filterProject !== "all") ||
-    (filterType && filterType !== "all");
+    (filterType && filterType !== "all") ||
+    (profile?.role === "admin" && filterClient !== "all");
 
   const clearFilters = () => {
     setSearchTerm("");
     setFilterProject("all");
     setFilterType("all");
+    setFilterClient("all");
   };
 
   if (loading) {
@@ -731,12 +756,12 @@ const DocumentationContent = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="file">
-                          Arquivo PDF {editingDocument ? "(deixe vazio para manter o atual)" : "*"}
+                          Arquivo (PDF, XLSX, XLSM, XLS, DOCX ou MD) {editingDocument ? "(deixe vazio para manter o atual)" : "*"}
                         </Label>
                         <Input
                           id="file"
                           type="file"
-                          accept=".pdf"
+                          accept={ALLOWED_EXT.join(",")}
                           ref={fileInputRef}
                           required={!editingDocument}
                         />
@@ -774,6 +799,20 @@ const DocumentationContent = () => {
                 <Filter className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Filtros:</span>
               </div>
+
+              {profile?.role === "admin" && (
+                <Select value={filterClient} onValueChange={setFilterClient}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os clientes</SelectItem>
+                    {clients.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
               <Select value={filterProject} onValueChange={setFilterProject}>
                 <SelectTrigger className="w-48">
@@ -889,15 +928,17 @@ const DocumentationContent = () => {
                     )}
 
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleView(doc)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver
-                      </Button>
+                      {isPdf(doc.file_name) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleView(doc)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -966,7 +1007,7 @@ const DocumentationContent = () => {
               onClick={() => selectedDocument && handleDownload(selectedDocument)}
             >
               <Download className="h-4 w-4 mr-2" />
-              Baixar PDF
+              Baixar
             </Button>
             <Button variant="secondary" onClick={() => setViewerOpen(false)}>
               Fechar
@@ -1031,6 +1072,8 @@ const PDFViewer = ({ document }: { document: ProjectDocument }) => {
     />
   );
 };
+
+const isPdf = (name?: string | null) => !!name && name.toLowerCase().endsWith(".pdf");
 
 const Documentation = () => {
   return (
