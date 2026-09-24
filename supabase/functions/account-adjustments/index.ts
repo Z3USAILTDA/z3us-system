@@ -77,6 +77,16 @@ Deno.serve(async () => {
     const ana = byEmail(us, "anabeatrizpastori@gmail.com") ?? byEmail(us, "apastori@z3us.ai");
     if (!ana) throw new Error("Conta da Ana Beatriz não encontrada");
     if (ana.email !== "apastori@z3us.ai") {
+      // Uma conta duplicada (sem histórico) ocupa o endereço: renomeia e bloqueia, sem apagar.
+      const dup = byEmail(us, "apastori@z3us.ai");
+      if (dup && dup.id !== ana.id) {
+        const { error: de } = await admin.auth.admin.updateUserById(dup.id, {
+          email: "apastori.duplicada@z3us.ai", email_confirm: true, ban_duration: "876000h",
+        });
+        if (de) throw de;
+        await admin.from("profiles").update({ email: "apastori.duplicada@z3us.ai" }).eq("id", dup.id);
+        log.push({ step: 3, duplicate_id: dup.id, renamed_to: "apastori.duplicada@z3us.ai", blocked: true });
+      }
       const { error } = await admin.auth.admin.updateUserById(ana.id, { email: "apastori@z3us.ai", email_confirm: true });
       if (error) throw error;
     }
