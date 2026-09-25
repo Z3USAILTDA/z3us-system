@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getStoredAuthSession } from "@/lib/authSession";
+import { getStoredAuthSession, hasUsableStoredSession } from "@/lib/authSession";
+import TvPinGate from "@/components/TvPinGate";
+import { useClientLogo } from "@/lib/clientLogo";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   PieChart,
@@ -113,8 +115,9 @@ const logoCliente = (nome: string) => {
   return CLIENTE_LOGO.find((c) => n.includes(c.match));
 };
 
-const ClienteLogo = ({ nome }: { nome: string }) => {
-  const logo = logoCliente(nome);
+const ClienteLogo = ({ nome, logoUrl }: { nome: string; logoUrl?: string | null }) => {
+  const cadastro = useClientLogo(logoUrl);
+  const logo = cadastro ? { url: cadastro, invert: false } : logoCliente(nome);
   const url = logo?.url;
   const [erro, setErro] = useState(false);
   if (!url || erro) {
@@ -144,12 +147,33 @@ export default function SprintMetricsTV() {
   const navigate = useNavigate();
   const [db, setDb] = useState<DB>(emptyDb);
   const [loaded, setLoaded] = useState(false);
+  const [authed, setAuthed] = useState(() => !!getStoredAuthSession()?.access_token && hasUsableStoredSession());
+  const [logosCadastro, setLogosCadastro] = useState<{ nome: string; logo: string }[]>([]);
 
   useEffect(() => {
-    if (!getStoredAuthSession()?.access_token) navigate("/auth", { replace: true });
-  }, [navigate]);
+    if (!authed) return;
+    (supabase as any)
+      .from("clients")
+      .select("company_name,logo_url")
+      .not("logo_url", "is", null)
+      .then(({ data }: any) =>
+        setLogosCadastro(
+          (data || []).map((c: any) => ({ nome: (c.company_name || "").toLowerCase().trim(), logo: c.logo_url }))
+        )
+      );
+  }, [authed]);
+
+  const logoDoCadastro = (nome: string) => {
+    const n = (nome || "").toLowerCase().trim();
+    if (!n) return null;
+    const exato = logosCadastro.find((c) => c.nome === n);
+    if (exato) return exato.logo;
+    return logosCadastro.find((c) => c.nome.startsWith(n) || n.startsWith(c.nome))?.logo ?? null;
+  };
+
 
   useEffect(() => {
+    if (!authed) return;
     let cancelled = false;
     const load = async () => {
       const { data } = await (supabase as any)
@@ -190,7 +214,7 @@ export default function SprintMetricsTV() {
       window.removeEventListener("focus", onVisible);
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [authed]);
 
 
   const sprintAtual = useMemo(() => {
@@ -315,7 +339,7 @@ export default function SprintMetricsTV() {
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <ClienteLogo nome={cliente} />
+              <ClienteLogo nome={cliente} logoUrl={logoDoCadastro(cliente)} />
               <div className="min-w-0">
                 <span className="block text-sm font-semibold text-foreground truncate">{cliente}</span>
                 <span className="block text-[11px] uppercase tracking-wide text-muted-foreground truncate">
@@ -342,6 +366,8 @@ export default function SprintMetricsTV() {
     </div>
   );
 
+
+  if (!authed) return <TvPinGate title="Métricas Sprint TV" onSuccess={() => setAuthed(true)} />;
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 space-y-2">

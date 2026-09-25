@@ -1,75 +1,64 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { findMetricsUser } from "../_shared/metricsUser.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+const randomPassword = () => {
+  const bytes = new Uint8Array(48);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes)).replace(/[^A-Za-z0-9]/g, "") + "!Aa9";
 };
 
-const METRICS_EMAIL = "metricas@z3us.ai";
-// Senha real armazenada no Auth (>=8 chars). A UI aceita "z3us" e
-// traduz para esta credencial real ao chamar signInWithPassword.
-const METRICS_PASSWORD = "z3us-metrics-tv-2026!";
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { autoRefreshToken: false, persistSession: false } },
-    );
+    const url = Deno.env.get("SUPABASE_URL")!;
+    const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
-    // 1) Verifica se já existe
-    const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-    const existing = list?.users?.find((u) => u.email === METRICS_EMAIL);
+    // Exige chamador admin
+    const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+    if (!token) return json({ error: "Não autenticado" }, 401);
+    const { data: caller, error: uErr } = await admin.auth.getUser(token);
+    if (uErr || !caller?.user) return json({ error: "Não autenticado" }, 401);
+    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: caller.user.id, _role: "admin" });
+    if (isAdmin !== true) return json({ error: "Apenas administradores" }, 403);
 
-    let userId = existing?.id;
+    const body = await req.json().catch(() => ({}));
+    let user = await findMetricsUser(admin);
+    const password = randomPassword();
 
-    if (!existing) {
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
-        email: METRICS_EMAIL,
-        password: METRICS_PASSWORD,
+    if (!user) {
+      const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        return json({ error: "Usuário de métricas não existe; informe o e-mail para criá-lo" }, 400);
+      }
+      const { data: created, error } = await admin.auth.admin.createUser({
+        email,
+        password,
         email_confirm: true,
-        user_metadata: { full_name: "Painel de Métricas", role: "viewer" },
+        user_metadata: { full_name: "Painel de Métricas" },
       });
-      if (createErr) throw createErr;
-      userId = created.user?.id;
+      if (error || !created.user) throw error ?? new Error("Falha ao criar usuário");
+      user = { id: created.user.id, email };
     } else {
-      // Garante a senha conhecida (caso já exista com outra senha)
-      await admin.auth.admin.updateUserById(existing.id, {
-        password: METRICS_PASSWORD,
-        email_confirm: true,
-      });
+      const { error } = await admin.auth.admin.updateUserById(user.id, { password, email_confirm: true });
+      if (error) throw error;
     }
 
-    if (!userId) throw new Error("Falha ao obter user id");
-
-    // 2) Garante papel viewer (somente leitura) e remove qualquer outro papel
-    await admin.from("user_roles").delete().eq("user_id", userId).neq("role", "viewer");
-    await admin
-      .from("user_roles")
-      .upsert({ user_id: userId, role: "viewer" }, { onConflict: "user_id,role" });
-
-    // 3) Garante profile admin
+    // Papel somente leitura; nunca admin
+    await admin.from("user_roles").delete().eq("user_id", user.id).neq("role", "viewer");
+    await admin.from("user_roles").upsert({ user_id: user.id, role: "viewer" }, { onConflict: "user_id,role" });
     await admin
       .from("profiles")
-      .upsert(
-        { id: userId, email: METRICS_EMAIL, full_name: "Painel de Métricas", role: "viewer" },
-        { onConflict: "id" },
-      );
+      .upsert({ id: user.id, email: user.email, full_name: "Painel de Métricas", role: "viewer" }, { onConflict: "id" });
 
-    return new Response(
-      JSON.stringify({ success: true, userId, email: METRICS_EMAIL }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
-    );
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Erro desconhecido";
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+    return json({ success: true, senha_trocada: true });
+  } catch (e) {
+    console.error("setup-metrics-user erro:", e instanceof Error ? e.message : "desconhecido");
+    return json({ error: "Falha ao configurar usuário de métricas" }, 400);
   }
 });
