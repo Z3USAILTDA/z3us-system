@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getStoredAuthSession } from "@/lib/authSession";
+import { getStoredAuthSession, hasUsableStoredSession } from "@/lib/authSession";
+import TvPinGate from "@/components/TvPinGate";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   PieChart,
@@ -145,11 +146,10 @@ export default function SprintMetricsTV() {
   const [db, setDb] = useState<DB>(emptyDb);
   const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    if (!getStoredAuthSession()?.access_token) navigate("/auth", { replace: true });
-  }, [navigate]);
+  const [authed, setAuthed] = useState(() => !!getStoredAuthSession()?.access_token && hasUsableStoredSession());
 
   useEffect(() => {
+    if (!authed) return;
     let cancelled = false;
     const load = async () => {
       const { data } = await (supabase as any)
@@ -190,7 +190,7 @@ export default function SprintMetricsTV() {
       window.removeEventListener("focus", onVisible);
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [authed]);
 
 
   const sprintAtual = useMemo(() => {
@@ -342,6 +342,8 @@ export default function SprintMetricsTV() {
     </div>
   );
 
+
+  if (!authed) return <TvPinGate title="Métricas Sprint TV" onSuccess={() => setAuthed(true)} />;
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 space-y-2">

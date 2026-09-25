@@ -30,7 +30,8 @@ import {
   Zap,
 } from "lucide-react";
 import { getTodayLocalDate, formatDateBR } from "@/lib/utils";
-import { clearAuthStorage, getStoredAuthSession, hasUsableStoredSession, storeAuthSession } from "@/lib/authSession";
+import { clearAuthStorage, getStoredAuthSession, hasUsableStoredSession } from "@/lib/authSession";
+import TvPinGate, { TV_SESSION_KEY, TV_SESSION_MS } from "@/components/TvPinGate";
 
 // ----- Types -----
 interface Project {
@@ -157,14 +158,6 @@ const StatusDot = ({ color }: { color: string }) => (
   />
 );
 
-// Credenciais especiais do painel (login simplificado, sessão 24h)
-const TV_USERNAME = "metricas";
-const TV_PASSWORD = "z3us";
-const TV_REAL_EMAIL = "metricas@z3us.ai";
-const TV_REAL_PASSWORD = "z3us-metrics-tv-2026!";
-const TV_SESSION_KEY = "metricsTvLoginAt";
-const TV_SESSION_MS = 24 * 60 * 60 * 1000;
-
 // ----- Main page -----
 const MetricsTV = () => {
   const navigate = useNavigate();
@@ -176,11 +169,6 @@ const MetricsTV = () => {
   const [now, setNow] = useState(new Date());
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [authed, setAuthed] = useState(false);
-  const [loginUser, setLoginUser] = useState("");
-  const [loginPass, setLoginPass] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loggingIn, setLoggingIn] = useState(false);
-
 
   // Auth gate: exige sessão do usuário de métricas (válida há <24h)
   useEffect(() => {
@@ -199,45 +187,6 @@ const MetricsTV = () => {
     setLoading(false);
   }, []);
 
-
-  const handleTvLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError("");
-    const user = loginUser.trim().toLowerCase();
-    const isTvUser = user === TV_USERNAME || user === TV_REAL_EMAIL;
-    if (!isTvUser || loginPass !== TV_PASSWORD) {
-      setLoginError("Usuário ou senha inválidos.");
-      return;
-    }
-    setLoggingIn(true);
-    try {
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-      clearAuthStorage();
-
-      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY },
-        body: JSON.stringify({ email: TV_REAL_EMAIL, password: TV_REAL_PASSWORD }),
-      });
-      const payload = await res.json().catch(() => ({}));
-
-      if (!res.ok || !payload?.access_token || !payload?.refresh_token) {
-        setLoginError("Falha ao acessar o painel. Tente novamente.");
-        return;
-      }
-
-      storeAuthSession(payload);
-      localStorage.setItem(TV_SESSION_KEY, Date.now().toString());
-      setAuthed(true);
-      setLoading(true);
-    } catch {
-      setLoginError("Falha ao acessar o painel. Tente novamente.");
-    } finally {
-      setLoggingIn(false);
-    }
-  };
 
   const fetchData = async () => {
     const [pj, pf, cl, cp] = await Promise.all([
@@ -634,56 +583,13 @@ const MetricsTV = () => {
 
   if (!authed) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-background tech-grid p-4">
-        <form
-          onSubmit={handleTvLogin}
-          className="w-full max-w-sm rounded-2xl border border-border/60 bg-card/80 backdrop-blur-md shadow-xl p-6 space-y-4"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div
-              className="rounded-xl p-2 glow-primary"
-              style={{ background: "var(--gradient-primary)" }}
-            >
-              <Activity className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Painel de Métricas</h1>
-              <p className="text-xs text-muted-foreground">Acesso para telão · sessão de 24h</p>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">Usuário</label>
-            <input
-              autoFocus
-              value={loginUser}
-              onChange={(e) => setLoginUser(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="metricas"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">Senha</label>
-            <input
-              type="password"
-              value={loginPass}
-              onChange={(e) => setLoginPass(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="••••"
-            />
-          </div>
-          {loginError && (
-            <div className="text-sm text-destructive">{loginError}</div>
-          )}
-          <button
-            type="submit"
-            disabled={loggingIn}
-            className="w-full rounded-lg py-2.5 font-semibold text-primary-foreground disabled:opacity-60"
-            style={{ background: "var(--gradient-primary)" }}
-          >
-            {loggingIn ? "Entrando..." : "Entrar no painel"}
-          </button>
-        </form>
-      </div>
+      <TvPinGate
+        title="Painel de Métricas"
+        onSuccess={() => {
+          setLoading(true);
+          setAuthed(true);
+        }}
+      />
     );
   }
 
