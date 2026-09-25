@@ -62,14 +62,12 @@ export default function TvPinGate({ title, onSuccess }: Props) {
     (d: string) => {
       if (busy) return;
       setError("");
-      setDigits((cur) => {
-        if (cur.length >= 4) return cur;
-        const next = cur + d;
-        if (next.length === 4) void submit(next);
-        return next;
-      });
+      if (digits.length >= 4) return;
+      const next = digits + d;
+      setDigits(next);
+      if (next.length === 4) void submit(next);
     },
-    [busy, submit]
+    [busy, submit, digits]
   );
 
   const backspace = useCallback(() => !busy && setDigits((c) => c.slice(0, -1)), [busy]);
