@@ -23,7 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
   on_hold: "bg-destructive",
   completed: "bg-success",
   cancelled: "bg-destructive",
-  waiting_client: "bg-orange-500",
+  waiting_client: "bg-warning",
 };
 
 const formatDate = (date?: string | null) => {
@@ -105,14 +105,14 @@ const ClientProjectModal = ({ project, open, onOpenChange, onSaved }: ClientProj
               <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
               <div className="text-sm">
                 <p className="text-muted-foreground">Entrega</p>
-                <p className="font-medium">{formatDate(project.end_date)}</p>
+                <p className="font-medium num">{formatDate(project.end_date)}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
               <div className="text-sm">
                 <p className="text-muted-foreground">Início</p>
-                <p className="font-medium">{formatDate(project.start_date)}</p>
+                <p className="font-medium num">{formatDate(project.start_date)}</p>
               </div>
             </div>
           </div>

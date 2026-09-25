@@ -29,10 +29,10 @@ import logoWhite from "@/assets/logo-branco.png";
 import { generateWeeklyPdf } from "@/lib/weeklyPdfExport";
 
 const CHART_COLORS = [
-  "hsl(175, 70%, 50%)", "hsl(217, 91%, 60%)", "hsl(280, 85%, 65%)",
-  "hsl(38, 92%, 55%)", "hsl(142, 76%, 45%)", "hsl(199, 89%, 55%)",
-  "hsl(48, 96%, 53%)", "hsl(0, 63%, 50%)", "hsl(160, 60%, 45%)",
-  "hsl(240, 60%, 60%)",
+  "hsl(var(--success))", "hsl(var(--primary))", "hsl(var(--primary))",
+  "hsl(var(--warning))", "hsl(var(--success))", "hsl(var(--primary))",
+  "hsl(var(--warning))", "hsl(var(--destructive))", "hsl(var(--success))",
+  "hsl(var(--primary))",
 ];
 
 const WeeklySummaryContent = () => {
@@ -283,7 +283,7 @@ const WeeklySummaryContent = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent num">
                       {ws.kpis.completionRate.toFixed(1)}%
                     </div>
                   </CardContent>
@@ -295,7 +295,7 @@ const WeeklySummaryContent = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent num">
                       {ws.kpis.avgLeadTimeDays.toFixed(1)} <span className="text-lg text-muted-foreground">dias</span>
                     </div>
                   </CardContent>
@@ -307,7 +307,7 @@ const WeeklySummaryContent = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent num">
                       {ws.kpis.slaRate.toFixed(1)}%
                     </div>
                   </CardContent>
@@ -324,12 +324,12 @@ const WeeklySummaryContent = () => {
                   <CardContent>
                     <ResponsiveContainer width="100%" height={250}>
                       <LineChart data={ws.dailyTrend}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 47%, 15%)" />
-                        <XAxis dataKey="label" stroke="hsl(215, 20%, 65%)" fontSize={12} />
-                        <YAxis stroke="hsl(215, 20%, 65%)" fontSize={12} allowDecimals={false} />
-                        <RechartsTooltip contentStyle={{ backgroundColor: "hsl(222, 47%, 8%)", border: "1px solid hsl(222, 47%, 15%)", borderRadius: "8px" }} />
-                        <Line type="monotone" dataKey="completed" stroke="hsl(142, 76%, 45%)" strokeWidth={2} name="Concluídas" dot={{ fill: "hsl(142, 76%, 45%)" }} />
-                        <Line type="monotone" dataKey="created" stroke="hsl(199, 89%, 55%)" strokeWidth={2} name="Criadas" dot={{ fill: "hsl(199, 89%, 55%)" }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
+                        <RechartsTooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                        <Line type="monotone" dataKey="completed" stroke="hsl(var(--success))" strokeWidth={2} name="Concluídas" dot={{ fill: "hsl(var(--success))" }} />
+                        <Line type="monotone" dataKey="created" stroke="hsl(var(--primary))" strokeWidth={2} name="Criadas" dot={{ fill: "hsl(var(--primary))" }} />
                         <Legend />
                       </LineChart>
                     </ResponsiveContainer>
@@ -345,11 +345,11 @@ const WeeklySummaryContent = () => {
                     <CardContent>
                       <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={ws.teamRankings}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 47%, 15%)" />
-                          <XAxis dataKey="name" stroke="hsl(215, 20%, 65%)" fontSize={11} tick={{ fill: "hsl(215, 20%, 65%)" }} />
-                          <YAxis stroke="hsl(215, 20%, 65%)" fontSize={12} allowDecimals={false} />
-                          <RechartsTooltip contentStyle={{ backgroundColor: "hsl(222, 47%, 8%)", border: "1px solid hsl(222, 47%, 15%)", borderRadius: "8px" }} />
-                          <Bar dataKey="completed" fill="hsl(175, 70%, 50%)" radius={[4, 4, 0, 0]} name="Concluídas" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
+                          <RechartsTooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                          <Bar dataKey="completed" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="Concluídas" />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -383,7 +383,7 @@ const WeeklySummaryContent = () => {
                             <TableCell className="text-center">{t.created}</TableCell>
                             <TableCell className="text-center text-success">{t.completed}</TableCell>
                             <TableCell className="text-center text-warning">{t.overdue}</TableCell>
-                            <TableCell className="text-center">{t.sharePercent.toFixed(1)}%</TableCell>
+                            <TableCell className="text-center num">{t.sharePercent.toFixed(1)}%</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -460,7 +460,7 @@ const WeeklySummaryContent = () => {
                         <Pie data={ws.clientBreakdown} dataKey="total" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, total }) => `${name.slice(0, 12)}… (${total})`} labelLine={false} fontSize={10}>
                           {ws.clientBreakdown.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                         </Pie>
-                        <RechartsTooltip contentStyle={{ backgroundColor: "hsl(222, 47%, 8%)", border: "1px solid hsl(222, 47%, 15%)", borderRadius: "8px" }} />
+                        <RechartsTooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -474,11 +474,11 @@ const WeeklySummaryContent = () => {
                   <CardContent>
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={ws.priorityBreakdown} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 47%, 15%)" />
-                        <XAxis type="number" stroke="hsl(215, 20%, 65%)" fontSize={12} allowDecimals={false} />
-                        <YAxis type="category" dataKey="label" stroke="hsl(215, 20%, 65%)" fontSize={12} width={60} />
-                        <RechartsTooltip contentStyle={{ backgroundColor: "hsl(222, 47%, 8%)", border: "1px solid hsl(222, 47%, 15%)", borderRadius: "8px" }} />
-                        <Bar dataKey="total" fill="hsl(280, 85%, 65%)" radius={[0, 4, 4, 0]} name="Atividades" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
+                        <YAxis type="category" dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} width={60} />
+                        <RechartsTooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                        <Bar dataKey="total" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Atividades" />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -492,11 +492,11 @@ const WeeklySummaryContent = () => {
                   <CardContent>
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={ws.statusBreakdown} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 47%, 15%)" />
-                        <XAxis type="number" stroke="hsl(215, 20%, 65%)" fontSize={12} allowDecimals={false} />
-                        <YAxis type="category" dataKey="label" stroke="hsl(215, 20%, 65%)" fontSize={11} width={100} />
-                        <RechartsTooltip contentStyle={{ backgroundColor: "hsl(222, 47%, 8%)", border: "1px solid hsl(222, 47%, 15%)", borderRadius: "8px" }} />
-                        <Bar dataKey="total" fill="hsl(217, 91%, 60%)" radius={[0, 4, 4, 0]} name="Atividades" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
+                        <YAxis type="category" dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={11} width={100} />
+                        <RechartsTooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                        <Bar dataKey="total" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Atividades" />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -572,9 +572,9 @@ const WeeklySummaryContent = () => {
                                p.status === "test" ? "Teste" :
                                p.status === "on_hold" ? "Pausado" : "Planejamento"}
                             </TableCell>
-                            <TableCell className="text-xs">{formatDateBR(p.created_at?.slice(0, 10))}</TableCell>
-                            <TableCell className="text-xs">{formatDateBR(p.end_date)}</TableCell>
-                            <TableCell className="text-xs">{formatDateBR(p.actual_end_date)}</TableCell>
+                            <TableCell className="text-xs num">{formatDateBR(p.created_at?.slice(0, 10))}</TableCell>
+                            <TableCell className="text-xs num">{formatDateBR(p.end_date)}</TableCell>
+                            <TableCell className="text-xs num">{formatDateBR(p.actual_end_date)}</TableCell>
                             <TableCell className="text-center text-xs">{p.status !== "completed" ? getOpenDays(p.created_at) : "—"}</TableCell>
                             <TableCell>{getBadgeStatus(p)}</TableCell>
                           </TableRow>
@@ -615,7 +615,7 @@ function KPICard({ title, value, icon: Icon, color, variation }: {
         </div>
       </CardHeader>
       <CardContent className="relative z-10">
-        <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">{value}</div>
+        <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent num">{value}</div>
         {variation && (
           <div className={`flex items-center gap-1 mt-1 text-xs ${variation.color}`}>
             <variation.icon className="h-3 w-3" />

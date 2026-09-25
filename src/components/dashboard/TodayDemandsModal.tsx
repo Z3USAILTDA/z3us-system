@@ -40,7 +40,7 @@ const getStatusBadge = (status: string) => {
     completed: { label: "Concluído", variant: "secondary" },
     on_hold: { label: "Pausado", variant: "destructive" },
     waiting_client: { label: "Aguardando cliente", variant: "outline", className: "bg-warning text-warning-foreground border-warning" },
-    test: { label: "Teste", variant: "outline", className: "bg-purple-500 text-white border-purple-500" },
+    test: { label: "Teste", variant: "outline", className: "bg-primary text-foreground border-primary" },
   };
 
   const config = statusConfig[status] || { label: getStatusLabel(status), variant: "outline" as const };

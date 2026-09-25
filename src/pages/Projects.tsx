@@ -353,8 +353,8 @@ const ProjectsContent = () => {
       on_hold: "bg-destructive",
       completed: "bg-success",
       cancelled: "bg-destructive",
-      test: "bg-purple-500",
-      waiting_client: "bg-orange-500",
+      test: "bg-primary",
+      waiting_client: "bg-warning",
     };
     return colors[status] || "bg-muted";
   };
@@ -1457,7 +1457,7 @@ const ProjectsContent = () => {
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Progresso</span>
-                            <span className="font-medium">{project.progress}%</span>
+                            <span className="font-medium num">{project.progress}%</span>
                           </div>
                           <Progress value={project.progress} className="h-2" />
                         </div>
@@ -1465,7 +1465,7 @@ const ProjectsContent = () => {
                         {project.end_date && (
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="h-4 w-4" />
-                            <span>Entrega: {formatDateBR(project.end_date)}</span>
+                            <span className="num">Entrega: {formatDateBR(project.end_date)}</span>
                           </div>
                         )}
 
@@ -1855,7 +1855,7 @@ const ProjectsContent = () => {
                               >
                                 <div className="flex items-center gap-2">
                                   <Progress value={project.progress} className="h-2 w-20" />
-                                  <span className="text-sm">{project.progress}%</span>
+                                  <span className="text-sm num">{project.progress}%</span>
                                 </div>
                               </div>
                             )}
@@ -1874,7 +1874,7 @@ const ProjectsContent = () => {
                             ) : (
                               <div
                                 onClick={() => startEditing(project.id, "end_date", project.end_date)}
-                                className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                                className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors num"
                               >
                                 {formatDateBR(project.end_date)}
                               </div>

@@ -126,11 +126,11 @@ interface DB {
 }
 
 const STAGES: { id: Stage; label: string; color: string; badge: string }[] = [
-  { id: "backlog", label: "Backlog da Sprint", color: "#94a3b8", badge: "bg-slate-400/15 text-slate-300" },
-  { id: "todo", label: "A Fazer", color: "#a78bfa", badge: "bg-violet-400/15 text-violet-300" },
-  { id: "dev", label: "Desenvolvimento", color: "#60a5fa", badge: "bg-blue-400/15 text-blue-300" },
-  { id: "homolog", label: "Homologação", color: "#fbbf24", badge: "bg-amber-400/15 text-amber-300" },
-  { id: "done", label: "Produção", color: "#34d399", badge: "bg-emerald-400/15 text-emerald-300" },
+  { id: "backlog", label: "Backlog da Sprint", color: "hsl(var(--muted-foreground))", badge: "bg-muted-foreground/15 text-muted-foreground" },
+  { id: "todo", label: "A Fazer", color: "hsl(var(--info))", badge: "bg-info/15 text-info" },
+  { id: "dev", label: "Desenvolvimento", color: "hsl(var(--primary))", badge: "bg-primary/15 text-primary" },
+  { id: "homolog", label: "Homologação", color: "hsl(var(--warning))", badge: "bg-warning/15 text-warning" },
+  { id: "done", label: "Produção", color: "hsl(var(--success))", badge: "bg-success/15 text-success" },
 ];
 
 const DEVS = ["Ana", "Patrick", "Larissa", "Paulo", "Roberto", "Thayná"];
@@ -487,12 +487,12 @@ const NewProjectsContent = () => {
     const hoje = todayISO();
     if (t.fimReal) {
       return t.fimPrev && t.fimReal > t.fimPrev
-        ? { cls: "bg-rose-400/15 text-rose-300", txt: "Entregue com atraso" }
-        : { cls: "bg-emerald-400/15 text-emerald-300", txt: "Entregue no prazo" };
+        ? { cls: "bg-destructive/15 text-destructive", txt: "Entregue com atraso" }
+        : { cls: "bg-success/15 text-success", txt: "Entregue no prazo" };
     }
-    if (t.fimPrev && hoje > t.fimPrev) return { cls: "bg-rose-400/15 text-rose-300", txt: "Em atraso" };
+    if (t.fimPrev && hoje > t.fimPrev) return { cls: "bg-destructive/15 text-destructive", txt: "Em atraso" };
     if (t.fimPrev && diffDays(t.fimPrev, hoje) <= 3 && t.stage !== "done")
-      return { cls: "bg-amber-400/15 text-amber-300", txt: "Prazo próximo" };
+      return { cls: "bg-warning/15 text-warning", txt: "Prazo próximo" };
     return null;
   };
 
@@ -1239,10 +1239,10 @@ const NewProjectsContent = () => {
     const usoReal = agg.capacidade ? Math.round((agg.entregue / agg.capacidade) * 100) : 0;
     const restante = Math.max(0, +(agg.planejado - agg.entregue).toFixed(1));
     return [
-      { nome: "Capacidade", valor: agg.capacidade, rotulo: `${fmtH(agg.capacidade)}h`, cor: "#fbbf24", capacidade: agg.capacidade },
-      { nome: "Planejado", valor: agg.planejado, rotulo: `${fmtH(agg.planejado)}h · ${usoPlan}%`, cor: "#60a5fa", capacidade: agg.capacidade },
-      { nome: "Entregue", valor: agg.entregue, rotulo: `${fmtH(agg.entregue)}h · ${usoReal}%`, cor: "#34d399", capacidade: agg.capacidade },
-      { nome: "Em aberto", valor: restante, rotulo: `${fmtH(restante)}h`, cor: "#94a3b8", capacidade: agg.capacidade },
+      { nome: "Capacidade", valor: agg.capacidade, rotulo: `${fmtH(agg.capacidade)}h`, cor: "hsl(var(--warning))", capacidade: agg.capacidade },
+      { nome: "Planejado", valor: agg.planejado, rotulo: `${fmtH(agg.planejado)}h · ${usoPlan}%`, cor: "hsl(var(--primary))", capacidade: agg.capacidade },
+      { nome: "Entregue", valor: agg.entregue, rotulo: `${fmtH(agg.entregue)}h · ${usoReal}%`, cor: "hsl(var(--success))", capacidade: agg.capacidade },
+      { nome: "Em aberto", valor: restante, rotulo: `${fmtH(restante)}h`, cor: "hsl(var(--muted-foreground))", capacidade: agg.capacidade },
     ];
   }, [horasPorSprint]);
 
@@ -1444,8 +1444,8 @@ const NewProjectsContent = () => {
               </div>
 
               {viewingClosed ? (
-                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2">
-                  <p className="text-xs text-amber-300">
+                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2">
+                  <p className="text-xs text-warning">
                     Visualizando o histórico da Sprint {sprintNum(sprintById(boardSprint)?.nome)} (encerrada
                     {sprintById(boardSprint)?.encerradaEm ? ` em ${fmt(sprintById(boardSprint)!.encerradaEm!)}` : ""}) ·
                     modo somente leitura
@@ -1485,7 +1485,7 @@ const NewProjectsContent = () => {
                           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${st.badge}`}>
                             {st.label}
                           </span>
-                          <span className="text-xs text-muted-foreground">{list.length}</span>
+                          <span className="text-xs text-muted-foreground num">{list.length}</span>
                         </div>
                         {list.length === 0 && (
                           <p className="text-xs text-muted-foreground text-center py-6">Solte um card aqui</p>
@@ -1518,12 +1518,12 @@ const NewProjectsContent = () => {
                                    {p ? clienteNome(p.clienteId) : "—"}
                                  </span>
                                 {t.dev && (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-400/15 text-violet-300">
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary">
                                     {t.dev}
                                   </span>
                                  )}
                                  {t.pts != null && (
-                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300">
+                                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/15 text-warning">
                                      {t.pts} · {EFFORT_LEVELS.find((e) => e.value === t.pts)?.label || "Esforço"}
                                    </span>
                                  )}
@@ -1678,8 +1678,8 @@ const NewProjectsContent = () => {
                             <XAxis dataKey="dia" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                             <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                             <RTooltip />
-                            <Line type="monotone" dataKey="ideal" stroke="#94a3b8" strokeDasharray="6 5" dot={false} />
-                            <Line type="monotone" dataKey="real" stroke="#2dd4bf" strokeWidth={2} dot={false} connectNulls />
+                            <Line type="monotone" dataKey="ideal" stroke="hsl(var(--muted-foreground))" strokeDasharray="6 5" dot={false} />
+                            <Line type="monotone" dataKey="real" stroke="hsl(var(--success))" strokeWidth={2} dot={false} connectNulls />
                           </LineChart>
                         </ResponsiveContainer>
                       ) : (
@@ -1705,7 +1705,7 @@ const NewProjectsContent = () => {
                         <p className="text-sm font-semibold mt-1">
                           {fmtH(s.entregue)}h <span className="text-muted-foreground">/ {fmtH(s.capacidade)}h</span>
                         </p>
-                        <p className={`text-[11px] ${s.desvio < 0 ? "text-amber-400" : "text-emerald-400"}`}>
+                        <p className={`text-[11px] ${s.desvio < 0 ? "text-warning" : "text-success"}`}>
                           desvio {s.desvio > 0 ? "+" : ""}{fmtH(s.desvio)}h · {s.usoReal}% da capacidade
                         </p>
                       </div>
@@ -1742,7 +1742,7 @@ const NewProjectsContent = () => {
                           />
                           <ReferenceLine
                             x={comparativoSprint[0]?.capacidade}
-                            stroke="#fbbf24"
+                            stroke="hsl(var(--warning))"
                             strokeDasharray="5 5"
                           />
                           <Bar dataKey="valor" radius={[0, 6, 6, 0]} barSize={28}>
@@ -1800,7 +1800,7 @@ const NewProjectsContent = () => {
                               className="block h-full"
                               style={{
                                 width: `${Math.min(100, r.pct)}%`,
-                                background: excedeu ? "#fb7185" : "#2dd4bf",
+                                background: excedeu ? "hsl(var(--destructive))" : "hsl(var(--success))",
                               }}
                             />
                           </div>
@@ -1821,7 +1821,7 @@ const NewProjectsContent = () => {
                                     </span>
                                   )}
                                 </span>
-                                <span className="shrink-0 font-medium text-foreground">{fmtH(i.horas)}h</span>
+                                <span className="shrink-0 font-medium text-foreground num">{fmtH(i.horas)}h</span>
                               </li>
                             ))}
                           </ul>
@@ -1956,7 +1956,7 @@ const NewProjectsContent = () => {
                   ))}
                 </datalist>
                 {sprintFormEncerrada && (
-                  <p className="mt-1.5 text-[11px] leading-snug rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-400 px-2 py-1.5">
+                  <p className="mt-1.5 text-[11px] leading-snug rounded-md border border-warning/40 bg-warning/10 text-warning px-2 py-1.5">
                     Atenção: a Sprint {sprintNum(formNames.sprint)} já foi encerrada. Ao salvar, a
                     atividade será registrada em uma sprint finalizada.
                   </p>
@@ -2097,14 +2097,14 @@ const NewProjectsContent = () => {
                     <p className="text-sm font-semibold">
                       Sprint {sprintNum(s.nome)}
                       {s.encerrada && (
-                        <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/15 text-emerald-300">
+                        <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success">
                           encerrada
                         </span>
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground">{fmt(s.inicio)} a {fmt(s.fim)}</p>
                   </div>
-                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap num">
                     {db.tarefas.filter((t) => t.sprintId === s.id).length} atividades
                   </span>
                   <Button variant="outline" size="sm" onClick={() => setSprintForm({ id: s.id, nome: s.nome, inicio: s.inicio, fim: s.fim, capacidadeDia: String(s.capacidadeDia ?? 5.5) })}>Editar</Button>

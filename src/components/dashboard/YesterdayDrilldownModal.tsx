@@ -100,7 +100,7 @@ const YesterdayDrilldownModal = ({ open, onClose, type, projects }: YesterdayDri
           <DialogTitle className="flex items-center gap-2">
             {getIcon()}
             {getTitle()}
-            <Badge variant="outline" className="ml-2">{projects.length}</Badge>
+            <Badge variant="outline" className="ml-2 num">{projects.length}</Badge>
           </DialogTitle>
         </DialogHeader>
         
@@ -133,7 +133,7 @@ const YesterdayDrilldownModal = ({ open, onClose, type, projects }: YesterdayDri
                   <TableCell className="text-muted-foreground">
                     {project.client_name || "-"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="num">
                     {formatDate(project.end_date)}
                   </TableCell>
                   <TableCell>
@@ -142,7 +142,7 @@ const YesterdayDrilldownModal = ({ open, onClose, type, projects }: YesterdayDri
                       className={
                         project.status === "on_hold" ? "bg-destructive text-destructive-foreground" :
                         project.status === "waiting_client" ? "bg-warning text-warning-foreground" :
-                        project.status === "test" ? "bg-purple-500 text-white" :
+                        project.status === "test" ? "bg-primary text-foreground" :
                         ""
                       }
                     >

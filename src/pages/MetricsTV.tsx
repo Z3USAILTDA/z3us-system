@@ -71,14 +71,14 @@ interface ClientProject {
 
 // ----- Constants -----
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  planning: { label: "A iniciar", color: "hsl(217 91% 60%)" },
-  in_progress: { label: "Em andamento", color: "hsl(48 96% 53%)" },
-  waiting_client: { label: "Aguardando cliente", color: "hsl(280 85% 65%)" },
-  on_hold: { label: "Pausado", color: "hsl(215 20% 65%)" },
-  test: { label: "Teste", color: "hsl(199 89% 55%)" },
-  completed: { label: "Concluído", color: "hsl(142 76% 45%)" },
-  cancelled: { label: "Cancelado", color: "hsl(0 63% 50%)" },
-  overdue: { label: "Atrasado", color: "hsl(0 84% 60%)" },
+  planning: { label: "A iniciar", color: "hsl(var(--primary))" },
+  in_progress: { label: "Em andamento", color: "hsl(var(--warning))" },
+  waiting_client: { label: "Aguardando cliente", color: "hsl(var(--primary))" },
+  on_hold: { label: "Pausado", color: "hsl(var(--muted-foreground))" },
+  test: { label: "Teste", color: "hsl(var(--primary))" },
+  completed: { label: "Concluído", color: "hsl(var(--success))" },
+  cancelled: { label: "Cancelado", color: "hsl(var(--destructive))" },
+  overdue: { label: "Atrasado", color: "hsl(var(--destructive))" },
 };
 
 const NON_OVERDUE_STATUSES = new Set([
@@ -143,7 +143,7 @@ const KpiCard = ({
       <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-medium leading-tight">
         {label}
       </div>
-      <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold leading-tight tabular-nums">
+      <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold leading-tight tabular-nums num">
         {value}
       </div>
       {hint && <div className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight truncate">{hint}</div>}
@@ -336,7 +336,7 @@ const MetricsTV = () => {
     const arr = Object.entries(metrics.byStatus).map(([k, v]) => ({
       name: STATUS_META[k]?.label || k,
       value: v,
-      color: STATUS_META[k]?.color || "hsl(215 20% 65%)",
+      color: STATUS_META[k]?.color || "hsl(var(--muted-foreground))",
       key: k,
     }));
     // adiciona "atrasado" virtual (não sobrepõe — apenas referência separada)
@@ -630,7 +630,7 @@ const MetricsTV = () => {
             </div>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold tabular-nums leading-none">
+            <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold tabular-nums leading-none num">
               {now.toLocaleTimeString("pt-BR")}
             </div>
             <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
@@ -694,13 +694,13 @@ const MetricsTV = () => {
                 </div>
                 <div className="flex items-end gap-4 lg:gap-6">
                   <div>
-                    <div className="text-3xl lg:text-4xl xl:text-5xl font-bold text-destructive tabular-nums leading-none">
+                    <div className="text-3xl lg:text-4xl xl:text-5xl font-bold text-destructive tabular-nums leading-none num">
                       {mostCritical.daysLate}<span className="text-xl lg:text-2xl">d</span>
                     </div>
                     <div className="text-[9px] lg:text-[10px] text-muted-foreground uppercase tracking-wider mt-1">de atraso</div>
                   </div>
                   <div className="pb-1">
-                    <div className="text-sm lg:text-base font-semibold tabular-nums">{formatDateBR(mostCritical.p.end_date)}</div>
+                    <div className="text-sm lg:text-base font-semibold tabular-nums num">{formatDateBR(mostCritical.p.end_date)}</div>
                     <div className="text-[9px] lg:text-[10px] text-muted-foreground uppercase tracking-wider">prazo original</div>
                   </div>
                 </div>
@@ -717,7 +717,7 @@ const MetricsTV = () => {
           <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1 shrink-0">
               <h2 className="text-sm lg:text-base font-bold">Status & Evolução · 6m</h2>
-              <span className="text-[10px] text-muted-foreground">{metrics.total} total</span>
+              <span className="text-[10px] text-muted-foreground num">{metrics.total} total</span>
             </div>
             {/* Topo: pie + legenda compacta */}
             <div className="grid grid-cols-5 gap-2 items-center shrink-0" style={{ height: "45%" }}>
@@ -750,7 +750,7 @@ const MetricsTV = () => {
                         <span className="truncate">{s.name}</span>
                       </div>
                       <div className="tabular-nums text-muted-foreground shrink-0">
-                        <span className="font-semibold text-foreground">{s.value}</span> · {pct}%
+                        <span className="font-semibold text-foreground num">{s.value}</span> · {pct}%
                       </div>
                     </div>
                   );
@@ -796,7 +796,7 @@ const MetricsTV = () => {
                 <AlertTriangle className="w-4 h-4 text-destructive" />
                 <h2 className="text-sm lg:text-base font-bold">Atrasos & alertas</h2>
               </div>
-              <span className="text-lg font-bold text-destructive tabular-nums leading-none">
+              <span className="text-lg font-bold text-destructive tabular-nums leading-none num">
                 {delayedProjects.length}
               </span>
             </div>
@@ -864,7 +864,7 @@ const MetricsTV = () => {
           <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
-                <Trophy className="w-4 h-4 text-yellow" />
+                <Trophy className="w-4 h-4 text-warning" />
                 <h2 className="text-sm lg:text-base font-bold">Ranking responsáveis</h2>
               </div>
               <span className="text-[10px] text-muted-foreground">por taxa</span>
@@ -890,7 +890,7 @@ const MetricsTV = () => {
                       <tr key={u.name} className="border-t border-border/40">
                         <td className="py-1 pr-1 text-muted-foreground tabular-nums">{i + 1}</td>
                         <td className="py-1 pr-1 font-medium truncate max-w-[120px]">{u.name}</td>
-                        <td className="py-1 px-1 text-center tabular-nums">{u.total}</td>
+                        <td className="py-1 px-1 text-center tabular-nums num">{u.total}</td>
                         <td className="py-1 px-1 text-center tabular-nums text-success hidden sm:table-cell">{u.completed}</td>
                         <td className="py-1 px-1 text-center tabular-nums text-destructive hidden sm:table-cell">{u.overdue}</td>
                         <td className="py-1 pl-1 text-right">
@@ -931,7 +931,7 @@ const MetricsTV = () => {
                 <Target className="w-4 h-4 text-primary" />
                 <h2 className="text-sm lg:text-base font-bold">Projetos por cliente</h2>
               </div>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[10px] text-muted-foreground num">
                 {clientProjectStats.length} cliente(s) · % por projeto
               </span>
             </div>
@@ -949,7 +949,7 @@ const MetricsTV = () => {
                     >
                       <div className="flex items-center justify-between text-[11px] lg:text-xs">
                         <span className="font-semibold truncate">{c.clientName}</span>
-                        <span className="text-muted-foreground tabular-nums shrink-0 ml-1">
+                        <span className="text-muted-foreground tabular-nums shrink-0 ml-1 num">
                           {c.total}
                         </span>
                       </div>
@@ -968,7 +968,7 @@ const MetricsTV = () => {
                                 style={{ width: `${proj.pct}%` }}
                               />
                             </div>
-                            <span className="tabular-nums shrink-0 font-semibold w-5 text-right">
+                            <span className="tabular-nums shrink-0 font-semibold w-5 text-right num">
                               {proj.count}
                             </span>
                           </div>

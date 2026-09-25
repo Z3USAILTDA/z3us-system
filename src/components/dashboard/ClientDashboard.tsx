@@ -131,7 +131,7 @@ const ClientDashboard = ({ userId }: ClientDashboardProps) => {
       on_hold: "bg-destructive",
       completed: "bg-success",
       cancelled: "bg-destructive",
-      waiting_client: "bg-orange-500",
+      waiting_client: "bg-warning",
     };
     return colors[status] || "bg-muted";
   };
@@ -284,8 +284,8 @@ const ClientDashboard = ({ userId }: ClientDashboardProps) => {
             </div>
           </CardHeader>
           <CardContent className="relative z-10">
-            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">{totalProjects}</div>
-            <p className="text-xs text-muted-foreground mt-2">
+            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent num">{totalProjects}</div>
+            <p className="text-xs text-muted-foreground mt-2 num">
               {totalProjects === 1 ? 'projeto cadastrado' : 'projetos cadastrados'}
             </p>
           </CardContent>
@@ -303,7 +303,7 @@ const ClientDashboard = ({ userId }: ClientDashboardProps) => {
             </div>
           </CardHeader>
           <CardContent className="relative z-10">
-            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">{inProgressCount}</div>
+            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent num">{inProgressCount}</div>
             <p className="text-xs text-muted-foreground mt-2">projetos ativos</p>
           </CardContent>
         </Card>
@@ -320,7 +320,7 @@ const ClientDashboard = ({ userId }: ClientDashboardProps) => {
             </div>
           </CardHeader>
           <CardContent className="relative z-10">
-            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">{completedCount}</div>
+            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent num">{completedCount}</div>
             <p className="text-xs text-muted-foreground mt-2">projetos finalizados</p>
           </CardContent>
         </Card>
@@ -337,7 +337,7 @@ const ClientDashboard = ({ userId }: ClientDashboardProps) => {
             </div>
           </CardHeader>
           <CardContent className="relative z-10">
-            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">{averageProgress}%</div>
+            <div className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent num">{averageProgress}%</div>
             <Progress value={averageProgress} className="h-2 mt-2" />
           </CardContent>
         </Card>
@@ -401,9 +401,9 @@ const ClientDashboard = ({ userId }: ClientDashboardProps) => {
                     }).map((demanda) => (
                       <TableRow key={demanda.demanda}>
                         <TableCell className="font-medium">{demanda.demanda}</TableCell>
-                        <TableCell className="text-center">{demanda.total}</TableCell>
+                        <TableCell className="text-center num">{demanda.total}</TableCell>
                         <TableCell className="text-center">
-                          <span className="text-primary font-semibold">{demanda.percentage.toFixed(1)}%</span>
+                          <span className="text-primary font-semibold num">{demanda.percentage.toFixed(1)}%</span>
                         </TableCell>
                         <TableCell>
                           <Progress value={demanda.percentage} className="h-2" />
@@ -469,7 +469,7 @@ const ClientDashboard = ({ userId }: ClientDashboardProps) => {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div className="text-sm">
                       <p className="text-muted-foreground">Entrega</p>
-                      <p className="font-medium">{formatDateBR(project.end_date)}</p>
+                      <p className="font-medium num">{formatDateBR(project.end_date)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
