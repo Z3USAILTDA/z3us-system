@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getStoredAuthSession, hasUsableStoredSession } from "@/lib/authSession";
 import TvPinGate from "@/components/TvPinGate";
+import { useClientLogo } from "@/lib/clientLogo";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   PieChart,
@@ -114,8 +115,9 @@ const logoCliente = (nome: string) => {
   return CLIENTE_LOGO.find((c) => n.includes(c.match));
 };
 
-const ClienteLogo = ({ nome }: { nome: string }) => {
-  const logo = logoCliente(nome);
+const ClienteLogo = ({ nome, logoUrl }: { nome: string; logoUrl?: string | null }) => {
+  const cadastro = useClientLogo(logoUrl);
+  const logo = cadastro ? { url: cadastro, invert: false } : logoCliente(nome);
   const url = logo?.url;
   const [erro, setErro] = useState(false);
   if (!url || erro) {

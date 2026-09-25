@@ -42,6 +42,21 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import logoWhite from "@/assets/logo-branco.png";
+import { CLIENT_LOGO_BUCKET, CLIENT_LOGO_MAX, CLIENT_LOGO_TYPES, useClientLogo } from "@/lib/clientLogo";
+
+const ClientLogoThumb = ({ value, name, size = "sm" }: { value?: string | null; name: string; size?: "sm" | "lg" }) => {
+  const url = useClientLogo(value);
+  const box = size === "lg" ? "h-20 w-36" : "h-8 w-14";
+  return (
+    <span className={`${box} shrink-0 rounded-md bg-background ring-1 ring-border grid place-items-center overflow-hidden`}>
+      {url ? (
+        <img src={url} alt={`Logo ${name}`} className="max-h-full max-w-full object-contain p-1" />
+      ) : (
+        <span className="text-xs text-muted-foreground">{size === "lg" ? "Sem logo" : "—"}</span>
+      )}
+    </span>
+  );
+};
 
 const ClientsContent = () => {
   const navigate = useNavigate();
@@ -62,6 +77,21 @@ const ClientsContent = () => {
   // Projetos do cliente (categorias de demandas)
   const [clientProjects, setClientProjects] = useState<{ id: string; name: string }[]>([]);
   const [newProjectName, setNewProjectName] = useState("");
+  const [logoPath, setLogoPath] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoFile = async (file?: File) => {
+    if (!file) return;
+    if (!CLIENT_LOGO_TYPES.includes(file.type)) return toast.error("Formato inválido. Use PNG, SVG, JPG ou WebP.");
+    if (file.size > CLIENT_LOGO_MAX) return toast.error("O logo deve ter no máximo 1 MB.");
+    setUploadingLogo(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+    const path = `${editingClient?.id || "novo"}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from(CLIENT_LOGO_BUCKET).upload(path, file, { contentType: file.type });
+    setUploadingLogo(false);
+    if (error) return toast.error("Erro ao enviar o logo");
+    setLogoPath(path);
+  };
 
 
   const form = useForm<ClientFormData>({
@@ -205,6 +235,7 @@ const ClientsContent = () => {
       phone: data.phone || "",
       address: data.address || "",
       status: data.status,
+      logo_url: logoPath,
     };
 
     if (editingClient) {
@@ -234,6 +265,10 @@ const ClientsContent = () => {
         await supabase.from("client_emails").insert(emailsToInsert);
       }
 
+      const oldLogo = editingClient.logo_url;
+      if (oldLogo && oldLogo !== logoPath && !/^https?:/.test(oldLogo)) {
+        await supabase.storage.from(CLIENT_LOGO_BUCKET).remove([oldLogo]);
+      }
       toast.success("Cliente atualizado com sucesso!");
       fetchClients();
       setDialogOpen(false);
@@ -296,6 +331,7 @@ const ClientsContent = () => {
   const handleEdit = async (client: any) => {
     setEditingClient(client);
     form.reset(client);
+    setLogoPath(client.logo_url || null);
     
     // Carregar emails adicionais
     const emails = await fetchClientEmails(client.id);
@@ -335,6 +371,7 @@ const ClientsContent = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingClient(null);
+      setLogoPath(null);
       setAdditionalEmails([]);
       setNewEmail("");
       setClientProjects([]);
@@ -455,6 +492,34 @@ const ClientsContent = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="client_logo">Logo</Label>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <ClientLogoThumb value={logoPath} name={form.watch("company_name") || "cliente"} size="lg" />
+                      <div className="space-y-2">
+                        <Input
+                          id="client_logo"
+                          type="file"
+                          accept=".png,.svg,.jpg,.jpeg,.webp,image/png,image/svg+xml,image/jpeg,image/webp"
+                          disabled={uploadingLogo}
+                          onChange={(e) => {
+                            handleLogoFile(e.target.files?.[0]);
+                            e.target.value = "";
+                          }}
+                        />
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-muted-foreground">
+                            {uploadingLogo ? "Enviando..." : "PNG, SVG, JPG ou WebP, até 1 MB."}
+                          </p>
+                          {logoPath && (
+                            <Button type="button" variant="ghost" size="sm" onClick={() => setLogoPath(null)}>
+                              <X className="h-4 w-4 mr-1" /> Remover logo
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="company_name">Nome da Empresa</Label>
@@ -706,6 +771,7 @@ const ClientsContent = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-20">Logo</TableHead>
                   <TableHead>Empresa</TableHead>
                   <TableHead>CNPJ</TableHead>
                   <TableHead>Contato</TableHead>
@@ -717,7 +783,7 @@ const ClientsContent = () => {
               <TableBody>
                 {clients.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       Nenhum cliente cadastrado
                     </TableCell>
                   </TableRow>
@@ -765,6 +831,9 @@ const ClientRow = ({
 
   return (
     <TableRow>
+      <TableCell>
+        <ClientLogoThumb value={client.logo_url} name={client.company_name} />
+      </TableCell>
       <TableCell className="font-medium">{client.company_name}</TableCell>
       <TableCell>{client.cnpj}</TableCell>
       <TableCell>{client.contact_name}</TableCell>
