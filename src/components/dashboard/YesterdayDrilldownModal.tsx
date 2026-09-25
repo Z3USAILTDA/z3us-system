@@ -100,7 +100,7 @@ const YesterdayDrilldownModal = ({ open, onClose, type, projects }: YesterdayDri
           <DialogTitle className="flex items-center gap-2">
             {getIcon()}
             {getTitle()}
-            <Badge variant="outline" className="ml-2">{projects.length}</Badge>
+            <Badge variant="outline" className="ml-2 num">{projects.length}</Badge>
           </DialogTitle>
         </DialogHeader>
         
