@@ -116,6 +116,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          logo_url: string | null
           phone: string | null
           status: string
           updated_at: string
@@ -129,6 +130,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          logo_url?: string | null
           phone?: string | null
           status?: string
           updated_at?: string
@@ -142,6 +144,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          logo_url?: string | null
           phone?: string | null
           status?: string
           updated_at?: string
@@ -460,6 +463,48 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_access_settings: {
+        Row: {
+          id: string
+          pin_hash: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          pin_hash?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          pin_hash?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      tv_pin_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          ip: string | null
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -485,6 +530,13 @@ export type Database = {
     Functions: {
       email_has_account: { Args: { _email: string }; Returns: boolean }
       get_import_documento_secret: { Args: never; Returns: string }
+      get_tv_pin_info: {
+        Args: never
+        Returns: {
+          configured: boolean
+          updated_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -515,10 +567,12 @@ export type Database = {
           status_code: number
         }[]
       }
+      set_tv_pin: { Args: { p_pin: string }; Returns: undefined }
       update_client_observation: {
         Args: { _observation: string; _project_id: string }
         Returns: undefined
       }
+      verify_tv_pin: { Args: { p_pin: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "client" | "viewer"
