@@ -579,7 +579,7 @@ const ClientsContent = () => {
                             {invitingEmail === form.watch("email") ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : emailsWithAccount.has(form.watch("email")?.toLowerCase() ?? "") ? (
-                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                              <CheckCircle2 className="h-4 w-4 text-success" />
                             ) : (
                               <Send className="h-4 w-4" />
                             )}
@@ -633,7 +633,7 @@ const ClientsContent = () => {
                                 <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                 <span className="text-sm truncate">{email}</span>
                                 {hasAccount && (
-                                  <Badge variant="outline" className="text-[10px] py-0 h-5 border-green-500/50 text-green-500">
+                                  <Badge variant="outline" className="text-[10px] py-0 h-5 border-success/50 text-success">
                                     Convidado
                                   </Badge>
                                 )}

@@ -21,11 +21,11 @@ import {
 type Stage = "backlog" | "todo" | "dev" | "homolog" | "done";
 
 const STAGES: { id: Stage; label: string; color: string; badge: string }[] = [
-  { id: "backlog", label: "Backlog da Sprint", color: "#94a3b8", badge: "bg-slate-400/15 text-slate-300" },
-  { id: "todo", label: "A Fazer", color: "#a78bfa", badge: "bg-violet-400/15 text-violet-300" },
-  { id: "dev", label: "Desenvolvimento", color: "#60a5fa", badge: "bg-blue-400/15 text-blue-300" },
-  { id: "homolog", label: "Homologação", color: "#fbbf24", badge: "bg-amber-400/15 text-amber-300" },
-  { id: "done", label: "Produção", color: "#34d399", badge: "bg-emerald-400/15 text-emerald-300" },
+  { id: "backlog", label: "Backlog da Sprint", color: "hsl(var(--muted-foreground))", badge: "bg-muted/15 text-muted-foreground" },
+  { id: "todo", label: "A Fazer", color: "hsl(var(--primary))", badge: "bg-primary/15 text-primary" },
+  { id: "dev", label: "Desenvolvimento", color: "hsl(var(--primary))", badge: "bg-primary/15 text-primary" },
+  { id: "homolog", label: "Homologação", color: "hsl(var(--warning))", badge: "bg-warning/15 text-warning" },
+  { id: "done", label: "Produção", color: "hsl(var(--success))", badge: "bg-success/15 text-success" },
 ];
 
 interface Tarefa {
@@ -128,7 +128,7 @@ const ClienteLogo = ({ nome, logoUrl }: { nome: string; logoUrl?: string | null 
     );
   }
   return (
-    <span className="h-9 w-16 shrink-0 rounded-lg bg-[hsl(222_47%_7%)] ring-1 ring-border/70 shadow-inner grid place-items-center overflow-hidden">
+    <span className="h-9 w-16 shrink-0 rounded-lg bg-background ring-1 ring-border/70 shadow-inner grid place-items-center overflow-hidden">
       <img
         src={url}
         alt={`Logo ${nome}`}
@@ -465,8 +465,8 @@ export default function SprintMetricsTV() {
                           <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                           <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                           <RTooltip />
-                          <Line type="monotone" dataKey="ideal" stroke="#94a3b8" strokeDasharray="6 5" dot={false} />
-                          <Line type="monotone" dataKey="real" stroke="#2dd4bf" strokeWidth={2} dot={false} connectNulls />
+                          <Line type="monotone" dataKey="ideal" stroke="hsl(var(--muted-foreground))" strokeDasharray="6 5" dot={false} />
+                          <Line type="monotone" dataKey="real" stroke="hsl(var(--success))" strokeWidth={2} dot={false} connectNulls />
                         </LineChart>
                       </ResponsiveContainer>
                     ) : (

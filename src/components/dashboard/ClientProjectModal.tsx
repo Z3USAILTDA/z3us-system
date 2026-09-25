@@ -23,7 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
   on_hold: "bg-destructive",
   completed: "bg-success",
   cancelled: "bg-destructive",
-  waiting_client: "bg-orange-500",
+  waiting_client: "bg-warning",
 };
 
 const formatDate = (date?: string | null) => {

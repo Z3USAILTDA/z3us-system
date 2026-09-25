@@ -131,7 +131,7 @@ const ClientDashboard = ({ userId }: ClientDashboardProps) => {
       on_hold: "bg-destructive",
       completed: "bg-success",
       cancelled: "bg-destructive",
-      waiting_client: "bg-orange-500",
+      waiting_client: "bg-warning",
     };
     return colors[status] || "bg-muted";
   };

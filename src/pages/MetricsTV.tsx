@@ -71,14 +71,14 @@ interface ClientProject {
 
 // ----- Constants -----
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  planning: { label: "A iniciar", color: "hsl(217 91% 60%)" },
-  in_progress: { label: "Em andamento", color: "hsl(48 96% 53%)" },
-  waiting_client: { label: "Aguardando cliente", color: "hsl(280 85% 65%)" },
-  on_hold: { label: "Pausado", color: "hsl(215 20% 65%)" },
-  test: { label: "Teste", color: "hsl(199 89% 55%)" },
-  completed: { label: "Concluído", color: "hsl(142 76% 45%)" },
-  cancelled: { label: "Cancelado", color: "hsl(0 63% 50%)" },
-  overdue: { label: "Atrasado", color: "hsl(0 84% 60%)" },
+  planning: { label: "A iniciar", color: "hsl(var(--primary))" },
+  in_progress: { label: "Em andamento", color: "hsl(var(--warning))" },
+  waiting_client: { label: "Aguardando cliente", color: "hsl(var(--primary))" },
+  on_hold: { label: "Pausado", color: "hsl(var(--muted-foreground))" },
+  test: { label: "Teste", color: "hsl(var(--primary))" },
+  completed: { label: "Concluído", color: "hsl(var(--success))" },
+  cancelled: { label: "Cancelado", color: "hsl(var(--destructive))" },
+  overdue: { label: "Atrasado", color: "hsl(var(--destructive))" },
 };
 
 const NON_OVERDUE_STATUSES = new Set([
@@ -336,7 +336,7 @@ const MetricsTV = () => {
     const arr = Object.entries(metrics.byStatus).map(([k, v]) => ({
       name: STATUS_META[k]?.label || k,
       value: v,
-      color: STATUS_META[k]?.color || "hsl(215 20% 65%)",
+      color: STATUS_META[k]?.color || "hsl(var(--muted-foreground))",
       key: k,
     }));
     // adiciona "atrasado" virtual (não sobrepõe — apenas referência separada)
@@ -864,7 +864,7 @@ const MetricsTV = () => {
           <Card className="col-span-1 p-3 flex flex-col min-h-0 overflow-hidden">
             <div className="flex items-center justify-between mb-1.5 shrink-0">
               <div className="flex items-center gap-1.5">
-                <Trophy className="w-4 h-4 text-yellow" />
+                <Trophy className="w-4 h-4 text-warning" />
                 <h2 className="text-sm lg:text-base font-bold">Ranking responsáveis</h2>
               </div>
               <span className="text-[10px] text-muted-foreground">por taxa</span>

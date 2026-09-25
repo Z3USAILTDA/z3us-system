@@ -353,8 +353,8 @@ const ProjectsContent = () => {
       on_hold: "bg-destructive",
       completed: "bg-success",
       cancelled: "bg-destructive",
-      test: "bg-purple-500",
-      waiting_client: "bg-orange-500",
+      test: "bg-primary",
+      waiting_client: "bg-warning",
     };
     return colors[status] || "bg-muted";
   };
