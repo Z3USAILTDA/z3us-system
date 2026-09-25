@@ -147,6 +147,7 @@ export default function SprintMetricsTV() {
   const navigate = useNavigate();
   const [db, setDb] = useState<DB>(emptyDb);
   const [loaded, setLoaded] = useState(false);
+  const [authed, setAuthed] = useState(() => !!getStoredAuthSession()?.access_token && hasUsableStoredSession());
   const [logosCadastro, setLogosCadastro] = useState<{ nome: string; logo: string }[]>([]);
 
   useEffect(() => {
@@ -170,7 +171,6 @@ export default function SprintMetricsTV() {
     return logosCadastro.find((c) => c.nome.startsWith(n) || n.startsWith(c.nome))?.logo ?? null;
   };
 
-  const [authed, setAuthed] = useState(() => !!getStoredAuthSession()?.access_token && hasUsableStoredSession());
 
   useEffect(() => {
     if (!authed) return;
