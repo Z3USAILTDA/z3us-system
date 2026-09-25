@@ -126,8 +126,8 @@ interface DB {
 }
 
 const STAGES: { id: Stage; label: string; color: string; badge: string }[] = [
-  { id: "backlog", label: "Backlog da Sprint", color: "hsl(var(--muted-foreground))", badge: "bg-muted/15 text-muted-foreground" },
-  { id: "todo", label: "A Fazer", color: "hsl(var(--primary))", badge: "bg-primary/15 text-primary" },
+  { id: "backlog", label: "Backlog da Sprint", color: "hsl(var(--muted-foreground))", badge: "bg-muted-foreground/15 text-muted-foreground" },
+  { id: "todo", label: "A Fazer", color: "hsl(var(--info))", badge: "bg-info/15 text-info" },
   { id: "dev", label: "Desenvolvimento", color: "hsl(var(--primary))", badge: "bg-primary/15 text-primary" },
   { id: "homolog", label: "Homologação", color: "hsl(var(--warning))", badge: "bg-warning/15 text-warning" },
   { id: "done", label: "Produção", color: "hsl(var(--success))", badge: "bg-success/15 text-success" },
