@@ -142,7 +142,7 @@ const YesterdayDrilldownModal = ({ open, onClose, type, projects }: YesterdayDri
                       className={
                         project.status === "on_hold" ? "bg-destructive text-destructive-foreground" :
                         project.status === "waiting_client" ? "bg-warning text-warning-foreground" :
-                        project.status === "test" ? "bg-primary text-foreground" :
+                        project.status === "test" ? "bg-primary text-primary-foreground" :
                         ""
                       }
                     >
