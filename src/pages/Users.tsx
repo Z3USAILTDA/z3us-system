@@ -37,6 +37,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import logoWhite from "@/assets/logo-branco.png";
+import TvPinSettings from "@/components/TvPinSettings";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -382,6 +383,7 @@ const UsersContent = () => {
         </div>
 
         <div className="p-6 space-y-6">
+          <TvPinSettings />
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground">Visualize e gerencie usuários do sistema</p>
