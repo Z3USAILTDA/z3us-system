@@ -1874,7 +1874,7 @@ const ProjectsContent = () => {
                             ) : (
                               <div
                                 onClick={() => startEditing(project.id, "end_date", project.end_date)}
-                                className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                                className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors num"
                               >
                                 {formatDateBR(project.end_date)}
                               </div>

@@ -11,16 +11,6 @@ const Index = () => {
       {/* Animated background grid */}
       <div className="absolute inset-0 tech-grid opacity-30" />
 
-      {/* Floating orbs */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float" />
-      <div
-        className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float"
-        style={{ animationDelay: "2s" }}
-      />
-      <div
-        className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/20 rounded-full blur-3xl animate-float"
-        style={{ animationDelay: "4s" }}
-      />
 
       <div className="container mx-auto px-4 py-16 relative z-10">
         {/* Hero Section */}
@@ -32,7 +22,7 @@ const Index = () => {
           <div className="space-y-6">
             <h1 className="text-6xl md:text-7xl font-bold tracking-tight text-foreground">Gestão de Projetos</h1>
 
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium">
               Plataforma tecnológica avançada para gerenciar projetos, equipes e dar visibilidade total aos seus
               clientes
             </p>
@@ -69,7 +59,7 @@ const Index = () => {
                 </div>
               </div>
               <h3 className="text-2xl font-bold mb-3 text-center">Gestão Inteligente</h3>
-              <p className="text-muted-foreground text-center leading-relaxed">
+              <p className="text-muted-foreground text-center leading-relaxed font-medium">
                 IA integrada para otimizar processos e sugerir as melhores alocações de recursos
               </p>
             </div>
@@ -79,12 +69,12 @@ const Index = () => {
             <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
             <div className="relative">
               <div className="flex justify-center mb-6">
-                <div className="p-4 bg-secondary/10 rounded-xl group-hover:bg-secondary/20 transition-colors">
-                  <Cpu className="h-10 w-10 text-secondary" />
+                <div className="p-4 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
+                  <Cpu className="h-10 w-10 text-primary" />
                 </div>
               </div>
               <h3 className="text-2xl font-bold mb-3 text-center">Tempo Real</h3>
-              <p className="text-muted-foreground text-center leading-relaxed">
+              <p className="text-muted-foreground text-center leading-relaxed font-medium">
                 Acompanhamento em tempo real de todos os projetos, equipes e demandas
               </p>
             </div>
@@ -94,12 +84,12 @@ const Index = () => {
             <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
             <div className="relative">
               <div className="flex justify-center mb-6">
-                <div className="p-4 bg-accent/10 rounded-xl group-hover:bg-accent/20 transition-colors">
-                  <Sparkles className="h-10 w-10 text-accent" />
+                <div className="p-4 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
+                  <Sparkles className="h-10 w-10 text-primary" />
                 </div>
               </div>
               <h3 className="text-2xl font-bold mb-3 text-center">Portal do Cliente</h3>
-              <p className="text-muted-foreground text-center leading-relaxed">
+              <p className="text-muted-foreground text-center leading-relaxed font-medium">
                 Seus clientes acessam via CNPJ e acompanham suas demandas de forma transparente
               </p>
             </div>
@@ -108,14 +98,13 @@ const Index = () => {
 
         {/* CTA Section */}
         <div className="relative max-w-5xl mx-auto">
-          <div className="absolute inset-0 bg-gradient-primary rounded-3xl blur-2xl opacity-20" />
           <div className="relative p-12 bg-card/80 backdrop-blur-sm border border-primary/30 rounded-3xl neon-border overflow-hidden">
             <div className="absolute inset-0 bg-gradient-secondary opacity-50" />
             <div className="relative text-center space-y-6">
               <h2 className="text-4xl md:text-5xl font-bold">
                 <span className="bg-gradient-primary bg-clip-text text-transparent">Tecnologia Avançada</span>
               </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto font-medium">
                 Transforme a gestão dos seus projetos com inteligência artificial, visibilidade total e controle em
                 tempo real
               </p>
