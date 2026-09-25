@@ -70,57 +70,10 @@ const fmtBR = (iso?: string) => (iso ? iso.split("-").reverse().join("/") : "—
 
 const sprintNum = (nome?: string) => (nome || "").replace(/sprint/gi, "").trim();
 
-// Logos oficiais enviadas pelo cliente
-import logoAgs from "@/assets/logos/logo-ags.avif.asset.json";
-import logoAmazon from "@/assets/logos/logo-amazon.png.asset.json";
-import logoAndreani from "@/assets/logos/logo-andreani.png.asset.json";
-import logoBrasmeg from "@/assets/logos/logo-brasmeg.png.asset.json";
-import logoDachser from "@/assets/logos/logo-dachser.svg.asset.json";
-import logoFm from "@/assets/logos/logo-fm.png.asset.json";
-import logoHandline from "@/assets/logos/logo-handline.png.asset.json";
-import logoMorada from "@/assets/logos/logo-morada_madalena.png.asset.json";
-import logoOlli from "@/assets/logos/logo-olli_sementes.png.asset.json";
-import logoProton from "@/assets/logos/logo-proton.png.asset.json";
-import logoRd from "@/assets/logos/logo-r_d.png.asset.json";
-import logoSigraweb from "@/assets/logos/logo-sigraweb.png.asset.json";
-import logoUni from "@/assets/logos/logo-uni-trim.png.asset.json";
-import logoLuft from "@/assets/logos/logo-luft.png.asset.json";
-import logoZ3us from "@/assets/logos/logo-z3us-branco.png.asset.json";
-import logoBewex from "@/assets/logos/logo-bewex.png.asset.json";
-
-const CLIENTE_LOGO: { match: string; url: string; invert?: boolean }[] = [
-  { match: "unitrading", url: logoUni.url },
-  { match: "uni trading", url: logoUni.url },
-  { match: "amazon", url: logoAmazon.url },
-  { match: "andreani", url: logoAndreani.url },
-  { match: "brasmeg", url: logoBrasmeg.url },
-  { match: "dachser", url: logoDachser.url },
-  { match: "dasch", url: logoDachser.url },
-  { match: "handline", url: logoHandline.url },
-  { match: "morada", url: logoMorada.url },
-  { match: "olli", url: logoOlli.url },
-  { match: "proton", url: logoProton.url },
-  { match: "sigraweb", url: logoSigraweb.url },
-  { match: "sigra", url: logoSigraweb.url },
-  { match: "luft", url: logoLuft.url },
-  { match: "ags", url: logoAgs.url },
-  { match: "r&d", url: logoRd.url },
-  { match: "fm ", url: logoFm.url },
-  { match: "bewex", url: logoBewex.url, invert: true },
-  { match: "z3us", url: logoZ3us.url },
-];
-
-const logoCliente = (nome: string) => {
-  const n = (nome || "").toLowerCase();
-  return CLIENTE_LOGO.find((c) => n.includes(c.match));
-};
-
 const ClienteLogo = ({ nome, logoUrl }: { nome: string; logoUrl?: string | null }) => {
   const cadastro = useClientLogo(logoUrl);
-  const logo = cadastro ? { url: cadastro, invert: false } : logoCliente(nome);
-  const url = logo?.url;
   const [erro, setErro] = useState(false);
-  if (!url || erro) {
+  if (!cadastro || erro) {
     return (
       <span className="h-9 w-16 shrink-0 rounded-lg bg-primary/15 text-primary text-xs font-bold grid place-items-center ring-1 ring-border/70">
         {(nome || "?").trim().charAt(0).toUpperCase()}
@@ -130,11 +83,11 @@ const ClienteLogo = ({ nome, logoUrl }: { nome: string; logoUrl?: string | null 
   return (
     <span className="h-9 w-16 shrink-0 rounded-lg bg-background ring-1 ring-border/70 shadow-inner grid place-items-center overflow-hidden">
       <img
-        src={url}
+        src={cadastro}
         alt={`Logo ${nome}`}
         loading="lazy"
         onError={() => setErro(true)}
-        className={`max-h-full max-w-full object-contain p-1 ${logo?.invert ? "invert" : ""}`}
+        className="max-h-full max-w-full object-contain p-1"
       />
     </span>
   );
