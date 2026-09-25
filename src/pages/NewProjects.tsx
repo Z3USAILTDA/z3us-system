@@ -1485,7 +1485,7 @@ const NewProjectsContent = () => {
                           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${st.badge}`}>
                             {st.label}
                           </span>
-                          <span className="text-xs text-muted-foreground">{list.length}</span>
+                          <span className="text-xs text-muted-foreground num">{list.length}</span>
                         </div>
                         {list.length === 0 && (
                           <p className="text-xs text-muted-foreground text-center py-6">Solte um card aqui</p>
@@ -1821,7 +1821,7 @@ const NewProjectsContent = () => {
                                     </span>
                                   )}
                                 </span>
-                                <span className="shrink-0 font-medium text-foreground">{fmtH(i.horas)}h</span>
+                                <span className="shrink-0 font-medium text-foreground num">{fmtH(i.horas)}h</span>
                               </li>
                             ))}
                           </ul>
@@ -2104,7 +2104,7 @@ const NewProjectsContent = () => {
                     </p>
                     <p className="text-xs text-muted-foreground">{fmt(s.inicio)} a {fmt(s.fim)}</p>
                   </div>
-                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap num">
                     {db.tarefas.filter((t) => t.sprintId === s.id).length} atividades
                   </span>
                   <Button variant="outline" size="sm" onClick={() => setSprintForm({ id: s.id, nome: s.nome, inicio: s.inicio, fim: s.fim, capacidadeDia: String(s.capacidadeDia ?? 5.5) })}>Editar</Button>

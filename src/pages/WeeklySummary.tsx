@@ -283,7 +283,7 @@ const WeeklySummaryContent = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent num">
                       {ws.kpis.completionRate.toFixed(1)}%
                     </div>
                   </CardContent>
@@ -295,7 +295,7 @@ const WeeklySummaryContent = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent num">
                       {ws.kpis.avgLeadTimeDays.toFixed(1)} <span className="text-lg text-muted-foreground">dias</span>
                     </div>
                   </CardContent>
@@ -307,7 +307,7 @@ const WeeklySummaryContent = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent num">
                       {ws.kpis.slaRate.toFixed(1)}%
                     </div>
                   </CardContent>
@@ -383,7 +383,7 @@ const WeeklySummaryContent = () => {
                             <TableCell className="text-center">{t.created}</TableCell>
                             <TableCell className="text-center text-success">{t.completed}</TableCell>
                             <TableCell className="text-center text-warning">{t.overdue}</TableCell>
-                            <TableCell className="text-center">{t.sharePercent.toFixed(1)}%</TableCell>
+                            <TableCell className="text-center num">{t.sharePercent.toFixed(1)}%</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -572,9 +572,9 @@ const WeeklySummaryContent = () => {
                                p.status === "test" ? "Teste" :
                                p.status === "on_hold" ? "Pausado" : "Planejamento"}
                             </TableCell>
-                            <TableCell className="text-xs">{formatDateBR(p.created_at?.slice(0, 10))}</TableCell>
-                            <TableCell className="text-xs">{formatDateBR(p.end_date)}</TableCell>
-                            <TableCell className="text-xs">{formatDateBR(p.actual_end_date)}</TableCell>
+                            <TableCell className="text-xs num">{formatDateBR(p.created_at?.slice(0, 10))}</TableCell>
+                            <TableCell className="text-xs num">{formatDateBR(p.end_date)}</TableCell>
+                            <TableCell className="text-xs num">{formatDateBR(p.actual_end_date)}</TableCell>
                             <TableCell className="text-center text-xs">{p.status !== "completed" ? getOpenDays(p.created_at) : "—"}</TableCell>
                             <TableCell>{getBadgeStatus(p)}</TableCell>
                           </TableRow>
@@ -615,7 +615,7 @@ function KPICard({ title, value, icon: Icon, color, variation }: {
         </div>
       </CardHeader>
       <CardContent className="relative z-10">
-        <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">{value}</div>
+        <div className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent num">{value}</div>
         {variation && (
           <div className={`flex items-center gap-1 mt-1 text-xs ${variation.color}`}>
             <variation.icon className="h-3 w-3" />

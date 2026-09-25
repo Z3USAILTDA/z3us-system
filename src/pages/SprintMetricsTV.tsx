@@ -22,7 +22,7 @@ type Stage = "backlog" | "todo" | "dev" | "homolog" | "done";
 
 const STAGES: { id: Stage; label: string; color: string; badge: string }[] = [
   { id: "backlog", label: "Backlog da Sprint", color: "hsl(var(--muted-foreground))", badge: "bg-muted/15 text-muted-foreground" },
-  { id: "todo", label: "A Fazer", color: "hsl(var(--primary))", badge: "bg-primary/15 text-primary" },
+  { id: "todo", label: "A Fazer", color: "hsl(var(--info))", badge: "bg-info/15 text-info" },
   { id: "dev", label: "Desenvolvimento", color: "hsl(var(--primary))", badge: "bg-primary/15 text-primary" },
   { id: "homolog", label: "Homologação", color: "hsl(var(--warning))", badge: "bg-warning/15 text-warning" },
   { id: "done", label: "Produção", color: "hsl(var(--success))", badge: "bg-success/15 text-success" },
@@ -325,7 +325,7 @@ export default function SprintMetricsTV() {
     >
       <div className="flex items-center justify-between mb-3 px-1">
         <span className={`text-sm font-semibold px-3 py-1 rounded-full ${stage.badge}`}>{stage.label}</span>
-        <span className="text-2xl font-bold text-foreground">{total}</span>
+        <span className="text-2xl font-bold text-foreground num">{total}</span>
       </div>
 
       {grupos.length === 0 && (
@@ -347,7 +347,7 @@ export default function SprintMetricsTV() {
                 </span>
               </div>
             </div>
-            <span className="shrink-0 min-w-7 h-7 px-2 rounded-full bg-primary/10 text-primary text-sm font-bold grid place-items-center">
+            <span className="shrink-0 min-w-7 h-7 px-2 rounded-full bg-primary/10 text-primary text-sm font-bold grid place-items-center num">
               {itens.length}
             </span>
           </div>
