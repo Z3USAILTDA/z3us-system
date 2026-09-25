@@ -147,6 +147,28 @@ export default function SprintMetricsTV() {
   const navigate = useNavigate();
   const [db, setDb] = useState<DB>(emptyDb);
   const [loaded, setLoaded] = useState(false);
+  const [logosCadastro, setLogosCadastro] = useState<{ nome: string; logo: string }[]>([]);
+
+  useEffect(() => {
+    if (!authed) return;
+    (supabase as any)
+      .from("clients")
+      .select("company_name,logo_url")
+      .not("logo_url", "is", null)
+      .then(({ data }: any) =>
+        setLogosCadastro(
+          (data || []).map((c: any) => ({ nome: (c.company_name || "").toLowerCase().trim(), logo: c.logo_url }))
+        )
+      );
+  }, [authed]);
+
+  const logoDoCadastro = (nome: string) => {
+    const n = (nome || "").toLowerCase().trim();
+    if (!n) return null;
+    const exato = logosCadastro.find((c) => c.nome === n);
+    if (exato) return exato.logo;
+    return logosCadastro.find((c) => c.nome.startsWith(n) || n.startsWith(c.nome))?.logo ?? null;
+  };
 
   const [authed, setAuthed] = useState(() => !!getStoredAuthSession()?.access_token && hasUsableStoredSession());
 
@@ -317,7 +339,7 @@ export default function SprintMetricsTV() {
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <ClienteLogo nome={cliente} />
+              <ClienteLogo nome={cliente} logoUrl={logoDoCadastro(cliente)} />
               <div className="min-w-0">
                 <span className="block text-sm font-semibold text-foreground truncate">{cliente}</span>
                 <span className="block text-[11px] uppercase tracking-wide text-muted-foreground truncate">
