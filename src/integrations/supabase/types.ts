@@ -484,12 +484,36 @@ export type Database = {
     }
     Functions: {
       email_has_account: { Args: { _email: string }; Returns: boolean }
+      get_import_documento_secret: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      importar_documento: {
+        Args: {
+          _cnpj: string
+          _content_base64: string
+          _description?: string
+          _file_name: string
+          _project_id: string
+          _title: string
+          _type: string
+          _visibility: string
+        }
+        Returns: number
+      }
+      importar_documento_resultado: {
+        Args: { _request_id: number }
+        Returns: {
+          document_id: string
+          erro: string
+          resposta: string
+          situacao: string
+          status_code: number
+        }[]
       }
       update_client_observation: {
         Args: { _observation: string; _project_id: string }
