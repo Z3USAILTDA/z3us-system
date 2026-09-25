@@ -65,7 +65,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="group relative p-8 bg-card/50 backdrop-blur-sm border border-border rounded-2xl hover:border-secondary/50 transition-all hover:shadow-xl hover:shadow-secondary/20 scan-line overflow-hidden">
+          <div className="group relative p-8 bg-card/50 backdrop-blur-sm border border-border rounded-2xl hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 scan-line overflow-hidden">
             <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
             <div className="relative">
               <div className="flex justify-center mb-6">
@@ -80,7 +80,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="group relative p-8 bg-card/50 backdrop-blur-sm border border-border rounded-2xl hover:border-accent/50 transition-all hover:shadow-xl hover:shadow-accent/20 scan-line overflow-hidden">
+          <div className="group relative p-8 bg-card/50 backdrop-blur-sm border border-border rounded-2xl hover:border-primary/50 transition-all hover:shadow-xl hover:shadow-primary/20 scan-line overflow-hidden">
             <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity" />
             <div className="relative">
               <div className="flex justify-center mb-6">
