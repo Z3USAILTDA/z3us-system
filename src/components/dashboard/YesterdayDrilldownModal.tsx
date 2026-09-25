@@ -133,7 +133,7 @@ const YesterdayDrilldownModal = ({ open, onClose, type, projects }: YesterdayDri
                   <TableCell className="text-muted-foreground">
                     {project.client_name || "-"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="num">
                     {formatDate(project.end_date)}
                   </TableCell>
                   <TableCell>
